@@ -1,0 +1,8 @@
+{
+  "provider": "http://localhost:7545",
+  "gasprice": 10,
+  "ethprice": 400,
+  "deploygas": 4000000,
+  "xfergas": 2000000,
+  "DEBUG": false
+}

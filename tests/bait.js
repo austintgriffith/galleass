@@ -1,0 +1,6 @@
+const Web3 = require('web3')
+web3 = new Web3(new Web3.providers.HttpProvider("http://:7545"))
+let bait = web3.utils.sha3(""+Math.random()+""+Date.now())
+console.log("BAIT:",bait)
+let baitHash = web3.utils.sha3(bait)
+console.log("BAITHASH:",baitHash)
