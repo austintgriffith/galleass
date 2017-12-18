@@ -4,38 +4,39 @@ contract CraftableToken {
 
   function CraftableToken() public { }
 
-
-
-
-  struct CraftableToken{
-    address _contractAddress;
-    uint256 _tokenId;
+  struct ExternalCraftableToken{
+    address contractAddress;
+    uint256 tokenId;
   }
-  mapping (uint256 => CraftableToken[]) public ingredients;
+  mapping (uint256 => ExternalCraftableToken[]) public ingredients;
 
   function addIngredient(uint256 _parentTokenId, address _contractAddress, uint256 _tokenId) external {
+      require(_owns(msg.sender, _parentTokenId));
       CraftableToken craftableTokenContract = CraftableToken(_contractAddress);
-
-      require(_to != address(0));
-      require(_to != address(this));
-      require(_owns(msg.sender, _tokenId));
-      require(_craftableTokenContractAddress._raw(_tokenId));
-      _transfer(msg.sender, _to, _tokenId);
+      require(craftableTokenContract.getIngredient(_parentTokenId,_tokenId));
+      //
+      //require(craftableTokenContract.ownerOf(msg.sender, _parentTokenId));
+      //require(_craftableTokenContractAddress._raw(_tokenId));
+      //_transfer(msg.sender, _to, _tokenId);
   }
 
-  function getIngredient(uint256 _parentTokenId,uint256 _)
+  //called from parent craftable token to add ingredient to parent
+  function getIngredient(uint256 _parentTokenId,uint256 _tokenId) public returns (bool) {
+    require(isRaw(_tokenId));
+
+  }
 
   //links child token to a parent token
   // the parent token is crafted using child tokens
-  mapping (uint256 => CraftableToken) public tokenIndexToCrafted;
+  mapping (uint256 => ExternalCraftableToken) public tokenIndexToCrafted;
 
   //only raw tokens can be transferred or used to craft
   // once they are part of a parent token they can no
   // longer be used until the parent is disassembled
   function isRaw(uint256 _tokenId) public view returns (bool) {
       return (
-        tokenIndexToCrafted[_tokenId]._contractAddress == address(0) &&
-        tokenIndexToCrafted[_tokenId]._tokenId == 0
+        tokenIndexToCrafted[_tokenId].contractAddress == address(0) &&
+        tokenIndexToCrafted[_tokenId].tokenId == 0
       );
   }
 
@@ -79,6 +80,7 @@ contract CraftableToken {
       Approval(msg.sender, _to, _tokenId);
   }
   event Approval(address owner, address approved, uint256 tokenId);
+
   function _approve(uint256 _tokenId, address _approved) internal {
       tokenIndexToApproved[_tokenId] = _approved;
   }

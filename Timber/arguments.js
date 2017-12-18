@@ -1,6 +1,2 @@
-/*
-  Example of passing in a string to the constructor:
-  module.exports = ["hello world"]
-*/
-
-module.exports = []
+const fs = require("fs")
+module.exports = [fs.readFileSync("Galleass/Galleass.address").toString().trim()]

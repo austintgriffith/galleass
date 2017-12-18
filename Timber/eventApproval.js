@@ -1,5 +1,5 @@
 //
-// usage: node contract Approval Catfish
+// usage: node contract Approval Timber
 //
 module.exports = (contract,params,args)=>{
   return contract.getPastEvents('Approval', {

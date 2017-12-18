@@ -1,44 +1,66 @@
 pragma solidity ^0.4.15;
 
-contract Ships is CraftableToken {
+import 'NFT.sol';
+import 'Galleasset.sol';
+
+contract Ships is Galleasset, NFT {
 
     string public constant name = "Galleass Ship";
     string public constant symbol = "G_SHIP";
-    uint32 BLOCKSTOBUILD = 3;
 
-    function Ships() public { }
+    function Ships(address _galleass) Galleasset(_galleass) public {
+      //0 index should be a blank ship owned by no one
+      Ship memory _ship = Ship({
+        model: Model(0),
+        birth: 0
+      });
+      ships.push(_ship);
+    }
+
+    enum Model{
+      FISHING
+    }
 
     struct Ship{
-      address controller;
-      uint16 location;
-      bool direction;
-      bool building;
-      bool floating;
-      bool sailing;
-      uint16 speed;
+      Model model;
       uint64 birth;
     }
 
     Ship[] ships;
 
-    function _createShip(address _owner, uint16 _location, uint16 _speed, bool _direction) internal returns (uint){
+    function buildShip(Model model) public returns (uint){
+      if(model==Model.FISHING){
+        require( getTokens(msg.sender,"Timber",2) );
+        require( hasPermission(msg.sender,"buildShip") );
+        return _createShip(msg.sender, model);
+      }
+      revert();
+    }
+    function buildShips(Model model,uint amount) public returns (uint){
+      uint result;
+      while((amount--)>0){
+        result=buildShip(model);
+      }
+      return result;
+    }
+
+    function _createShip(address _owner, Model model) internal returns (uint){
         Ship memory _ship = Ship({
-          controller: msg.sender,
-          location: _location,
-          direction: _direction,
-          building: true,
-          floating: false,
-          sailing: false,
-          speed: _speed,
+          model: model,
           birth: uint64(now)
         });
         uint256 newShipId = ships.push(_ship) - 1;
         require(newShipId == uint256(uint32(newShipId)));
-        Birth(_owner,newShipId,_location,_direction);
+        //Birth(_owner,newShipId);
         _transfer(0, _owner, newShipId);
         return newShipId;
     }
-    event Birth(address owner, uint256 shipId, uint16 location, bool direction);
+    //no need for Birth even just look for 0x0 transfers
+    //event Birth(address owner, uint256 shipId);
+
+    function getShip(uint256 _id) public view returns (address,Model,uint64) {
+      return (tokenIndexToOwner[_id],ships[_id].model,ships[_id].birth);
+    }
 
     function totalSupply() public view returns (uint) {
         return ships.length - 1;
@@ -62,14 +84,4 @@ contract Ships is CraftableToken {
             return result;
         }
     }
-}
-
-
-// --------------------------------------------------------------------------- Dependencies
-
-import 'CraftableToken.sol';
-
-contract StandardToken {
-  function transferFrom(address _from, address _to, uint256 _value) public returns (bool) { }
-  function transfer(address _to, uint256 _value) public returns (bool) { }
 }

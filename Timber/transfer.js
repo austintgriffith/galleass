@@ -1,5 +1,5 @@
 //
-// usage: clevis contract transfer Catfish ##accountindex## _to _value
+// usage: clevis contract transfer Timber ##accountindex## _to _value
 //
 
 module.exports = (contract,params,args)=>{

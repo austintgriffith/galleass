@@ -1,5 +1,5 @@
 //
-// usage: clevis contract allowance Catfish
+// usage: clevis contract allowance Timber
 //
 module.exports = async (contract,params,args)=>{
   return await contract.methods.allowance(args[3],args[4]).call()

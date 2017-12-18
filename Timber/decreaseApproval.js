@@ -1,5 +1,5 @@
 //
-// usage: clevis contract decreaseApproval Catfish ##accountindex## _spender _subtractedValue
+// usage: clevis contract decreaseApproval Timber ##accountindex## _spender _subtractedValue
 //
 
 module.exports = (contract,params,args)=>{

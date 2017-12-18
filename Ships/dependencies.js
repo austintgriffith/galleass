@@ -1,4 +1,5 @@
 const fs = require('fs');
 module.exports = {
-  'CraftableToken.sol': fs.readFileSync('CraftableToken/CraftableToken.sol', 'utf8')
+  'Galleasset.sol': fs.readFileSync('Galleasset/Galleasset.sol', 'utf8'),
+  'NFT.sol': fs.readFileSync('NFT/NFT.sol', 'utf8')
 };

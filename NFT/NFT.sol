@@ -1,5 +1,8 @@
 pragma solidity ^0.4.15;
 
+//https://github.com/ethereum/EIPs/issues/721
+// thanks to Dieter Shirley && http://axiomzen.co
+
 contract NFT {
 
   function NFT() public { }
@@ -43,15 +46,12 @@ contract NFT {
       tokenIndexToApproved[_tokenId] = _approved;
   }
 
-
-
   function approve(address _to,uint256 _tokenId) external {
       require(_owns(msg.sender, _tokenId));
       _approve(_tokenId, _to);
       Approval(msg.sender, _to, _tokenId);
   }
   event Approval(address owner, address approved, uint256 tokenId);
-
 
   function balanceOf(address _owner) public view returns (uint256 count) {
       return ownershipTokenCount[_owner];

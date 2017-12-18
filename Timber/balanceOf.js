@@ -1,5 +1,5 @@
 //
-// usage: clevis contract balanceOf Catfish
+// usage: clevis contract balanceOf Timber
 //
 module.exports = async (contract,params,args)=>{
   return await contract.methods.balanceOf(args[3]).call()

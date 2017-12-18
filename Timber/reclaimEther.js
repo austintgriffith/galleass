@@ -1,5 +1,5 @@
 //
-// usage: clevis contract reclaimEther Catfish ##accountindex## 
+// usage: clevis contract reclaimEther Timber ##accountindex## 
 //
 
 module.exports = (contract,params,args)=>{

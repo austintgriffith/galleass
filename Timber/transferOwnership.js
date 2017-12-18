@@ -1,5 +1,5 @@
 //
-// usage: clevis contract transferOwnership Catfish ##accountindex## newOwner
+// usage: clevis contract transferOwnership Timber ##accountindex## newOwner
 //
 
 module.exports = (contract,params,args)=>{

@@ -1,8 +1,8 @@
 pragma solidity ^0.4.15;
-contract Predecessor is Ownable{
-    function Predecessor() {}
+contract Predecessor is Ownable, Staged{
+    function Predecessor() public {}
     address public descendant;
-    function setDescendant(address _descendant) onlyOwner public {
+    function setDescendant(address _descendant) onlyOwner isNotProduction public {
       descendant=_descendant;
     }
     modifier hasNoDescendant() {
@@ -11,3 +11,4 @@ contract Predecessor is Ownable{
     }
 }
 import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
+import 'Staged.sol';

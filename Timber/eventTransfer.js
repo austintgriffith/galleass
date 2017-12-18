@@ -1,5 +1,5 @@
 //
-// usage: node contract Transfer Catfish
+// usage: node contract Transfer Timber
 //
 module.exports = (contract,params,args)=>{
   return contract.getPastEvents('Transfer', {
