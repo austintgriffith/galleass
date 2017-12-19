@@ -50,7 +50,7 @@ contract Ships is Galleasset, NFT {
           birth: uint64(now)
         });
         uint256 newShipId = ships.push(_ship) - 1;
-        require(newShipId == uint256(uint32(newShipId)));
+        //require(newShipId == uint256(uint32(newShipId)));//this is from the CK stuff
         //Birth(_owner,newShipId);
         _transfer(0, _owner, newShipId);
         return newShipId;
@@ -60,6 +60,9 @@ contract Ships is Galleasset, NFT {
 
     function getShip(uint256 _id) public view returns (address,Model,uint64) {
       return (tokenIndexToOwner[_id],ships[_id].model,ships[_id].birth);
+    }
+    function getShipModel(uint256 _id) public view returns (Model) {
+      return (ships[_id].model);
     }
 
     function totalSupply() public view returns (uint) {

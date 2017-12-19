@@ -32,17 +32,28 @@ contract Harbor is Galleasset, Ownable {
 
   function buyShip(Ships.Model model) public payable enoughValue(model) returns (uint) {
     address shipsContractAddress = getContract("Ships");
-    if(model==Ships.Model.FISHING){
-      Ships shipsContract = Ships(shipsContractAddress);
-      //  uint256 shipId = shipsContract.buildShip(model);
-      //return shipId;
-      return 1;
-    }
-    revert();
+    Ships shipsContract = Ships(shipsContractAddress);
+    uint256 availableShip = getShipFromStorage(shipsContract,model);
+    require( availableShip!=0 );
+    shipsContract.transfer(msg.sender,availableShip);
+    return availableShip;
   }
 
   function setPrice(Ships.Model model,uint256 amount) public onlyOwner returns (bool) {
     currentPrice[uint256(model)]=amount;
+  }
+
+  function getShipFromStorage(Ships shipsContract, Ships.Model model) internal returns (uint256) {
+    uint256 index = 0;
+    while(index<shipStorage.length){
+      if(shipStorage[index]!=0 && shipsContract.getShipModel(shipStorage[index])==model){
+        uint256 shipId = shipStorage[index];
+        shipStorage[index]=0;
+        return shipId;
+      }
+      index++;
+    }
+    return 0;
   }
 
   function storeShip(uint256 _shipId) internal returns (bool) {
@@ -63,6 +74,10 @@ contract Harbor is Galleasset, Ownable {
     return true;
   }
 
+  function getBalance() public view returns (uint256) {
+    return this.balance;
+  }
+
 }
 
 contract Ships {
@@ -71,4 +86,5 @@ contract Ships {
   }
   function buildShip(Model model) public returns (uint) { }
   function transfer(address _to,uint256 _tokenId) external { }
+  function getShipModel(uint256 _id) public view returns (Model) { }
 }
