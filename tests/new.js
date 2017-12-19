@@ -43,27 +43,14 @@ testMint("Timber",0,1,10)
 //
 // //make sure you can't build ships in the harbor with no timber
 // attemptToBuildShip(1,0)
-//
-// //make sure you can build ships in the harbor with timber
-// approveContract("Timber",1,"Harbor",4)
-// buildShip(1,0)
-//
-// //make sure you can revoke timber and it will fail to build ships at the harbor
-// approveContract("Timber",1,"Harbor",0)
-// attemptToBuildShip(1,0)
 
 //make sure you can build ships in the harbor with timber
 approveContract("Timber",1,"Harbor",4)
 buildShip(1,0)
-//make sure you can build ships in the harbor with timber
-approveContract("Timber",1,"Harbor",4)
-buildShip(1,0)
-//make sure you can build ships in the harbor with timber
-approveContract("Timber",1,"Harbor",4)
-buildShip(1,0)
-//make sure you can build ships in the harbor with timber
-approveContract("Timber",1,"Harbor",4)
-buildShip(1,0)
+
+//make sure you can revoke timber and it will fail to build ships at the harbor
+// approveContract("Timber",1,"Harbor",0)
+// attemptToBuildShip(1,0)
 
 
 //buildShips(1,0,5)

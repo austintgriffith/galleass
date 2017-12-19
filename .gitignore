@@ -3,6 +3,7 @@ zeppelin-solidity
 package-lock.json
 *.log
 *.ens
+*/.clevis
 */*/*.abi
 */*/*.bytecode
 */*/*.address
