@@ -26,7 +26,7 @@ contract Ships is Galleasset, NFT {
       uint64 birth;
     }
 
-    Ship[] ships;
+    Ship[] private ships;
 
     function buildShip(Model model) public returns (uint){
       if(model==Model.FISHING){

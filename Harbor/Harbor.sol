@@ -12,7 +12,7 @@ contract Harbor is Galleasset, Ownable {
     currentPrice[uint256(Ships.Model.FISHING)] = (1 ether)/1000;
   }
 
-  function buildShip(Ships.Model model) public returns (uint) {
+  function buildShip(Ships.Model model) public isContract("Harbor") returns (uint) {
     address shipsContractAddress = getContract("Ships");
     if(model==Ships.Model.FISHING){
       require( getTokens(msg.sender,"Timber",2) );
@@ -25,12 +25,24 @@ contract Harbor is Galleasset, Ownable {
     revert();
   }
 
+  function sellShip(uint256 shipId) public isContract("Harbor") returns (bool) {
+    address shipsContractAddress = getContract("Ships");
+    Ships shipsContract = Ships(shipsContractAddress);
+    require( shipsContract.ownerOf(shipId) == msg.sender);
+    shipsContract.transferFrom(msg.sender,address(this),shipId);
+    require( shipsContract.ownerOf(shipId) == address(this));
+    require( storeShip(shipId) );
+    uint256 buyBackAmount = currentPrice[uint256(shipsContract.getShipModel(shipId))] * 9;
+    buyBackAmount = buyBackAmount / 10;
+    return msg.sender.send(buyBackAmount);
+  }
+
   modifier enoughValue(Ships.Model model){
     require( msg.value >= currentPrice[uint256(model)] );
     _;
   }
 
-  function buyShip(Ships.Model model) public payable enoughValue(model) returns (uint) {
+  function buyShip(Ships.Model model) public payable isContract("Harbor") enoughValue(model) returns (uint) {
     address shipsContractAddress = getContract("Ships");
     Ships shipsContract = Ships(shipsContractAddress);
     uint256 availableShip = getShipFromStorage(shipsContract,model);
@@ -86,5 +98,7 @@ contract Ships {
   }
   function buildShip(Model model) public returns (uint) { }
   function transfer(address _to,uint256 _tokenId) external { }
+  function transferFrom(address _from,address _to,uint256 _tokenId) external { }
+  function ownerOf(uint256 _tokenId) external view returns (address owner) { }
   function getShipModel(uint256 _id) public view returns (Model) { }
 }

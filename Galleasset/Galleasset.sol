@@ -26,6 +26,12 @@ contract Galleasset {
     return galleassContract.hasPermission(_contract,_permission);
   }
 
+  modifier isContract(bytes32 _name) {
+    Galleass galleassContract = Galleass(galleass);
+    require(address(this) == galleassContract.getContract(_name));
+    _;
+  }
+  
 }
 
 

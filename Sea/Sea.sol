@@ -1,24 +1,30 @@
 pragma solidity ^0.4.15;
 
-contract Sea is Staged, Predecessor, HasNoEther {
+import 'Galleasset.sol';
+import 'zeppelin-solidity/contracts/ownership/HasNoEther.sol';
 
-  function Sea() public { }
+contract Sea is Galleasset, HasNoEther {
+
+  function Sea(address _galleass) public Galleasset(_galleass) { }
 
   uint16 public width = 65535; //pixels
   uint16 public depth = 65535; //pixels
-  uint256 public shipSpeed = 256; //pixels per block
-  uint256 nonce;
+
+  uint256 public shipSpeed = 256;///this will be replaced soon
 
   mapping (address => Ship) public ships;
   mapping (bytes32 => address) public fish;
   mapping (address => bool) public species;
 
+  event ShipUpdate(uint256 id,address owner,uint timestamp,bool floating,bool sailing,bool direction,bool fishing,uint32 blockNumber,uint16 location);
+
   struct Ship{
+    uint256 id;
     bool floating;
     bool sailing;
     bool direction; //true: east (+), false: west (-)
     bool fishing;
-    uint32 block;
+    uint32 blockNumber;
     uint16 location;
     //when you cast, it is after a specific fish with a certain bait hash
     bytes32 bait;
@@ -27,12 +33,12 @@ contract Sea is Staged, Predecessor, HasNoEther {
 
   // --------------------------------------------------------------------------- BUILD
 
-  function addCloud(uint16 _location,uint8 _speed,uint8 _image) isBuilding onlyOwner public returns (bool) {
+  function addCloud(uint16 _location,uint8 _speed,uint8 _image) onlyOwner public returns (bool) {
     Cloud(_location,_speed,_image,uint32(block.number));
   }
   event Cloud(uint16 location,uint8 speed,uint8 image,uint32 block);
 
-  function allowSpecies(address _species) isBuilding onlyOwner public returns (bool) {
+  function allowSpecies(address _species) onlyOwner public returns (bool) {
     assert( _species != address(0) );
     species[_species]=true;
   }
@@ -42,7 +48,8 @@ contract Sea is Staged, Predecessor, HasNoEther {
   //
   // stock the sea with a specific species
   //
-  function stock(address _species,uint256 _amount) isNotPaused hasNoDescendant public returns (bool) {
+  uint256 nonce;
+  function stock(address _species,uint256 _amount) public isContract("Sea") returns (bool) {
     require( _species != address(0) );
     require( species[_species] );
     StandardToken fishContract = StandardToken(_species);
@@ -57,18 +64,26 @@ contract Sea is Staged, Predecessor, HasNoEther {
   }
   event Fish(bytes32 id, uint256 timestamp, address species);
 
+
+
   //
-  // 'borrow' a fishing ship
+  // transfer your ship to the sea to sail
   //
-  function embark() isNotPaused hasNoDescendant public returns (bool) {
-    require(!ships[msg.sender].floating);
+  function embark(uint256 shipId) public isContract("Sea") returns (bool) {
+    require( !ships[msg.sender].floating );
+    NFT shipsContract = NFT(getContract("Ships"));
+    require( shipsContract.ownerOf(shipId)==msg.sender );
+    shipsContract.transferFrom(msg.sender,address(this),shipId);
+    require( shipsContract.ownerOf(shipId)==address(this) );
+
+    ships[msg.sender].id = shipId;
     ships[msg.sender].floating=true;
     ships[msg.sender].sailing=false;
     ships[msg.sender].location=width/2;
-    ships[msg.sender].block=uint32(block.number);
+    ships[msg.sender].blockNumber=uint32(block.number);
     ships[msg.sender].direction=false;
 
-    ShipUpdate(msg.sender,now,ships[msg.sender].floating,ships[msg.sender].sailing,ships[msg.sender].direction,ships[msg.sender].fishing,ships[msg.sender].block,ships[msg.sender].location);
+    ShipUpdate(ships[msg.sender].id,msg.sender,now,ships[msg.sender].floating,ships[msg.sender].sailing,ships[msg.sender].direction,ships[msg.sender].fishing,ships[msg.sender].blockNumber,ships[msg.sender].location);
 
     return true;
   }
@@ -76,32 +91,33 @@ contract Sea is Staged, Predecessor, HasNoEther {
   //
   // sail east (true) or west (false)
   //
-  function setSail(bool direction) isNotPaused hasNoDescendant public returns (bool) {
+  function setSail(bool direction) public returns (bool) {
     require( ships[msg.sender].floating );
     require( !ships[msg.sender].fishing );
     require( !ships[msg.sender].sailing );
 
     ships[msg.sender].sailing=true;
-    ships[msg.sender].block=uint32(block.number);
+    ships[msg.sender].blockNumber=uint32(block.number);
     ships[msg.sender].direction=direction;
 
-    ShipUpdate(msg.sender,now,ships[msg.sender].floating,ships[msg.sender].sailing,ships[msg.sender].direction,ships[msg.sender].fishing,ships[msg.sender].block,ships[msg.sender].location);
+    ShipUpdate(ships[msg.sender].id,msg.sender,now,ships[msg.sender].floating,ships[msg.sender].sailing,ships[msg.sender].direction,ships[msg.sender].fishing,ships[msg.sender].blockNumber,ships[msg.sender].location);
 
     return true;
   }
 
+
   //
   // drop anchor to stop the ship
   //
-  function dropAnchor() isNotPaused hasNoDescendant public returns (bool) {
+  function dropAnchor() public returns (bool) {
     require( ships[msg.sender].floating );
     require( ships[msg.sender].sailing );
 
     ships[msg.sender].location = shipLocation(msg.sender);
-    ships[msg.sender].block = uint32(block.number);
+    ships[msg.sender].blockNumber = uint32(block.number);
     ships[msg.sender].sailing = false;
 
-    ShipUpdate(msg.sender,now,ships[msg.sender].floating,ships[msg.sender].sailing,ships[msg.sender].direction,ships[msg.sender].fishing,ships[msg.sender].block,ships[msg.sender].location);
+    ShipUpdate(ships[msg.sender].id,msg.sender,now,ships[msg.sender].floating,ships[msg.sender].sailing,ships[msg.sender].direction,ships[msg.sender].fishing,ships[msg.sender].blockNumber,ships[msg.sender].location);
 
     return true;
   }
@@ -109,38 +125,32 @@ contract Sea is Staged, Predecessor, HasNoEther {
   //
   // bait the hook and cast the line
   //
-  function castLine(bytes32 baitHash) isNotPaused hasNoDescendant public returns (bool) {
+  function castLine(bytes32 baitHash) public returns (bool) {
     require( ships[msg.sender].floating );
     require( !ships[msg.sender].sailing );
     require( !ships[msg.sender].fishing );
 
     ships[msg.sender].fishing = true;
-    ships[msg.sender].block = uint32(block.number);
+    ships[msg.sender].blockNumber = uint32(block.number);
     ships[msg.sender].bait = baitHash;
 
-    ShipUpdate(msg.sender,now,ships[msg.sender].floating,ships[msg.sender].sailing,ships[msg.sender].direction,ships[msg.sender].fishing,ships[msg.sender].block,ships[msg.sender].location);
-
-    Debug(ships[msg.sender].block, block.blockhash(ships[msg.sender].block), block.blockhash(ships[msg.sender].block-1));
+    ShipUpdate(ships[msg.sender].id,msg.sender,now,ships[msg.sender].floating,ships[msg.sender].sailing,ships[msg.sender].direction,ships[msg.sender].fishing,ships[msg.sender].blockNumber,ships[msg.sender].location);
 
     return true;
   }
-  event Debug(uint32 block, bytes32 blockhash, bytes32 previousblockhash);
-
 
   //
   //  try to catch a fish with your bait
   //
-  function reelIn(bytes32 _fish, bytes32 bait) isNotPaused hasNoDescendant public returns (bool) {
+  function reelIn(bytes32 _fish, bytes32 bait) public returns (bool) {
     require( ships[msg.sender].floating );
     require( ships[msg.sender].fishing );
-    require( block.number > ships[msg.sender].block);//must be next block after so we have a new block hash
+    require( block.number > ships[msg.sender].blockNumber);//must be next block after so we have a new block hash
     require( species[fish[_fish]] );//make sure fish exists and is valid species
     require( keccak256(bait) == ships[msg.sender].bait);//make sure their off-chain bait == onchain hash
 
-    Debug(ships[msg.sender].block, block.blockhash(ships[msg.sender].block), block.blockhash(ships[msg.sender].block-1));
-
     ships[msg.sender].fishing = false;
-    ShipUpdate(msg.sender,now,ships[msg.sender].floating,ships[msg.sender].sailing,ships[msg.sender].direction,ships[msg.sender].fishing,ships[msg.sender].block,ships[msg.sender].location);
+    ShipUpdate(ships[msg.sender].id,msg.sender,now,ships[msg.sender].floating,ships[msg.sender].sailing,ships[msg.sender].direction,ships[msg.sender].fishing,ships[msg.sender].blockNumber,ships[msg.sender].location);
 
     if(catchFish(_fish,bait)){
       assert( fish[_fish]!=address(0) );
@@ -160,7 +170,9 @@ contract Sea is Staged, Predecessor, HasNoEther {
   //
   // SCUTTLE THAT SUMMA B!
   //
-  function scuttle() isNotPaused hasNoDescendant public returns(bool) {
+  /*
+  function scuttle() public returns(bool) {
+    delete ships[msg.sender].id;
     delete ships[msg.sender].floating;
     delete ships[msg.sender].sailing;
     delete ships[msg.sender].direction;
@@ -173,24 +185,26 @@ contract Sea is Staged, Predecessor, HasNoEther {
 
     delete ships[msg.sender];
   }
-  event ShipUpdate(address sender,uint timestamp,bool floating,bool sailing,bool direction,bool fishing,uint32 block,uint16 location);
+  */
 
   // --------------------------------------------------------------------------- GETTERS
 
   function getShip(address _address) public constant returns (
+    uint256 id,
     bool floating,
     bool sailing,
     bool direction,
     bool fishing,
-    uint32 block,
+    uint32 blockNumber,
     uint16 location
   ) {
     return(
+      ships[_address].id,
       ships[_address].floating,
       ships[_address].sailing,
       ships[_address].direction,
       ships[_address].fishing,
-      ships[_address].block,
+      ships[_address].blockNumber,
       shipLocation(_address)
     );
   }
@@ -202,7 +216,7 @@ contract Sea is Staged, Predecessor, HasNoEther {
     if(!ships[_owner].sailing){
       return ships[_owner].location;
     }else{
-      uint256 blocksTraveled = block.number - ships[_owner].block;
+      uint256 blocksTraveled = block.number - ships[_owner].blockNumber;
       uint256 pixelsTraveled = blocksTraveled * shipSpeed;
       uint16 location;
       if( ships[_owner].direction ){
@@ -213,6 +227,7 @@ contract Sea is Staged, Predecessor, HasNoEther {
       return location;
     }
   }
+
 
   //
   // location of fish is based on their id
@@ -228,13 +243,14 @@ contract Sea is Staged, Predecessor, HasNoEther {
 
   // --------------------------------------------------------------------------- Internal
 
+
   //
   // get some psuedo random numbers to decided if they catch the fish
   // they need to be close and it's hard if the fish is deeper
   //
   function catchFish(bytes32 _fish, bytes32 bait) internal returns (bool) {
-    bytes32 catchHash = keccak256(msg.sender,bait,block.blockhash(ships[msg.sender].block));
-    bytes32 depthHash = keccak256(msg.sender,bait,catchHash,block.blockhash(ships[msg.sender].block-1));
+    bytes32 catchHash = keccak256(msg.sender,bait,block.blockhash(ships[msg.sender].blockNumber));
+    bytes32 depthHash = keccak256(msg.sender,bait,catchHash,block.blockhash(ships[msg.sender].blockNumber-1));
     uint randomishWidthNumber = uint16( uint(catchHash) % width/10 );
     uint depthPlus = depth;
     depthPlus+=depth/3;
@@ -258,11 +274,17 @@ contract Sea is Staged, Predecessor, HasNoEther {
 
 }
 
-// --------------------------------------------------------------------------- Dependencies
+contract Ships {
+    enum Model{
+      FISHING
+    }
+    function getShipModel(uint256 _id) public view returns (Model) { }
+}
 
-import 'Predecessor.sol';
-import 'Staged.sol';
-import 'zeppelin-solidity/contracts/ownership/HasNoEther.sol';
+contract NFT {
+  function transferFrom(address _from,address _to,uint256 _tokenId) external { }
+  function ownerOf(uint256 _tokenId) external view returns (address owner) { }
+}
 
 contract StandardToken {
   function transferFrom(address _from, address _to, uint256 _value) public returns (bool) { }

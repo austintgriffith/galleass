@@ -62,4 +62,7 @@ contract NFT {
       require(owner != address(0));
   }
 
+  function allowance(address _claimant, uint256 _tokenId) public view returns (bool) {
+      return _approvedFor(_claimant,_tokenId);
+  }
 }

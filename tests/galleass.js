@@ -1,0 +1,541 @@
+const clevis = require("clevis")
+const colors = require('colors')
+const chai = require("chai")
+const assert = chai.assert
+const expect = chai.expect;
+const should = chai.should();
+const fs = require('fs')
+const Web3 = require('web3')
+const clevisConfig = JSON.parse(fs.readFileSync("clevis.json").toString().trim())
+web3 = new Web3(new Web3.providers.HttpProvider(clevisConfig.provider))
+function localContractAddress(contract){
+  return fs.readFileSync(contract+"/"+contract+".address").toString().trim()
+}
+function printTxResult(result){
+  console.log(tab,result.transactionHash.gray,(""+result.gasUsed).yellow)
+}
+function bigHeader(str){
+  return "########### "+str+" "+Array(128-str.length).join("#")
+}
+function rand(min, max) {
+  return Math.floor( Math.random() * (max - min) + min );
+}
+const tab = "\t\t";
+
+let TARGET_LOCATION
+let TARGET_FISH
+let BAIT
+
+module.exports = {
+  compile:(contract)=>{
+    describe('#compile() '+contract.magenta, function() {
+      it('should compile '+contract.magenta+' contract to bytecode', async function() {
+        this.timeout(20000)
+        const result = await clevis("compile",contract)
+        assert(Object.keys(result.contracts).length>0, "No compiled contacts found.")
+        let count = 0
+        for(let c in result.contracts){
+          console.log("\t\t"+"contract "+c.blue+": ",result.contracts[c].bytecode.length)
+          if(count++==0){
+              assert(result.contracts[c].bytecode.length > 1, "No bytecode for contract "+c)
+          }
+        }
+      });
+    });
+  },
+  deploy:(contract,accountindex)=>{
+    describe('#deploy() '+contract.magenta, function() {
+      it('should deploy '+contract.magenta+' as account '+accountindex, async function() {
+        this.timeout(60000)
+        const result = await clevis("deploy",contract,accountindex)
+        printTxResult(result)
+        console.log(tab+"Address: "+result.contractAddress.blue)
+        assert(result.contractAddress)
+      });
+    });
+  },
+
+
+  setContract:(contract,accountindex)=>{
+    describe('#setContract() '+contract.magenta, function() {
+      it('should setContract with main contract', async function() {
+        this.timeout(60000)
+        let contractAddress = localContractAddress(contract)
+        const setResult = await clevis("contract","setContract","Galleass",accountindex,web3.utils.fromAscii(contract),contractAddress)
+        printTxResult(setResult)
+        const getResult = await clevis("contract","getContract","Galleass",web3.utils.fromAscii(contract))
+        assert(getResult==contractAddress,"Contract Address did not set correctly")
+        //finally, make sure the contract links back to the correct main galleass address
+        const galleass = await clevis("contract","galleass",contract)
+        assert(galleass==localContractAddress("Galleass"),"Galleass main address is wrong or contract isn't Galleasset")
+      });
+    });
+  },
+  setPermission:(contract,accountindex,permission,value)=>{
+    describe('#setPermission() '+contract.magenta, function() {
+      it('should setPermission with main contract', async function() {
+        this.timeout(60000)
+        let contractAddress = localContractAddress(contract)
+        const setResult = await clevis("contract","setPermission","Galleass",accountindex,contractAddress,web3.utils.fromAscii(permission),value)
+        console.log(tab+contract+" permission ("+permission.magenta+"): "+value)
+        const getResult = await clevis("contract","hasPermission","Galleass",contractAddress,web3.utils.fromAscii(permission))
+        assert(""+getResult===value,"Contract Permission did not set correctly")
+      });
+    });
+  },
+  approveContract:(contract,accountindex,toContract,amount)=>{
+    describe('#approve() '+contract.magenta, function() {
+      it('should approve tokens', async function() {
+        this.timeout(60000)
+        const accounts = await clevis("accounts")
+        let toContractAddress = localContractAddress(toContract)
+        const result = await clevis("contract","approve",contract,accountindex,toContractAddress,amount)
+        const allowance = await clevis("contract","allowance",contract,accounts[accountindex],toContractAddress)
+        assert(allowance>=amount,"Approve Failed!?!")
+        console.log(tab,accounts[accountindex].blue+" approves "+toContractAddress.blue+" to transfer "+((allowance+"").yellow+" "+contract))
+      });
+    });
+  },
+  testMint:(contract,accountindex,toIndex,amount)=>{
+    describe('#testMint() '+contract.magenta, function() {
+      it('should mint tokens', async function() {
+        this.timeout(60000)
+        const accounts = await clevis("accounts")
+        const result = await clevis("contract","mint",contract,accountindex,accounts[toIndex],amount)
+        const balance = await clevis("contract","balanceOf",contract,accounts[toIndex])
+        assert(balance>=amount,"Mint Failed!?!")
+        console.log(tab,accounts[toIndex].blue+" has "+((balance+"").yellow+" "+contract))
+      });
+    });
+  },
+  buyShip:(accountindex,model)=>{
+    describe('#buyShip()', function() {
+      it('should buy ship from the Harbor', async function() {
+        this.timeout(60000)
+        const accounts = await clevis("accounts")
+        //const wei = await clevis("wei",ether,"ether")
+        const wei = await clevis("contract","currentPrice","Harbor",model)
+        const result = await clevis("contract","buyShip","Harbor",accountindex,wei,model)
+        printTxResult(result)
+        const ships = await clevis("contract","shipsOfOwner","Ships",accounts[accountindex])
+        console.log(tab,"Ships belonging to "+accounts[accountindex].blue+":",ships)
+      });
+    });
+  },
+  attemptBuyShipCheap:(accountindex,model)=>{
+    describe('#buyShip()', function() {
+      it('should fail to buy ship from the Harbor for half price', async function() {
+        this.timeout(60000)
+        const accounts = await clevis("accounts")
+        //const wei = await clevis("wei",ether,"ether")
+        const wei = await clevis("contract","currentPrice","Harbor",model)/2;
+        console.log(tab,"Attempting to buy ship for half price ("+(""+wei).magenta+")")
+        let error
+        try{
+          const result = await clevis("contract","buyShip","Harbor",accountindex,wei,model)
+          console.log(tab,"WARNING".red,"WAS ABLE TO BUY HALF PRICED SHIP!".yellow)
+        }catch(e){
+          error = e.toString()
+        }
+        assert(error.indexOf("VM Exception while processing transaction: revert")>0)
+        const ships = await clevis("contract","shipsOfOwner","Ships",accounts[accountindex])
+        console.log(tab,"Ships belonging to "+accounts[accountindex].blue+":",ships)
+      });
+    });
+  },
+  approveFirst:(contract,accountindex,toContract)=>{
+    describe('#approveFirst() '+contract.magenta, function() {
+      it('should approve first '+contract+' to be transferred', async function() {
+        this.timeout(60000)
+        const accounts = await clevis("accounts")
+        let toContractAddress = localContractAddress(toContract)
+        let tokens = await clevis("contract","shipsOfOwner",contract,accounts[accountindex])
+        console.log(tab,"Approving token id "+(""+tokens[0]).magenta+" to be transferred by "+toContract+"...");
+        const result = await clevis("contract","approve",contract,accountindex,toContractAddress,tokens[0])
+        const allowance = await clevis("contract","allowance",contract,toContractAddress,tokens[0])
+        assert(allowance===true)
+        console.log(tab,accounts[accountindex].blue+" approves "+toContractAddress.blue+" to transfer Token #"+((tokens[0]+"").yellow))
+      });
+    });
+  },
+  sellFirstShip:(accountindex)=>{
+    describe('#sellFirstShip()', function() {
+      it('should sell first ship owned', async function() {
+        this.timeout(60000)
+        const accounts = await clevis("accounts")
+        let ships = await clevis("contract","shipsOfOwner","Ships",accounts[accountindex])
+        console.log(tab,"Selling ship id "+(""+ships[0]).magenta+" back to the Harbor...");
+        const result = await clevis("contract","sellShip","Harbor",accountindex,ships[0])
+        printTxResult(result)
+        let harborAddress = localContractAddress("Harbor")
+        ships = await clevis("contract","shipsOfOwner","Ships",harborAddress)
+        console.log(tab,"Ships belonging to "+harborAddress.blue+" (Harbor):",ships)
+      });
+    });
+  },
+  attemptToSellFirstShip:(accountindex)=>{
+    describe('#attemptToSellFirstShip()', function() {
+      it('should fail sell first ship', async function() {
+        this.timeout(60000)
+        const accounts = await clevis("accounts")
+        let ships = await clevis("contract","shipsOfOwner","Ships",accounts[accountindex])
+        let error
+        try{
+          let fakeShip = ships[0];
+          if(!fakeShip){
+            fakeShip=1
+          }
+          console.log(tab,"Attempting to sell ship id "+(""+fakeShip).magenta+" back to the Harbor...");
+          const result = await clevis("contract","sellShip","Harbor",accountindex,fakeShip)
+          console.log(tab,"WARNING".red,"WAS ABLE TO SELL SHIP!".yellow)
+        }catch(e){
+          error = e.toString()
+        }
+        assert(error.indexOf("VM Exception while processing transaction: revert")>0)
+      });
+    });
+  },
+  buildShip:(accountindex,model)=>{
+    describe('#buildShip()', function() {
+      it('should build Ships at the Harbor', async function() {
+        this.timeout(60000)
+        const result = await clevis("contract","buildShip","Harbor",accountindex,model)
+        printTxResult(result)
+        const ships = await clevis("contract","balanceOf","Ships",localContractAddress("Harbor"))
+        assert(ships>=1,"Ships didn't build!?!")
+        console.log(tab,"Harbor has "+((ships+"").yellow+" Ships"))
+      });
+    });
+  },
+  attemptBuildShip:(accountindex,model)=>{
+    describe('#attemptBuildShip()', function() {
+      it('should fail to build Ships at the Harbor', async function() {
+        this.timeout(60000)
+        let error = ""
+        try{
+          const result = await clevis("contract","buildShip","Harbor",accountindex,model)
+          console.log(tab,"WARNING".red,"WAS ABLE TO BUILD SHIP!".yellow)
+        }catch(e){
+          error = e.toString()
+        }
+        assert(error.indexOf("VM Exception while processing transaction: revert")>0)
+      });
+    });
+  },
+
+
+  buildShips:(accountindex,model,amount)=>{
+    describe('#buildShips()', function() {
+      it('should build Ships', async function() {
+        this.timeout(60000)
+        const result = await clevis("contract","buildShips","Ships",accountindex,model,amount)
+        printTxResult(result)
+        const accounts = await clevis("accounts")
+        const myShipCount = await clevis("contract","balanceOf","Ships",accounts[accountindex])
+        assert(myShipCount>=amount,"Ships didn't build!?!")
+        console.log(tab,accounts[accountindex].blue+" has "+((myShipCount+"").yellow+" Ships"))
+      });
+    });
+  },
+  attemptBuildShipDirectly:(accountindex,model)=>{
+    describe('#attemptBuildShipDirectly()', function() {
+      it('should fail to build Ships directly', async function() {
+        this.timeout(60000)
+        let error = ""
+        try{
+          const result = await clevis("contract","buildShip","Ships",accountindex,model)
+          console.log(tab,"WARNING".red,"WAS ABLE TO BUILD SHIP WITHOUT HARBOR!".yellow)
+        }catch(e){
+          error = e.toString()
+        }
+        assert(error.indexOf("VM Exception while processing transaction: revert")>0)
+      });
+    });
+  },
+  attemptToBuildShip:(accountindex,model)=>{
+    describe('#attemptToBuildShip()', function() {
+      it('should fail to build Ships at the Harbor', async function() {
+        this.timeout(60000)
+        let error = ""
+        try{
+          const result = await clevis("contract","buildShip","Harbor",accountindex,model)
+          console.log(tab,"WARNING".red,"WAS ABLE TO BUILD SHIP!".yellow)
+        }catch(e){
+          error = e.toString()
+        }
+        assert(error.indexOf("VM Exception while processing transaction: revert")>0)
+      });
+    });
+  },
+  allowSpecies:(contract,accountindex)=>{
+    describe('#allowSpecies() '+contract.magenta, function() {
+      it('should allow species '+contract.magenta, async function() {
+        this.timeout(60000)
+        let contractAddress = localContractAddress(contract);
+        const result = await clevis("contract","allowSpecies","Sea",accountindex,contractAddress)
+        console.log(tab,result.transactionHash.gray,contractAddress.blue,(""+result.gasUsed).yellow)
+        assert(result.transactionHash,"No transaction hash!?")
+      });
+    });
+  },
+  stock:(species,accountindex,amount)=>{
+    describe('#stock() '+species.magenta, function() {
+      it('should stock '+amount+' '+species.magenta+' as account '+accountindex, async function() {
+        this.timeout(60000)
+        let speciesAddress = localContractAddress(species);
+        const result = await clevis("contract","stock","Sea",accountindex,speciesAddress,amount)
+        console.log(tab,result.transactionHash.gray,speciesAddress.blue,(""+result.gasUsed).yellow)
+        assert(result.transactionHash,"No transaction hash!?")
+      });
+    });
+  },
+  attemptStock:(species,accountindex,amount)=>{
+    describe('#stock() '+species.magenta, function() {
+      it('should fail to stock '+amount+' '+species.magenta+' as account '+accountindex, async function() {
+        this.timeout(60000)
+        let speciesAddress = localContractAddress(species);
+        let error = ""
+        try{
+          const result = await clevis("contract","stock","Sea",accountindex,speciesAddress,amount)
+          console.log(tab,"WARNING".red,"WAS ABLE TO STOCK!".yellow)
+        }catch(e){
+          error = e.toString()
+        }
+        assert(error.indexOf("VM Exception while processing transaction: revert")>0)
+      });
+    });
+  },
+  cloud:(accountindex,image,speed)=>{
+    const tab = "\t\t";
+    describe('#cloud() ', function() {
+      it('should add cloud', async function() {
+        this.timeout(60000)
+        let width = await clevis("contract","width","Sea")
+        let location = rand(0,width);
+        let result = await clevis("contract","addCloud","Sea",accountindex,location,speed,image)
+        console.log(tab,(""+location).white,(""+speed).gray,result.transactionHash.gray,(""+result.gasUsed).yellow)
+      });
+    });
+  },
+  embarkWithFirst:(accountindex)=>{
+    describe('#embark() ', function() {
+      it('should embark (transfer first ship to sea)', async function() {
+        this.timeout(60000)
+        const accounts = await clevis("accounts")
+        let tokens = await clevis("contract","shipsOfOwner","Ships",accounts[accountindex])
+        console.log(tab,"Embarking with ship id "+(""+tokens[0]).magenta+"");
+        let result = await clevis("contract","embark","Sea",accountindex,tokens[0])
+        console.log(tab,result.transactionHash.gray,(""+result.gasUsed).yellow)
+      });
+    });
+  },
+  findFish:(accountindex)=>{
+    describe('#findFish() ', function() {
+      it('should find a fish', async function() {
+        this.timeout(60000)
+
+        let accounts = await clevis("accounts")
+        let myAddress = accounts[accountindex];
+        let myShip = await clevis("contract","getShip","Sea",myAddress);
+
+        console.log("\t\tFinding a fish for "+myAddress.magenta+" @ "+myShip.location+"...");
+
+        let result = await clevis("contract","eventFish","Sea")
+        let fish = [];
+        for(let f in result){
+          let id = result[f].returnValues.id;
+          let timestamp = result[f].returnValues.timestamp;
+          let species = result[f].returnValues.species;
+          if( !fish[id] || fish[id].timestamp < timestamp){
+            fish[id] = {timestamp:timestamp,species:species}
+          }
+        }
+
+        let bestFish = false
+        let bestDistance = 9999999
+
+        for(let id in fish){
+          let species = fish[id].species;
+          if("0x0000000000000000000000000000000000000000"!=species){
+            let location = await clevis("contract","fishLocation","Sea",id);
+            console.log(id.white,species.gray,location)
+            let thisDistance = Math.abs( myShip.location - location[0])
+            if( thisDistance < bestDistance){
+              bestDistance=thisDistance
+              bestFish=id
+            }
+          }
+        }
+
+        assert(bestFish!=false,"NO FISH TO FIND!?")
+
+        let location = await clevis("contract","fishLocation","Sea",bestFish)
+
+        TARGET_LOCATION = location[0];
+        TARGET_FISH = bestFish
+        console.log("Best fish is "+bestFish.magenta+" at a distance ("+(""+bestDistance).green+") @ ",TARGET_LOCATION)
+        assert(TARGET_LOCATION>0,"No Target Location found!?!")
+      });
+    });
+  },
+  setSailTowardFish:(accountindex)=>{
+    describe('#setSailTowardFish() ', function() {
+      it('should setSailTowardFish', async function() {
+        this.timeout(60000)
+        assert(TARGET_LOCATION>0,"We need to findFish before this function runs")
+
+        let accounts = await clevis("accounts")
+        let myAddress = accounts[accountindex];
+        let myShip = await clevis("contract","getShip","Sea",myAddress);
+
+        let direction = myShip.location < TARGET_LOCATION
+
+        console.log("\t\t Heading "+direction+" because I'm at "+myShip.location+" and I need to get to "+TARGET_LOCATION)
+
+        let result = await clevis("contract","setSail","Sea",accountindex,""+direction)
+        //console.log(result)
+        console.log(tab,result.transactionHash.gray,(""+result.gasUsed).yellow)
+        assert(result.transactionHash,"No transaction hash!?")
+
+      });
+    });
+  },
+  transactionsUntilAtFish:(accountindex)=>{
+    describe('#transactionsUntilAtFish() ', function() {
+      it('should add a new block to the chain', async function() {
+        this.timeout(60000)
+
+        let accounts = await clevis("accounts")
+        let myAddress = accounts[accountindex];
+        //console.log("My address:",myAddress)
+        let myShip = await clevis("contract","getShip","Sea",myAddress);
+        //console.log(myShip)
+        console.log("\t\t Heading "+myShip.direction+" because ("+myAddress+") is at "+myShip.location+" and I need to get to "+TARGET_LOCATION)
+
+        if(!myShip.direction){
+          while( myShip.location > TARGET_LOCATION){
+            let result = await clevis("send","0.1","1","2")
+            console.log(tab,result.transactionHash.gray,(""+result.gasUsed).yellow)
+            myShip = await clevis("contract","getShip","Sea",myAddress);
+          }
+        }else{
+          while( myShip.location < TARGET_LOCATION){
+            let result = await clevis("send","0.1","1","2")
+            console.log(tab,result.transactionHash.gray,(""+result.gasUsed).yellow)
+            myShip = await clevis("contract","getShip","Sea",myAddress);
+          }
+        }
+      });
+    });
+  },
+  dropAnchor:(accountindex)=>{
+    describe('#dropAnchor() ', function() {
+      it('should dropAnchor', async function() {
+        this.timeout(60000)
+        let result = await clevis("contract","dropAnchor","Sea",accountindex)
+        console.log(tab,result.transactionHash.gray,(""+result.gasUsed).yellow)
+      })
+    })
+  },
+  castLine:(accountindex)=>{
+    describe('#castLine() ', function() {
+      it('should castLine with random bait', async function() {
+        this.timeout(60000)
+        let web3 = new Web3()
+        BAIT = web3.utils.sha3(Math.random()+Date.now()+"LIVEBAIT!");
+        console.log(tab,"Using Bait:",BAIT.blue)
+        let baitHash = web3.utils.sha3(BAIT);
+        console.log(tab,"Bait hash:",baitHash.magenta)
+        let result = await clevis("contract","castLine","Sea",accountindex,baitHash)
+        console.log(tab,result.transactionHash.gray,(""+result.gasUsed).yellow)
+      })
+    })
+  },
+  reelIn(accountindex){
+    describe('#reelIn() ', function() {
+      it('should reelIn '+TARGET_FISH, async function() {
+        this.timeout(60000)
+        //run one transaction to make sure it's the next block
+        let result = await clevis("send","0.1","1","2")
+        console.log(tab,result.transactionHash.gray,(""+result.gasUsed).yellow)
+
+        console.log(tab,"Reeling in fish: ",TARGET_FISH.magenta)
+        result = await clevis("contract","reelIn","Sea",accountindex,TARGET_FISH,BAIT)
+        console.log(tab,result.transactionHash.gray,(""+result.gasUsed).yellow)
+      })
+    })
+  },
+
+  status:()=>{
+    describe(bigHeader('STATUS'), function() {
+      it('should display status', async function() {
+        this.timeout(6000000)
+        const ships = await clevis("contract","balanceOf","Ships",localContractAddress("Harbor"))
+        console.log(tab,"Harbor has "+((ships+"").yellow+" Ships"))
+      });
+    });
+  },
+
+
+  full:()=>{
+    describe(bigHeader('COMPILE'), function() {
+      it('should compile', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","compile")
+        assert(result==0,"compile ERRORS")
+      });
+    });
+
+    describe(bigHeader('DEPLOY'), function() {
+      it('should deploy', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","deploy")
+        assert(result==0,"deploy ERRORS")
+      });
+    });
+
+    describe(bigHeader('TIMBER MINTING & BUILD SHIPS'), function() {
+      it('should mintTimberBuildShips', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","mintTimberBuildShips")
+        assert(result==0,"mintTimberBuildShips ERRORS")
+      });
+    });
+
+    describe(bigHeader('BUY/SELL SHIPS'), function() {
+      it('should buyAndSellShips', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","buyAndSellShips")
+        assert(result==0,"buyAndSellShips ERRORS")
+      });
+    });
+
+    describe(bigHeader('MINT FISH AND STOCK'), function() {
+      it('should mintCatfishAndStockSea', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","mintCatfishAndStockSea")
+        assert(result==0,"mintCatfishAndStockSea ERRORS")
+      });
+    });
+
+    describe(bigHeader('EMBARK AND GO FISHING'), function() {
+      it('should embarkAndGoFishing', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","embarkAndGoFishing")
+        assert(result==0,"embarkAndGoFishing ERRORS")
+      });
+    });
+
+    describe(bigHeader('FINISHING TOUCHES'), function() {
+      it('should finishingTouches', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","finishingTouches")
+        assert(result==0,"finishingTouches ERRORS")
+      });
+    });
+
+
+  },
+
+
+}
