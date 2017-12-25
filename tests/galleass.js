@@ -55,7 +55,6 @@ module.exports = {
     });
   },
 
-
   setContract:(contract,accountindex)=>{
     describe('#setContract() '+contract.magenta, function() {
       it('should setContract with main contract', async function() {
@@ -222,8 +221,6 @@ module.exports = {
       });
     });
   },
-
-
   buildShips:(accountindex,model,amount)=>{
     describe('#buildShips()', function() {
       it('should build Ships', async function() {
@@ -465,6 +462,19 @@ module.exports = {
       })
     })
   },
+  transferAndCall:(contract,accountindex,toContract,amount,data)=>{
+    describe('#transferAndCall() '+contract.magenta, function() {
+      it('should transfer '+amount+' '+contract+' tokens to '+toContract+' and then call function '+data, async function() {
+        this.timeout(60000)
+        let toContractAddress = localContractAddress(toContract);
+        console.log("Transferring "+amount+" "+contract+" to "+toContract+" ("+toContractAddress+") and then calling "+data)
+        const result = await clevis("contract","transferAndCall",contract,accountindex,toContractAddress,amount,web3.utils.fromAscii(data))
+        printTxResult(result)
+        const events = await clevis("contract","eventTokensIncoming",toContract)
+        console.log(events)
+      });
+    });
+  },
 
   status:()=>{
     describe(bigHeader('STATUS'), function() {
@@ -475,8 +485,6 @@ module.exports = {
       });
     });
   },
-
-
   full:()=>{
     describe(bigHeader('COMPILE'), function() {
       it('should compile', async function() {
@@ -526,6 +534,14 @@ module.exports = {
       });
     });
 
+    describe(bigHeader('METAMASK'), function() {
+      it('should give metamask users some fake ether', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","metamask")
+        assert(result==0,"metamask ERRORS")
+      });
+    });
+
     describe(bigHeader('FINISHING TOUCHES'), function() {
       it('should finishingTouches', async function() {
         this.timeout(6000000)
@@ -534,8 +550,14 @@ module.exports = {
       });
     });
 
+    describe(bigHeader('PUBLISH'), function() {
+      it('should publish conract address to app', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","publish")
+        assert(result==0,"publish ERRORS")
+      });
+    });
+
 
   },
-
-
 }

@@ -10,6 +10,7 @@ class Ships extends Component {
     let {ships,web3,blockNumber,shipSpeed,width,height,horizon} = this.props
     let renderedShips = []
     for(let b in ships){
+      //console.log(ships[b],b)
       let translatedX
       let image = "fishingboat";
       if(ships[b].sailing){
@@ -21,8 +22,6 @@ class Ships extends Component {
         }
         let adjustedLocation = parseInt(ships[b].location)+pixelsTraveled;
         translatedX = width*(adjustedLocation/65535);
-
-
         while(translatedX>width)
         {
           translatedX-=(width+shipwidth);
@@ -46,7 +45,6 @@ class Ships extends Component {
         flagleft=60
       }
       image+=".png";
-
 
       //offset ships based on their ids so when they are in the same place
       //we can see both of them
@@ -73,8 +71,8 @@ class Ships extends Component {
           left:flagleft
         }}>
         <this.props.Blockies
-        seed={b.toLowerCase()}
-        scale={2}
+          seed={ships[b].owner.toLowerCase()}
+          scale={2}
         />
         </div>
         </div>

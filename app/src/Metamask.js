@@ -1,7 +1,5 @@
 import React, { Component } from 'react';
-
 let CHECKFORMAINNET = false
-
 class Metamask extends Component {
   constructor(props) {
     super(props);
@@ -14,7 +12,6 @@ class Metamask extends Component {
     this.checkMetamask()
   }
   checkMetamask() {
-
     if (typeof window.web3 == 'undefined') {
       if(this.state.metamask!=0) this.setState({metamask:0})
     } else {
@@ -37,7 +34,6 @@ class Metamask extends Component {
                   this.setState({metamask:3,accounts:accounts},()=>{
                     this.props.init(accounts[0])
                   })
-
                 }
               }
             }
@@ -46,7 +42,6 @@ class Metamask extends Component {
           console.log(e)
           if(this.state.metamask!=-1) this.setState({metamask:-1})
         }
-
       }
     }
   }

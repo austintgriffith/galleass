@@ -7,6 +7,7 @@ class Fish extends Component {
   constructor(props) {
     super(props);
   }
+  //({fish[f].x},{fish[f].y})
   render(){
     let {fish,width,height,horizon} = this.props
     let renderedFish = []
@@ -20,7 +21,7 @@ class Fish extends Component {
          <img
           src="fish1.png"
           style={{maxWidth:50,opacity:opacity}}
-          onClick={()=>{console.log(f+" "+fish[f].species+" "+fish[f].x+" "+fish[f].y)}} />({fish[f].x},{fish[f].y})
+          onClick={()=>{console.log(f+" "+fish[f].species+" "+fish[f].x+" "+fish[f].y)}} />
         </div>
       )
     }

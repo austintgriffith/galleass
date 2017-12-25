@@ -49,7 +49,7 @@ contract Sea is Galleasset, HasNoEther {
   // stock the sea with a specific species
   //
   uint256 nonce;
-  function stock(address _species,uint256 _amount) public isContract("Sea") returns (bool) {
+  function stock(address _species,uint256 _amount) public isGalleasset("Sea") returns (bool) {
     require( _species != address(0) );
     require( species[_species] );
     StandardToken fishContract = StandardToken(_species);
@@ -69,7 +69,7 @@ contract Sea is Galleasset, HasNoEther {
   //
   // transfer your ship to the sea to sail
   //
-  function embark(uint256 shipId) public isContract("Sea") returns (bool) {
+  function embark(uint256 shipId) public isGalleasset("Sea") returns (bool) {
     require( !ships[msg.sender].floating );
     NFT shipsContract = NFT(getContract("Ships"));
     require( shipsContract.ownerOf(shipId)==msg.sender );

@@ -12,20 +12,33 @@ contract Harbor is Galleasset, Ownable {
     currentPrice[uint256(Ships.Model.FISHING)] = (1 ether)/1000;
   }
 
-  function buildShip(Ships.Model model) public isContract("Harbor") returns (uint) {
-    address shipsContractAddress = getContract("Ships");
+  function onTokenTransfer(address _sender, uint _value, bytes _data) {
+    if( msg.sender == getContract("Timber") ){
+      TokensIncoming("Timber",_sender,_value,_data);
+    }else{
+      revert();
+    }
+  }
+  event TokensIncoming(bytes32 _contract,address _sender,uint _value, bytes _data);
+
+  function buildShip(Ships.Model model) public isGalleasset("Harbor") returns (uint) {
     if(model==Ships.Model.FISHING){
       require( getTokens(msg.sender,"Timber",2) );
-      require( approveTokens("Timber",shipsContractAddress,2) );
-      Ships shipsContract = Ships(shipsContractAddress);
-      uint256 shipId = shipsContract.buildShip(model);
-      require( storeShip(shipId) );
-      return shipId;
+      return _buildShip(model);
     }
     revert();
   }
 
-  function sellShip(uint256 shipId) public isContract("Harbor") returns (bool) {
+  function _buildShip(Ships.Model model) internal returns (uint) {
+    address shipsContractAddress = getContract("Ships");
+    require( approveTokens("Timber",shipsContractAddress,2) );
+    Ships shipsContract = Ships(shipsContractAddress);
+    uint256 shipId = shipsContract.buildShip(model);
+    require( storeShip(shipId) );
+    return shipId;
+  }
+
+  function sellShip(uint256 shipId) public isGalleasset("Harbor") returns (bool) {
     address shipsContractAddress = getContract("Ships");
     Ships shipsContract = Ships(shipsContractAddress);
     require( shipsContract.ownerOf(shipId) == msg.sender);
@@ -38,11 +51,12 @@ contract Harbor is Galleasset, Ownable {
   }
 
   modifier enoughValue(Ships.Model model){
+    require( currentPrice[uint256(model)] > 0 );
     require( msg.value >= currentPrice[uint256(model)] );
     _;
   }
 
-  function buyShip(Ships.Model model) public payable isContract("Harbor") enoughValue(model) returns (uint) {
+  function buyShip(Ships.Model model) public payable isGalleasset("Harbor") enoughValue(model) returns (uint) {
     address shipsContractAddress = getContract("Ships");
     Ships shipsContract = Ships(shipsContractAddress);
     uint256 availableShip = getShipFromStorage(shipsContract,model);
@@ -91,6 +105,7 @@ contract Harbor is Galleasset, Ownable {
   }
 
 }
+
 
 contract Ships {
   enum Model{

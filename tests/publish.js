@@ -25,15 +25,19 @@ function publish(){
     it('should inject contract address and abi into web app', async function() {
       this.timeout(60000)
       const fs = require("fs")
-      let address = fs.readFileSync("Sea/Sea.address").toString().trim()
-      console.log("ADDRESS:",address.blue)
-      let abi = fs.readFileSync("Sea/Sea.abi").toString().trim()
-      console.log("ABI:",abi.gray)
-
-      assert(address&&abi,"No Address or ABI!?")
-
+      let address = fs.readFileSync("Galleass/Galleass.address").toString().trim()
+      console.log(tab,"ADDRESS:",address.blue)
+      assert(address,"No Address!?")
       fs.writeFileSync("app/src/Address.js","module.exports = \""+address+"\"");
-      fs.writeFileSync("app/src/Abi.js","module.exports = "+abi);
+      loadAbi("Galleass")
+      loadAbi("Sea")
+      loadAbi("Harbor")
     });
   });
+}
+
+function loadAbi(contract){
+  let abi = fs.readFileSync(contract+"/"+contract+".abi").toString().trim()
+  //console.log(contract+" ABI:",abi.gray)
+  fs.writeFileSync("app/src/"+contract+".abi.js","module.exports = "+abi);
 }

@@ -1,10 +1,11 @@
 pragma solidity ^0.4.15;
 
-import 'Galleasset.sol';
 import 'zeppelin-solidity/contracts/ownership/HasNoEther.sol';
 import 'zeppelin-solidity/contracts/token/MintableToken.sol';
+import 'ERC677Token.sol';
+import 'Galleasset.sol';
 
-contract Timber is Galleasset, HasNoEther, MintableToken {
+contract Timber is Galleasset, HasNoEther, MintableToken, ERC677Token {
 
   string public constant name = "Galleass Timber";
   string public constant symbol = "G_TIMBER";

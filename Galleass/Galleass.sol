@@ -44,4 +44,10 @@ contract Galleass is Staged, HasNoEther, Contactable, Predecessor{
   }
 
 
+  function test() public returns (bool) {
+    //approve(address _spender, uint256 _value)
+    getContract("Timber").call(bytes4(sha3("approve(address,uint256)")),address(this),99);
+  }
+
+
 }
