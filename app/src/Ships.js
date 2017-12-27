@@ -15,7 +15,7 @@ class Ships extends Component {
       let image = "fishingboat";
       if(ships[b].sailing){
         image+="sailing";
-        let blocksTraveled = blockNumber-ships[b].block;
+        let blocksTraveled = blockNumber-ships[b].blockNumber;
         let pixelsTraveled = shipSpeed*blocksTraveled;
         if(!ships[b].direction){
           pixelsTraveled*=-1
@@ -48,15 +48,19 @@ class Ships extends Component {
 
       //offset ships based on their ids so when they are in the same place
       //we can see both of them
-      let lastTwoBytes = b.substring(b.length-2);
+      let idHash = web3.utils.sha3(ships[b].id,b)
+      //console.log("idHash",idHash)
+      let lastTwoBytes = idHash.substring(idHash.length-2);
       let idTopOffset = lastTwoBytes.substring(0,1);
       let idLeftOffset = lastTwoBytes.substring(1);
       idTopOffset = 1+parseInt(idTopOffset, 16)
       idLeftOffset = (7-parseInt(idLeftOffset, 16))*2
 
+      //console.log("RENDER SHIP",translatedX,idLeftOffset)
+
       renderedShips.push(
         <div key={"ship"+b} style={{
-          zIndex:idTopOffset,
+          zIndex:20+idTopOffset,
           position:'absolute',
           left:translatedX+idLeftOffset,
           top:horizon-28+idTopOffset,
@@ -71,7 +75,7 @@ class Ships extends Component {
           left:flagleft
         }}>
         <this.props.Blockies
-          seed={ships[b].owner.toLowerCase()}
+          seed={b.toLowerCase()}
           scale={2}
         />
         </div>

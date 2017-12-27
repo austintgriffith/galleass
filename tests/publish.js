@@ -32,6 +32,9 @@ function publish(){
       loadAbi("Galleass")
       loadAbi("Sea")
       loadAbi("Harbor")
+      loadAbi("Ships")
+      loadAbi("Timber")
+      loadAbi("Catfish")
     });
   });
 }

@@ -15,9 +15,18 @@ let shipSpeed = 1000;
 let contracts = {};
 let web3;
 
+let loadContracts = [
+  "Sea",
+  "Harbor",
+  "Ships",
+  "Timber",
+  "Catfish"
+]
+
 const GWEI = 4;
 const GAS = 100000;
 
+const FISHINGBOAT = 0;
 
 const DEBUGCONTRACTLOAD = false;
 let loadContract = async (contract)=>{
@@ -37,14 +46,17 @@ function waitForAllContracts(){
   console.log("waitForAllContracts")
   let finishedLoading = true;
 
-  if(!contracts["Sea"]) finishedLoading=false;
-  if(!contracts["Harbor"]) finishedLoading=false;
+  for(let c in loadContracts){
+    if(!contracts[loadContracts[c]]) finishedLoading=false;
+  }
 
   if(finishedLoading) {
     console.log("Finished Loading")
 
     clearInterval(waitInterval);
     this.setState({contractsLoaded:true})
+
+
 
     this.syncClouds()
     setInterval(this.syncBlockNumber.bind(this),503)
@@ -53,6 +65,8 @@ function waitForAllContracts(){
     this.syncFish()
     setInterval(this.syncShips.bind(this),2003)
     this.syncShips()
+    setInterval(this.syncInventory.bind(this),1009)
+    this.syncInventory()
   }
 }
 
@@ -62,11 +76,10 @@ class App extends Component {
     web3 = new Web3(window.web3.currentProvider)
     if(DEBUGCONTRACTLOAD) console.log("galleassAddress",galleassAddress)
     contracts["Galleass"] = new web3.eth.Contract(galleassAbi,galleassAddress)
-    this.state = {fish:[],ships:[],clouds:[],blockNumber:0};
-
-    loadContract("Sea")
-    loadContract("Harbor")
-
+    this.state = {inventory:[],fish:[],ships:[],clouds:[],blockNumber:0};
+    for(let c in loadContracts){
+      loadContract(loadContracts[c])
+    }
     waitInterval = setInterval(waitForAllContracts.bind(this),1000)
   }
   init(account) {
@@ -92,6 +105,31 @@ class App extends Component {
     }
     this.setState({clouds:storedClouds})
   }
+  async syncInventory() {
+
+    if(this.state && this.state.account && this.state.inventory){
+
+      let inventory = this.state.inventory;
+      let update = false;
+      console.log("account",this.state.account)
+      let galleass = await contracts["Ships"].methods.galleass().call()
+      console.log("galleass",galleass)
+      console.log(contracts["Ships"])
+      let balanceOf = await contracts["Ships"].methods.balanceOf(this.state.account).call()
+      console.log("balanceOf",balanceOf)
+      let myShipArray = await contracts["Ships"].methods.shipsOfOwner(this.state.account).call()
+      console.log("MYSHIPS...",myShipArray)
+      if(inventory['Ships']!=myShipArray){
+        inventory['Ships'] = myShipArray;
+        update=true;
+      }
+
+      if(update){
+        this.setState({inventory:inventory})
+      }
+
+    }
+  }
   async syncShips() {
     /*
     event ShipUpdate(uint256 id,address owner,uint timestamp,bool floating,bool sailing,bool direction,bool fishing,uint32 blockNumber,uint16 location);
@@ -109,15 +147,15 @@ class App extends Component {
     let storedShips = this.state.ships;
     let updated = false;
     for(let b in ships){
-      //let id = ships[b].returnValues.sender.toLowerCase()
-      let id = ships[b].returnValues.id
+      let id = ships[b].returnValues.owner.toLowerCase()
+      //let id = ships[b].returnValues.id
       let timestamp = ships[b].returnValues.timestamp
       if(!storedShips[id]||storedShips[id].timestamp < timestamp){
         if(DEBUG_SYNCSHIPS) console.log(ships[b].returnValues)
         updated=true;
         storedShips[id]={
           timestamp:timestamp,
-          owner:ships[b].returnValues.owner,
+          id:ships[b].returnValues.id,
           floating:ships[b].returnValues.floating,
           sailing:ships[b].returnValues.sailing,
           direction:ships[b].returnValues.direction,
@@ -134,7 +172,7 @@ class App extends Component {
   }
   async syncFish() {
     let DEBUG_SYNCFISH = false;
-    if(DEBUG_SYNCFISH) console.log("Sync Fish")
+    //if(DEBUG_SYNCFISH) console.log("Sync Fish")
     //this wont scale
     //you'll need to work through the chain
     // in chunks and then stay up to date
@@ -149,8 +187,8 @@ class App extends Component {
       let species = fish[f].returnValues.species
       let timestamp = fish[f].returnValues.timestamp
       if("0x0000000000000000000000000000000000000000" == species){
-        console.log("Fish dead")
-        delete storedFish[id];
+        //console.log("Fish dead")
+        //delete storedFish[id];
       }else if(!storedFish[id] || storedFish[id].timestamp < timestamp){
         if(DEBUG_SYNCFISH) console.log(id)
         let result = await contracts["Sea"].methods.fishLocation(id).call()
@@ -160,6 +198,49 @@ class App extends Component {
     if(DEBUG_SYNCFISH) console.log(storedFish)
     this.setState({fish:storedFish})
   }
+  async buyShip() {
+    console.log("BUYSHIP")
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+    console.log(accounts)
+    let currentPrice = await contracts["Harbor"].methods.currentPrice(FISHINGBOAT).call()
+    console.log("current price for",FISHINGBOAT,"is",currentPrice)
+    contracts["Harbor"].methods.buyShip(FISHINGBOAT).send({
+      value: currentPrice,
+      from: accounts[0],
+      gas:GAS,
+      gasPrice:GWEI * 1000000000
+    }).then((receipt)=>{
+      console.log("RESULT:",receipt)
+    })
+
+  }
+  async approveAndEmbark() {
+    //"contract","approve",contract,accountindex,toContractAddress,tokens[0]
+    console.log("approveAndEmbark")
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+    console.log(accounts)
+    let seaContractAddress = await contracts["Galleass"].methods.getContract(web3.utils.asciiToHex("Sea")).call()
+    console.log("seaContractAddress",seaContractAddress)
+    console.log("MY FIRST SHIP ",this.state.inventory['Ships'][0])
+    contracts["Ships"].methods.approve(seaContractAddress,this.state.inventory['Ships'][0]).send({
+      from: accounts[0],
+      gas:GAS,
+      gasPrice:GWEI * 1000000000
+    }).then((receipt)=>{
+      console.log("RESULT:",receipt)
+      //let result = await clevis("contract","embark","Sea",accountindex,tokens[0])
+      contracts["Sea"].methods.embark(this.state.inventory['Ships'][0]).send({
+        from: accounts[0],
+        gas:300000,
+        gasPrice:GWEI * 1000000000
+      }).then((receipt)=>{
+        console.log("RESULT:",receipt)
+      })
+    })
+
+  }
+
+
   embark(){
     console.log("EMBARK")
     window.web3.eth.getAccounts((err,_accounts)=>{
@@ -243,12 +324,17 @@ class App extends Component {
         }
       }
       //console.log(myShip)
-      console.log(this.state.bait)
-      console.log("finally ",bestDist,bestId)
+      console.log("BAIT",this.state.bait)
+      console.log("BESTS",bestDist,bestId)
 
-      contracts["Sea"].methods.reelIn(bestId,this.state.bait).send({
+      let baitToUse = this.state.bait
+      if(!baitToUse) baitToUse="0x0000000000000000000000000000000000000000";
+
+      console.log("FINAL BAIT AND ID ",baitToUse,bestId)
+
+      contracts["Sea"].methods.reelIn(bestId,baitToUse).send({
         from: _accounts[0],
-        gas:GAS,
+        gas:300000,
         gasPrice:GWEI * 1000000000
       }).then((receipt)=>{
         console.log("RESULT:",receipt)
@@ -259,6 +345,8 @@ class App extends Component {
     let buttons = [];
 
     let myShip = this.state.ships[this.state.account];
+    //console.log("ACCOUNT",this.state.account)
+    //console.log("SHIPS:",this.state.ships)
     let buttonsTop = horizon-200;
     let buttonsLeft = width/2;
 
@@ -267,9 +355,24 @@ class App extends Component {
       buttonsLeft = myLocation
     }
 
-    console.log(myShip)
+    //console.log(myShip)
 
     if(!myShip||!myShip.floating){
+      if(!this.state.inventory['Ships']||this.state.inventory['Ships'].length<=0){
+        buttons.push(
+          <div style={{zIndex:200,position:'absolute',left:buttonsLeft,top:buttonsTop-50,opacity:0.9,}} onClick={this.buyShip.bind(this)}>
+            <img src="buyship.png" style={{maxWidth:150}}/>
+          </div>
+        )
+      }else{
+        buttons.push(
+          <div style={{zIndex:200,position:'absolute',left:buttonsLeft,top:buttonsTop,opacity:0.9,}} onClick={this.approveAndEmbark.bind(this)}>
+            <img src="approveAndEmbark.png" style={{maxWidth:150}}/>
+          </div>
+        )
+      }
+
+    }else if(!myShip.floating){
       buttons.push(
         <div style={{zIndex:200,position:'absolute',left:buttonsLeft,top:buttonsTop,opacity:0.9,}} onClick={this.embark.bind(this)}>
           <img src="gofishing.png" style={{maxWidth:150}}/>
@@ -322,6 +425,8 @@ class App extends Component {
         {buttons}
         <Ships ships={this.state.ships} width={width} height={height} horizon={horizon} Blockies={Blockies} web3={web3} shipSpeed={shipSpeed} blockNumber={this.state.blockNumber}/>
         <Fish fish={this.state.fish} width={width} height={height} horizon={horizon} />
+        <div style={{zIndex:11,position:'absolute',left:0,top:horizon,opacity:0.8,backgroundImage:"url('oceanblack.jpg')",backgroundRepeat:'no-repeat',height:height+horizon,width:width}}></div>
+
       </div>
     )
 
@@ -337,6 +442,14 @@ class App extends Component {
 }
 
 
+const promisify = (inner) =>
+  new Promise((resolve, reject) =>
+    inner((err, res) => {
+      if (err) { reject(err) }
+
+      resolve(res);
+    })
+  );
 
 
 

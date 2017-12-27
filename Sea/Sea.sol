@@ -10,7 +10,7 @@ contract Sea is Galleasset, HasNoEther {
   uint16 public width = 65535; //pixels
   uint16 public depth = 65535; //pixels
 
-  uint256 public shipSpeed = 256;///this will be replaced soon
+  uint256 public shipSpeed = 1000;///this will be replaced soon
 
   mapping (address => Ship) public ships;
   mapping (bytes32 => address) public fish;
@@ -147,6 +147,12 @@ contract Sea is Galleasset, HasNoEther {
     require( ships[msg.sender].fishing );
     require( block.number > ships[msg.sender].blockNumber);//must be next block after so we have a new block hash
     require( species[fish[_fish]] );//make sure fish exists and is valid species
+    if(bait==0){
+      //you can cut your line if you lose your bait
+      ships[msg.sender].fishing = false;
+      ShipUpdate(ships[msg.sender].id,msg.sender,now,ships[msg.sender].floating,ships[msg.sender].sailing,ships[msg.sender].direction,ships[msg.sender].fishing,ships[msg.sender].blockNumber,ships[msg.sender].location);
+      return false;
+    }
     require( keccak256(bait) == ships[msg.sender].bait);//make sure their off-chain bait == onchain hash
 
     ships[msg.sender].fishing = false;

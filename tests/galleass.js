@@ -502,6 +502,8 @@ module.exports = {
       });
     });
 
+
+
     describe(bigHeader('TIMBER MINTING & BUILD SHIPS'), function() {
       it('should mintTimberBuildShips', async function() {
         this.timeout(6000000)
@@ -534,13 +536,7 @@ module.exports = {
       });
     });
 
-    describe(bigHeader('METAMASK'), function() {
-      it('should give metamask users some fake ether', async function() {
-        this.timeout(6000000)
-        const result = await clevis("test","metamask")
-        assert(result==0,"metamask ERRORS")
-      });
-    });
+
 
     describe(bigHeader('FINISHING TOUCHES'), function() {
       it('should finishingTouches', async function() {
@@ -555,6 +551,14 @@ module.exports = {
         this.timeout(6000000)
         const result = await clevis("test","publish")
         assert(result==0,"publish ERRORS")
+      });
+    });
+
+    describe(bigHeader('METAMASK'), function() {
+      it('should give metamask users some fake ether', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","metamask")
+        assert(result==0,"metamask ERRORS")
       });
     });
 

@@ -12,9 +12,11 @@ class Fish extends Component {
     let {fish,width,height,horizon} = this.props
     let renderedFish = []
     for(let f in fish){
-      let ratio = fish[f].y/80000; //80k because it looks right, totally just picked 80k
+      let opacityratio = fish[f].y/80000; //80k because it looks right, totally just picked 80k
+      let ratio = fish[f].y/50000; //50k because it looks right, totally just picked 50k
       let depth = Math.round(((height-horizon-horizonFishPad)*ratio))
-      let opacity = (1-ratio)*0.7;
+      let opacity = (1-opacityratio)*0.9;
+      //console.log(opacity)
       let widthRatio = fish[f].x/65536
       renderedFish.push(
         <div key={"fish"+f} style={{position:"absolute",left:widthRatio*width,top:horizon+depth}}>
