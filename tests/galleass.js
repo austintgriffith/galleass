@@ -20,6 +20,11 @@ function bigHeader(str){
 function rand(min, max) {
   return Math.floor( Math.random() * (max - min) + min );
 }
+function loadAbi(contract){
+  let abi = fs.readFileSync(contract+"/"+contract+".abi").toString().trim()
+  //console.log(contract+" ABI:",abi.gray)
+  fs.writeFileSync("app/src/"+contract+".abi.js","module.exports = "+abi);
+}
 const tab = "\t\t";
 
 let TARGET_LOCATION
@@ -260,7 +265,7 @@ module.exports = {
         }catch(e){
           error = e.toString()
         }
-        assert(error.indexOf("VM Exception while processing transaction: revert")>0)
+        assert(error.indexOf("VM Exception while processing transaction: revert")>0,"NOT REVERT:"+(error.red))
       });
     });
   },
@@ -450,7 +455,7 @@ module.exports = {
   },
   reelIn(accountindex){
     describe('#reelIn() ', function() {
-      it('should reelIn '+TARGET_FISH, async function() {
+      it('should reelIn TARGET_FISH', async function() {
         this.timeout(60000)
         //run one transaction to make sure it's the next block
         let result = await clevis("send","0.1","1","2")
@@ -472,6 +477,36 @@ module.exports = {
         printTxResult(result)
         const events = await clevis("contract","eventTokensIncoming",toContract)
         console.log(events)
+      });
+    });
+  },
+
+  publish:()=>{
+    describe('#publish() ', function() {
+      it('should inject contract address and abi into web app', async function() {
+        this.timeout(60000)
+        const fs = require("fs")
+        let address = fs.readFileSync("Galleass/Galleass.address").toString().trim()
+        console.log(tab,"ADDRESS:",address.blue)
+        assert(address,"No Address!?")
+        fs.writeFileSync("app/src/Address.js","module.exports = \""+address+"\"");
+        loadAbi("Galleass")
+        loadAbi("Sea")
+        loadAbi("Harbor")
+        loadAbi("Ships")
+        loadAbi("Timber")
+        loadAbi("Catfish")
+      });
+    });
+  },
+  metamask:()=>{
+    describe('#transfer() ', function() {
+      it('should give metamask account some ether', async function() {
+        this.timeout(60000)
+        await clevis("sendTo","0.1","0","0x34aA3F359A9D614239015126635CE7732c18fDF3")
+        await clevis("sendTo","0.1","0","0xB2ac59aE04d0f7310dC3519573BF70387b3b6E3a")
+        await clevis("sendTo","0.1","0","0xfdE139e04963094650bAAD2686ca65A0cF04373C")
+        await clevis("sendTo","0.1","0","0x1D1B2B691Aaf5E5490864ED91c818B200C0fA0E2")
       });
     });
   },

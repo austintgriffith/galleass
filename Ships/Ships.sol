@@ -28,14 +28,29 @@ contract Ships is Galleasset, NFT {
 
     Ship[] private ships;
 
-    function buildShip(Model model) public returns (uint){
+    function buildShip(Model model) public isGalleasset("Ships") returns (uint){
+
+      // getTokens(address _from,bytes32 _name,uint256 _amount)
+      //   return StandardTokenInterface(getContract(_name)).approve(_to,_amount);
+
+      //getTokens(msg.sender,"Timber",2)
+
+      //Build(msg.sender,model,model==Model.FISHING,getTokens(msg.sender,"Timber",2));
+      //Build(msg.sender,model,model==Model.FISHING);
+
       if(model==Model.FISHING){
         require( getTokens(msg.sender,"Timber",2) );
-        require( hasPermission(msg.sender,"buildShip") );
+        bool hasPermissionResult = hasPermission(msg.sender,"buildShip");
+        require( hasPermissionResult );
+        Build(msg.sender,model,hasPermissionResult);
         return _createShip(msg.sender, model);
       }
       revert();
     }
+    //event Build(address _sender,Model model,bool fishing,bool _get);
+    event Build(address _sender,Model model,bool hasPermissionResult);
+
+/*
     function buildShips(Model model,uint amount) public returns (uint){
       uint result;
       while((amount--)>0){
@@ -43,7 +58,7 @@ contract Ships is Galleasset, NFT {
       }
       return result;
     }
-
+*/
     function _createShip(address _owner, Model model) internal returns (uint){
         Ship memory _ship = Ship({
           model: model,

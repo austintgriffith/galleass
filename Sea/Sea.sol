@@ -142,36 +142,38 @@ contract Sea is Galleasset, HasNoEther {
   //
   //  try to catch a fish with your bait
   //
-  function reelIn(bytes32 _fish, bytes32 bait) public returns (bool) {
+  function reelIn(bytes32 _fish, bytes32 _bait) public returns (bool) {
     require( ships[msg.sender].floating );
     require( ships[msg.sender].fishing );
     require( block.number > ships[msg.sender].blockNumber);//must be next block after so we have a new block hash
-    require( species[fish[_fish]] );//make sure fish exists and is valid species
-    if(bait==0){
-      //you can cut your line if you lose your bait
+    if(_bait==0){
+      //you can cut your line if you snag your bait
+      // (if you lose the original bait that was used to produce the baithash you send 0x0 to cut the line)
       ships[msg.sender].fishing = false;
       ShipUpdate(ships[msg.sender].id,msg.sender,now,ships[msg.sender].floating,ships[msg.sender].sailing,ships[msg.sender].direction,ships[msg.sender].fishing,ships[msg.sender].blockNumber,ships[msg.sender].location);
       return false;
     }
-    require( keccak256(bait) == ships[msg.sender].bait);//make sure their off-chain bait == onchain hash
+    require( species[fish[_fish]] );//make sure fish exists and is valid species
+    require( keccak256(_bait) == ships[msg.sender].bait);//make sure their off-chain bait == onchain hash
 
     ships[msg.sender].fishing = false;
     ShipUpdate(ships[msg.sender].id,msg.sender,now,ships[msg.sender].floating,ships[msg.sender].sailing,ships[msg.sender].direction,ships[msg.sender].fishing,ships[msg.sender].blockNumber,ships[msg.sender].location);
 
-    if(catchFish(_fish,bait)){
+    if(catchFish(_fish,_bait)){
       assert( fish[_fish]!=address(0) );
       address fishContractAddress = fish[_fish];
       fish[_fish] = address(0);
       StandardToken thisFishContract = StandardToken(fishContractAddress);
       require( thisFishContract.transfer(msg.sender,1) );
-      Catch(msg.sender,_fish,fishContractAddress);
+      Catch(msg.sender,_fish,now,fishContractAddress);
       Fish(_fish, now, fish[_fish]);
       return true;
     }else{
       return false;
     }
   }
-  event Catch(address account, bytes32 fish, address species);
+  event Catch(address account, bytes32 id, uint256 timestamp, address species);
+
 
   //
   // SCUTTLE THAT SUMMA B!
@@ -255,9 +257,9 @@ contract Sea is Galleasset, HasNoEther {
   // they need to be close and it's hard if the fish is deeper
   //
   function catchFish(bytes32 _fish, bytes32 bait) internal returns (bool) {
-    bytes32 catchHash = keccak256(msg.sender,bait,block.blockhash(ships[msg.sender].blockNumber));
-    bytes32 depthHash = keccak256(msg.sender,bait,catchHash,block.blockhash(ships[msg.sender].blockNumber-1));
-    uint randomishWidthNumber = uint16( uint(catchHash) % width/10 );
+    bytes32 catchHash = keccak256(bait,block.blockhash(ships[msg.sender].blockNumber));
+    bytes32 depthHash = keccak256(bait,catchHash,block.blockhash(ships[msg.sender].blockNumber-1));
+    uint randomishWidthNumber = uint16( uint(catchHash) % width/5 );
     uint depthPlus = depth;
     depthPlus+=depth/3;
     uint randomishDepthNumber =  uint(depthHash) % (depthPlus) ;
