@@ -47,6 +47,7 @@ class App extends Component {
   init(account) {
     console.log("Init "+account+"...")
     this.setState({account:account})
+    window.scrollTo(2000-(window.innerWidth/2), 0);
   }
   async syncBlockNumber(){
     console.log("checking block number....")
@@ -425,7 +426,7 @@ class App extends Component {
 
     //console.log("ACCOUNT",this.state.account)
     //console.log("SHIPS:",this.state.ships)
-    let buttonsTop = horizon-200;
+    let buttonsTop = horizon-250;
     let buttonsLeft = width/2;
 
     if(myShip&&myShip.floating&&myShip.location){
@@ -442,13 +443,13 @@ class App extends Component {
     if(!myShip||!myShip.floating){
       if(!this.state.inventoryDetail['Ships']||this.state.inventoryDetail['Ships'].length<=0){
         buttons.push(
-          <div style={{zIndex:200,position:'absolute',left:buttonsLeft,top:buttonsTop-50,opacity:buttonOpacity}} onClick={this.buyShip.bind(this)}>
+          <div style={{zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} onClick={this.buyShip.bind(this)}>
             <img src="buyship.png" style={{maxWidth:150}}/>
           </div>
         )
       }else{
         buttons.push(
-          <div style={{zIndex:200,position:'absolute',left:buttonsLeft,top:buttonsTop,opacity:buttonOpacity}} onClick={this.approveAndEmbark.bind(this)}>
+          <div style={{zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} onClick={this.approveAndEmbark.bind(this)}>
             <img src="approveAndEmbark.png" style={{maxWidth:150}}/>
           </div>
         )
@@ -462,29 +463,29 @@ class App extends Component {
       )
     }else if(myShip.sailing){
       buttons.push(
-        <div style={{zIndex:200,position:'absolute',left:buttonsLeft,top:buttonsTop,opacity:buttonOpacity}} onClick={this.dropAnchor.bind(this)}>
+        <div style={{zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} onClick={this.dropAnchor.bind(this)}>
           <img src="dropanchor.png" style={{maxWidth:150}}/>
         </div>
       )
     }else if(myShip.fishing){
       buttons.push(
-        <div style={{zIndex:200,position:'absolute',left:buttonsLeft,top:buttonsTop,opacity:buttonOpacity}} onClick={this.reelIn.bind(this)}>
+        <div style={{zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} onClick={this.reelIn.bind(this)}>
           <img src="reelin.png" style={{maxWidth:150}}/>
         </div>
       )
     }else{
       buttons.push(
-        <div style={{zIndex:200,position:'absolute',left:buttonsLeft+180,top:buttonsTop,opacity:buttonOpacity}} onClick={this.setSail.bind(this,true)}>
+        <div style={{zIndex:200,position:'absolute',left:buttonsLeft+180-75,top:buttonsTop,opacity:buttonOpacity}} onClick={this.setSail.bind(this,true)}>
           <img src="saileast.png" style={{maxWidth:150}}/>
         </div>
       )
       buttons.push(
-        <div style={{zIndex:200,position:'absolute',left:buttonsLeft,top:buttonsTop,opacity:buttonOpacity}} onClick={this.castLine.bind(this,false)}>
+        <div style={{zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} onClick={this.castLine.bind(this,false)}>
           <img src="castLine.png" style={{maxWidth:150}}/>
         </div>
       )
       buttons.push(
-        <div style={{zIndex:200,position:'absolute',left:buttonsLeft-180,top:buttonsTop,opacity:buttonOpacity}} onClick={this.setSail.bind(this,false)}>
+        <div style={{zIndex:200,position:'absolute',left:buttonsLeft-180-75,top:buttonsTop,opacity:buttonOpacity}} onClick={this.setSail.bind(this,false)}>
           <img src="sailwest.png" style={{maxWidth:150}}/>
         </div>
       )
@@ -522,7 +523,7 @@ class App extends Component {
 
     let land = (
       <div style={{position:"absolute",left:0,top:horizon-60,width:width}} >
-        <Land />
+        <Land Blockies={Blockies} />
       </div>
     )
 

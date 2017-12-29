@@ -62,7 +62,7 @@ class Ships extends Component {
         <div key={"ship"+b} style={{
           zIndex:20+idTopOffset,
           position:'absolute',
-          left:translatedX+idLeftOffset,
+          left:translatedX+idLeftOffset-(shipwidth/2),
           top:horizon-28+idTopOffset,
           opacity:0.9,
           height:75,
