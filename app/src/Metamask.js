@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
-let CHECKFORMAINNET = false
+
 class Metamask extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      metamask:0
+      metamask:0,
+      network:0
     }
   }
   componentDidMount(){
@@ -15,34 +16,40 @@ class Metamask extends Component {
     if (typeof window.web3 == 'undefined') {
       if(this.state.metamask!=0) this.setState({metamask:0})
     } else {
-      if(CHECKFORMAINNET && window.web3.version.network!=1){
-        if(this.state.metamask!=1) this.setState({metamask:1})
-      }else{
+      window.web3.version.getNetwork((err,network)=>{
+        network = translateNetwork(network);
         let accounts
         try{
           window.web3.eth.getAccounts((err,_accounts)=>{
             if(err){
-              if(this.state.metamask!=-1) this.setState({metamask:-1})
+              if(this.state.metamask!=-1) this.setState({metamask:-1,network:network})
             }else{
               accounts = _accounts;
               if(!accounts){
-                if(this.state.metamask!=-1) this.setState({metamask:-1})
+                if(this.state.metamask!=-1) this.setState({metamask:-1,network:network})
               } else if(accounts.length<=0){
-                if(this.state.metamask!=2) this.setState({metamask:2})
+                if(this.state.metamask!=2) this.setState({metamask:2,network:network})
               } else{
+
+              if(this.props.account&&this.props.account!=accounts[0]){
+                window.location.reload(true);
+              }else{
                 if(this.state.metamask!=3) {
-                  this.setState({metamask:3,accounts:accounts},()=>{
+                  this.setState({metamask:3,accounts:accounts,network:network},()=>{
                     this.props.init(accounts[0])
                   })
                 }
+              }
+
+
               }
             }
           })
         }catch(e){
           console.log(e)
-          if(this.state.metamask!=-1) this.setState({metamask:-1})
+          if(this.state.metamask!=-1) this.setState({metamask:-1,network:network})
         }
-      }
+      })
     }
   }
   render(){
@@ -66,12 +73,12 @@ class Metamask extends Component {
       //not installed
       metamask = (
         <a target="_blank" href="https://metamask.io/">
-          <span style={{paddingRight:8}}>
-          Install MetaMask and reload to play
-          </span>
-          <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
-          src="https://cdn.worldvectorlogo.com/logos/metamask.svg"
-          />
+        <span style={{paddingRight:8}}>
+        Install MetaMask and reload to play
+        </span>
+        <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
+        src="https://cdn.worldvectorlogo.com/logos/metamask.svg"
+        />
         </a>
       )
     }else if(this.state.metamask==1){
@@ -90,12 +97,12 @@ class Metamask extends Component {
       //not installed
       metamask = (
         <div>
-        <span style={{paddingRight:8}}>
-        Unlock Metamask to play
-        </span>
-        <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
-        src="https://cdn.worldvectorlogo.com/logos/metamask.svg"
-        />
+          <span style={{paddingRight:8}}>
+            Unlock Metamask to play
+          </span>
+          <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
+            src="https://cdn.worldvectorlogo.com/logos/metamask.svg"
+          />
         </div>
       )
     }else if(!this.state.accounts){
@@ -116,23 +123,51 @@ class Metamask extends Component {
       metamask = (
         <div style={{padding:4}}>
           <a target="_blank" href={"https://etherscan.io/search?q="+this.state.accounts[0]}>
-          <span style={{float:'left',marginTop:6,padding:10,color:'#444444'}}>
-          {this.state.accounts.length > 0 ? this.state.accounts[0].substring(0,8) : "Loading..."}
-          </span>
-          <this.props.Blockies
-          seed={this.state.accounts[0]}
-          scale={6}
-          />
+            <span style={{
+              float:'left',
+              marginTop:3,
+              paddingRight:10,
+              zIndex:210,
+              fontWeight:'bold',
+              fontSize:21,
+              color:"#222",
+              textAlign:"right"
+            }}>
+              <div>{this.state.accounts.length > 0 ? this.state.accounts[0].substring(0,12) : "Loading..."}</div>
+              <div>{this.state.network} @ {this.props.blockNumber%10000}</div>
+            </span>
+            <this.props.Blockies
+            seed={this.state.accounts[0]}
+            scale={6}
+            />
           </a>
         </div>
       )
     }
     return (
       <div style={{float:'right',padding:2}}>
-        {metamask}
+      {metamask}
       </div>
     )
   }
 }
 
 export default Metamask;
+
+function translateNetwork(network){
+  if(network==5777){
+    return "Private";
+  }else if(network==1){
+    return "Mainnet";
+  }else if(network==2){
+    return "Morden";
+  }else if(network==3){
+    return "Ropsten";
+  }else if(network==4){
+    return "Rinkeby";
+  }else if(network==42){
+    return "Kovan";
+  }else{
+    return "Unknown";
+  }
+}

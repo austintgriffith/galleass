@@ -520,6 +520,36 @@ module.exports = {
       });
     });
   },
+  redeploy:()=>{
+    describe(bigHeader('DEPLOY'), function() {
+      it('should deploy', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","deploy")
+        assert(result==0,"deploy ERRORS")
+      });
+    });
+    describe(bigHeader('TIMBER MINTING & BUILD SHIPS'), function() {
+      it('should mintTimberBuildShips', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","mintTimberBuildShips")
+        assert(result==0,"mintTimberBuildShips ERRORS")
+      });
+    });
+    describe(bigHeader('MINT FISH AND STOCK'), function() {
+      it('should mintCatfishAndStockSea', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","mintCatfishAndStockSea")
+        assert(result==0,"mintCatfishAndStockSea ERRORS")
+      });
+    });
+    describe(bigHeader('PUBLISH'), function() {
+      it('should publish conract address to app', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","publish")
+        assert(result==0,"publish ERRORS")
+      });
+    });
+  },
   full:()=>{
     describe(bigHeader('COMPILE'), function() {
       it('should compile', async function() {

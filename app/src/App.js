@@ -9,14 +9,19 @@ import Ships from './Ships.js'
 import Clouds from './Clouds.js'
 import Inventory from './Inventory.js'
 import Metamask from './Metamask.js'
+import {Motion, spring, presets} from 'react-motion';
+//var smoothScroll = require('smoothscroll');
+//var Scroll  = require('react-scroll');
+//var scroll     = Scroll.animateScroll;
 var Web3 = require('web3');
 let width = 4000;
 let height = 1050;
 let horizon = 300;
 let shipSpeed = 1000;
 let contracts = {};
-let txWaitInterval;
+let txWaitIntervals = [];
 let web3;
+
 
 
 let loadContracts = [
@@ -35,19 +40,36 @@ const FISHINGBOAT = 0;
 class App extends Component {
   constructor(props) {
     super(props);
-    web3 = new Web3(window.web3.currentProvider)
-    if(DEBUGCONTRACTLOAD) console.log("galleassAddress",galleassAddress)
-    contracts["Galleass"] = new web3.eth.Contract(galleassAbi,galleassAddress)
-    this.state = {inventory:[],inventoryDetail:[],fish:[],ships:[],clouds:[],blockNumber:0};
-    for(let c in loadContracts){
-      loadContract(loadContracts[c])
+
+    this.state = {
+      scrollLeft:2000-(window.innerWidth/2),
+      scrollConfig:{stiffness: 80, damping: 20},
+      inventory:[],
+      inventoryDetail:[],
+      fish:[],
+      ships:[],
+      clouds:[],
+      blockNumber:0,
+      metamaskDip:0
     }
-    waitInterval = setInterval(waitForAllContracts.bind(this),1000)
+
+    try{
+      web3 = new Web3(window.web3.currentProvider)
+      if(DEBUGCONTRACTLOAD) console.log("galleassAddress",galleassAddress)
+      contracts["Galleass"] = new web3.eth.Contract(galleassAbi,galleassAddress)
+
+      for(let c in loadContracts){
+        loadContract(loadContracts[c])
+      }
+      waitInterval = setInterval(waitForAllContracts.bind(this),1000)
+    } catch(e) {
+      console.log(e)
+    }
+
   }
   init(account) {
     console.log("Init "+account+"...")
-    this.setState({account:account})
-    window.scrollTo(2000-(window.innerWidth/2), 0);
+    this.setState({account:account,scrollLeft:2000-(window.innerWidth/2)})
   }
   async syncBlockNumber(){
     console.log("checking block number....")
@@ -91,9 +113,9 @@ class App extends Component {
 
       if(inventory['Ships']>0){
         let myShipArray = await contracts["Ships"].methods.shipsOfOwner(this.state.account).call()
-        if(myShipArray!=inventoryDetail['Ships']){
+        if(!isEquivalent(myShipArray,inventoryDetail['Ships'])){
           inventoryDetail['Ships']=myShipArray
-          updateDetail=true;
+          updateDetail=true
 
         }
       }
@@ -103,25 +125,44 @@ class App extends Component {
       if(DEBUG_INVENTORY) console.log("balanceOf",balanceOfCatfish)
       if(inventory['Catfish']!=balanceOfCatfish){
         inventory['Catfish'] = balanceOfCatfish;
-        update=true;
+        update=true
       }
 
+      let balanceOfEther = Math.round(web3.utils.fromWei(await web3.eth.getBalance(this.state.account),"Ether")*1000)/1000;
+      if(DEBUG_INVENTORY) console.log("balanceOfEther",balanceOfEther)
+      if(inventory['Ether']!=balanceOfEther){
+        inventory['Ether']=balanceOfEther
+        update=true
+      }
+
+
       if(update){
-        this.setState({inventory:inventory})
+        console.log("INVENTORY UPDATE....")
+        this.setState({inventory:inventory,waitingForInventoryUpdate:false})
       }
       if(updateDetail){
-        this.setState({inventoryDetail:inventoryDetail})
+        console.log("DETAIL INVENTORY UPDATE....")
+        this.setState({inventoryDetail:inventoryDetail,waitingForInventoryUpdate:false})
       }
 
     }
   }
   async syncMyShip() {
+    //console.log("SYNCING MY SHIP")
     let myship = this.state.ship;
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
     let getMyShip = await contracts["Sea"].methods.getShip(accounts[0]).call();
     //console.log("COMPARE",this.state.ship,getMyShip)
-    if(this.state.ship!=getMyShip) {
-      this.setState({ship:getMyShip},()=>{
+    //if(JSON.stringify(this.state.ship)!=JSON.stringify(getMyShip)) {
+    if(!isEquivalent(this.state.ship,getMyShip)){
+      console.log("UPDATE MY SHIP",JSON.stringify(this.state.ship),JSON.stringify(getMyShip))
+      let myLocation = 2000;
+      if(getMyShip.floating){
+        myLocation = 4000 * getMyShip.location / 65535
+        console.log("myLocation",myLocation)
+        this.setState({scrollLeft:myLocation-(window.innerWidth/2)})
+      }
+      this.setState({ship:getMyShip,waitingForShipUpdate:false,myLocation:myLocation},()=>{
         //console.log("SET getMyShip",this.state.ship)
       })
     }
@@ -212,21 +253,33 @@ class App extends Component {
     if(DEBUG_SYNCFISH) console.log("storedFish",storedFish)
     this.setState({fish:storedFish})
   }
+  metamaskHint(){
+    this.setState({metamaskDip:8},()=>{
+      setTimeout(()=>{
+        this.setState({metamaskDip:0})
+      },500)
+    })
+  }
   async buyShip() {
     console.log("BUYSHIP")
-    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
-    console.log(accounts)
-    let currentPrice = await contracts["Harbor"].methods.currentPrice(FISHINGBOAT).call()
-    console.log("current price for",FISHINGBOAT,"is",currentPrice)
-    contracts["Harbor"].methods.buyShip(FISHINGBOAT).send({
-      value: currentPrice,
-      from: accounts[0],
-      gas:GAS,
-      gasPrice:GWEI * 1000000000
-    }).then((receipt)=>{
-      console.log("RESULT:",receipt)
-    })
-
+    if(!web3){
+      //hint to install metamask
+      this.metamaskHint()
+    }else{
+      const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+      console.log(accounts)
+      let currentPrice = await contracts["Harbor"].methods.currentPrice(FISHINGBOAT).call()
+      console.log("current price for",FISHINGBOAT,"is",currentPrice)
+      contracts["Harbor"].methods.buyShip(FISHINGBOAT).send({
+        value: currentPrice,
+        from: accounts[0],
+        gas:GAS,
+        gasPrice:GWEI * 1000000000
+      }).then((receipt)=>{
+        console.log("RESULT:",receipt)
+        this.startWaiting(receipt.transactionHash,"inventoryUpdate")
+      })
+    }
   }
   async approveAndEmbark() {
     //"contract","approve",contract,accountindex,toContractAddress,tokens[0]
@@ -249,12 +302,13 @@ class App extends Component {
         gasPrice:GWEI * 1000000000
       }).then((receipt)=>{
         console.log("RESULT:",receipt)
+        this.startWaiting(receipt.transactionHash,"shipUpdate")
       })
     })
 
   }
-  async startWaitingForTransaction(){
-    console.log("WAITING FOR TRANSACTION ",this.state.waitingForTransaction,this.state.waitingForTransactionTime)
+  async startWaitingForTransaction(hash){
+    console.log("WAITING FOR TRANSACTION ",hash,this.state.waitingForTransaction,this.state.waitingForTransactionTime)
     try {
         var receipt = await web3.eth.getTransactionReceipt(this.state.waitingForTransaction);
         if (receipt == null) {
@@ -263,17 +317,19 @@ class App extends Component {
         } else {
           //DONE
           console.log("DONE WITH TX",receipt)
-          clearInterval(txWaitInterval);
+          clearInterval(txWaitIntervals[hash]);
           this.setState({waitingForTransaction:false})
+          console.log("CALL A SYNC OF EVERYTHING!!")
           this.syncEverythingOnce()
         }
     } catch(e) {
         console.log("ERROR WAITING FOR TX",e)
-        clearInterval(txWaitInterval);
+        clearInterval(txWaitIntervals[hash]);
         this.setState({waitingForTransaction:false})
     }
+    console.log("DONE WAITING ON TRANSACTION")
   }
-
+  /*
   embark(){
     console.log("EMBARK")
     window.web3.eth.getAccounts((err,_accounts)=>{
@@ -284,9 +340,11 @@ class App extends Component {
         gasPrice:GWEI * 1000000000
       }).then((receipt)=>{
         console.log("RESULT:",receipt)
+        this.startWaiting(receipt.transactionHash,)
       })
     })
   }
+  */
   setSail(direction){
     console.log("SET SAIL")
     window.web3.eth.getAccounts((err,_accounts)=>{
@@ -297,6 +355,7 @@ class App extends Component {
         gasPrice:GWEI * 1000000000
       }).then((receipt)=>{
         console.log("RESULT:",receipt)
+        this.startWaiting(receipt.transactionHash,"shipUpdate")
       })
     })
   }
@@ -310,6 +369,7 @@ class App extends Component {
         gasPrice:GWEI * 1000000000
       }).then((receipt)=>{
         console.log("RESULT:",receipt)
+        this.startWaiting(receipt.transactionHash,"shipUpdate")
       })
     })
   }
@@ -326,9 +386,7 @@ class App extends Component {
         gasPrice:GWEI * 1000000000
       }).then((receipt)=>{
         console.log("RESULT:",receipt)
-        this.setState({waitingForTransaction:receipt.transactionHash,waitingForTransactionTime:Date.now()},()=>{
-          txWaitInterval = setInterval(this.startWaitingForTransaction.bind(this),1000)
-        })
+        this.startWaiting(receipt.transactionHash,"shipUpdate")
       })
     })
   }
@@ -379,13 +437,25 @@ class App extends Component {
         gasPrice:GWEI * 1000000000
       }).then((receipt)=>{
         if(DEBUG_REEL_IN) console.log("RESULT:",receipt)
-        this.setState({waitingForTransaction:receipt.transactionHash,waitingForTransactionTime:Date.now()},()=>{
-          txWaitInterval = setInterval(this.startWaitingForTransaction.bind(this),1000)
-        })
+        this.startWaiting(receipt.transactionHash,"shipUpdate")
       })
     })
   }
-
+  startWaiting(hash,nextPhase){
+    if(hash){
+      console.log("STARTWAITING",hash,nextPhase)
+      let update = {waitingForTransaction:hash,waitingForTransactionTime:Date.now()}
+      if(nextPhase=="inventoryUpdate"){
+        update.waitingForInventoryUpdate=true
+      }else{
+        update.waitingForShipUpdate=true
+      }
+      this.setState(update,()=>{
+        txWaitIntervals[hash] = setInterval(this.startWaitingForTransaction.bind(this,hash),1200)
+        this.startWaitingForTransaction(hash)
+      })
+    }
+  }
   startSync() {
     console.log("Finished Loading")
     clearInterval(waitInterval);
@@ -399,6 +469,11 @@ class App extends Component {
     //dev loop only...
     //setInterval(this.syncContacts.bind(this),4001)
     //this.syncContacts()
+    /*setTimeout(
+      ()=>{
+        this.setState({scrollConfig: {stiffness: 2, damping: 20}})
+      },3000
+    )*/
   }
   syncEverythingOnce() {
     this.syncMyShip()
@@ -407,16 +482,24 @@ class App extends Component {
     this.syncShips()
     this.syncInventory()
     this.syncClouds()
-
   }
 
   render() {
     let buttons = [];
+    if(!this.state){
+      return (
+        <div>Loading</div>
+      )
+    }
 
+    let myShip
+    if(this.state&&this.state.shipsOfOwner){
+      myShip = this.state.ship;
+    }
 
     //both of these are in sync and we need to test which is fastest
     // one is all of the ship events while the other is doing a get ship
-    let myShip = this.state.ship;
+    //let myShip = this.state.ship;
     //console.log(myShip)
     //myShip = this.state.ships[this.state.account];
     //console.log("console.log(myShip)",myShip)
@@ -428,20 +511,29 @@ class App extends Component {
     //console.log("SHIPS:",this.state.ships)
     let buttonsTop = horizon-250;
     let buttonsLeft = width/2;
+    let loadingBar = ""
+
 
     if(myShip&&myShip.floating&&myShip.location){
-      let myLocation = 4000 * myShip.location / 65535
-      buttonsLeft = myLocation
+      buttonsLeft = this.state.myLocation
     }
 
     let buttonOpacity = 0.9
-    if(this.state.waitingForTransaction){
-      buttonOpacity=0.3
+    let buttonDisabled = false
+    if(this.state.waitingForTransaction || this.state.waitingForShipUpdate || this.state.waitingForInventoryUpdate){
+      buttonOpacity = 0.3
+      buttonDisabled = true
+      let timeSpentWaiting = Date.now() - this.state.waitingForTransactionTime
+      timeSpentWaiting = Math.floor(timeSpentWaiting/1000)+1;
+      console.log("timeSpentWaiting",timeSpentWaiting)
+      if(timeSpentWaiting>12) timeSpentWaiting=12
+      loadingBar = (
+        <img src={"loader_"+timeSpentWaiting+".png"} />
+      )
     }
-    //console.log(myShip)
 
     if(!myShip||!myShip.floating){
-      if(!this.state.inventoryDetail['Ships']||this.state.inventoryDetail['Ships'].length<=0){
+      if(this.state.inventoryDetail && (!this.state.inventoryDetail['Ships']||this.state.inventoryDetail['Ships'].length<=0)){
         buttons.push(
           <div style={{zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} onClick={this.buyShip.bind(this)}>
             <img src="buyship.png" style={{maxWidth:150}}/>
@@ -455,12 +547,12 @@ class App extends Component {
         )
       }
 
-    }else if(!myShip.floating){
+    /*}else if(!myShip.floating){
       buttons.push(
         <div style={{zIndex:200,position:'absolute',left:buttonsLeft,top:buttonsTop,opacity:buttonOpacity}} onClick={this.embark.bind(this)}>
           <img src="gofishing.png" style={{maxWidth:150}}/>
         </div>
-      )
+      )*/
     }else if(myShip.sailing){
       buttons.push(
         <div style={{zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} onClick={this.dropAnchor.bind(this)}>
@@ -468,8 +560,12 @@ class App extends Component {
         </div>
       )
     }else if(myShip.fishing){
+      let clickFn = this.reelIn.bind(this);
+      if(buttonDisabled){
+        clickFn=()=>{}
+      }
       buttons.push(
-        <div style={{zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} onClick={this.reelIn.bind(this)}>
+        <div style={{zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} disabled={buttonDisabled} onClick={clickFn}>
           <img src="reelin.png" style={{maxWidth:150}}/>
         </div>
       )
@@ -490,6 +586,12 @@ class App extends Component {
         </div>
       )
     }
+    buttons.push(
+      <div style={{zIndex:201,position:'absolute',left:buttonsLeft-50,top:buttonsTop+50,opacity:0.7}}>
+        {loadingBar}
+      </div>
+    )
+
 
     let menuSize = 60;
     let menu = (
@@ -497,7 +599,24 @@ class App extends Component {
         <div style={{float:'left',opacity:0.01}}>
           <img src="ethfishtitle.png" alt="eth.fish" />
         </div>
-        <Metamask init={this.init.bind(this)} Blockies={Blockies}/>
+
+        <Motion
+          defaultStyle={{
+            marginTop:0
+          }}
+          style={{
+            marginTop: spring(this.state.metamaskDip,{stiffness: 120, damping: 17})// presets.noWobble)
+          }}
+        >
+          {currentStyles => {
+            return (
+              <div style={currentStyles}>
+                <Metamask account={this.state.account} init={this.init.bind(this)} Blockies={Blockies} blockNumber={this.state.blockNumber}/>
+              </div>
+            )
+          }}
+        </Motion>
+
 
       </div>
     )
@@ -516,7 +635,7 @@ class App extends Component {
         <div style={{position:'absolute',left:0,top:horizon,opacity:1,backgroundImage:"url('oceanblackblur.jpg')",backgroundRepeat:'no-repeat',height:height+horizon,width:width}}></div>
         {buttons}
         <Ships ships={this.state.ships} width={width} height={height} horizon={horizon+100} Blockies={Blockies} web3={web3} shipSpeed={shipSpeed} blockNumber={this.state.blockNumber}/>
-        <Fish fish={this.state.fish} width={width} height={height} horizon={horizon+100} />
+        <Fish fish={this.state.fish} width={width} height={height} horizon={horizon+150} />
         <div style={{zIndex:11,position:'absolute',left:0,top:horizon,opacity:.7,backgroundImage:"url('oceanfront.png')",backgroundRepeat:'no-repeat',height:height+horizon,width:width}}></div>
       </div>
     )
@@ -529,12 +648,28 @@ class App extends Component {
 
     if(!this.state.contractsLoaded) buttons="";
 
+
+
     return (
       <div className="App" >
         {menu}
         {inventory}
         {sea}
         {land}
+        <Motion
+          defaultStyle={{
+            scrollLeft:document.scrollingElement.scrollLeft
+          }}
+          style={{
+            scrollLeft: spring(this.state.scrollLeft,this.state.scrollConfig )// presets.noWobble)
+          }}
+        >
+          {currentStyles => {
+            //console.log("currentStyles.scrollLeft",currentStyles.scrollLeft)
+            return <WindowScrollSink scrollLeft={currentStyles.scrollLeft} />
+
+          }}
+        </Motion>
       </div>
     );
   }
@@ -542,15 +677,20 @@ class App extends Component {
 
 const DEBUGCONTRACTLOAD = false;
 let loadContract = async (contract)=>{
-  if(DEBUGCONTRACTLOAD) console.log("HITTING GALLEASS for address of "+contract)
-  if(DEBUGCONTRACTLOAD) console.log(contracts["Galleass"])
-  let hexContractName = web3.utils.asciiToHex(contract);
-  if(DEBUGCONTRACTLOAD) console.log(hexContractName)
-  let thisContractAddress = await contracts["Galleass"].methods.getContract(hexContractName).call()
-  if(DEBUGCONTRACTLOAD) console.log("ADDRESS OF SEA:",thisContractAddress)
-  let thisContractAbi = require('./'+contract+'.abi.js');
-  if(DEBUGCONTRACTLOAD) console.log("LOADING",contract,thisContractAddress,thisContractAbi)
-  contracts[contract] = new web3.eth.Contract(thisContractAbi,thisContractAddress)
+  try{
+    if(DEBUGCONTRACTLOAD) console.log("HITTING GALLEASS for address of "+contract)
+    if(DEBUGCONTRACTLOAD) console.log(contracts["Galleass"])
+    let hexContractName = web3.utils.asciiToHex(contract);
+    if(DEBUGCONTRACTLOAD) console.log(hexContractName)
+    let thisContractAddress = await contracts["Galleass"].methods.getContract(hexContractName).call()
+    if(DEBUGCONTRACTLOAD) console.log("ADDRESS OF SEA:",thisContractAddress)
+    let thisContractAbi = require('./'+contract+'.abi.js');
+    if(DEBUGCONTRACTLOAD) console.log("LOADING",contract,thisContractAddress,thisContractAbi)
+    contracts[contract] = new web3.eth.Contract(thisContractAbi,thisContractAddress)
+  } catch(e) {
+    console.log(e)
+  }
+
 }
 
 let waitInterval
@@ -565,6 +705,22 @@ function waitForAllContracts(){
   }
 }
 
+function isEquivalent(a, b) {
+    if(!a||!b) return false;
+    var aProps = Object.getOwnPropertyNames(a);
+    var bProps = Object.getOwnPropertyNames(b);
+    if (aProps.length != bProps.length) {
+        return false;
+    }
+    for (var i = 0; i < aProps.length; i++) {
+        var propName = aProps[i];
+        if (a[propName] !== b[propName]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 const promisify = (inner) =>
   new Promise((resolve, reject) =>
     inner((err, res) => {
@@ -573,5 +729,17 @@ const promisify = (inner) =>
       resolve(res);
     })
   );
+
+  class WindowScrollSink extends Component {
+    componentDidUpdate (prevProps) {
+      if (prevProps.scrollLeft !== this.props.scrollLeft) {
+        document.scrollingElement.scrollLeft = this.props.scrollLeft
+      }
+    }
+
+    render () {
+      return null
+    }
+  }
 
 export default App;
