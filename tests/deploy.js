@@ -17,3 +17,6 @@ galleass.setContract("Timber",0)
 
 galleass.deploy("Catfish",0)
 galleass.setContract("Catfish",0)
+
+galleass.deploy("Pinner",0)
+galleass.setContract("Pinner",0)

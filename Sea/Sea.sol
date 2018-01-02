@@ -58,11 +58,11 @@ contract Sea is Galleasset, HasNoEther {
       bytes32 id = keccak256(nonce++,block.blockhash(block.number-1),msg.sender);
       require(fish[id]==address(0));
       fish[id] = _species;
-      Fish(id,now,fish[id]);
+      Fish(id,now,fish[id],fishContract.image());
     }
     return true;
   }
-  event Fish(bytes32 id, uint256 timestamp, address species);
+  event Fish(bytes32 id, uint256 timestamp, address species, bytes32 image);
 
 
 
@@ -166,7 +166,7 @@ contract Sea is Galleasset, HasNoEther {
       StandardToken thisFishContract = StandardToken(fishContractAddress);
       require( thisFishContract.transfer(msg.sender,1) );
       Catch(msg.sender,_fish,now,fishContractAddress);
-      Fish(_fish, now, fish[_fish]);
+      Fish(_fish, now, fish[_fish],thisFishContract.image());
       return true;
     }else{
       return false;
@@ -295,6 +295,7 @@ contract NFT {
 }
 
 contract StandardToken {
+  bytes32 public image;
   function transferFrom(address _from, address _to, uint256 _value) public returns (bool) { }
   function transfer(address _to, uint256 _value) public returns (bool) { }
 }

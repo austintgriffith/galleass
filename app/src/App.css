@@ -47,11 +47,3 @@ a:active {
     text-decoration: underline;
     color: #aaaaaa;
 }
-
-.darkText {
-    z-index:210;
-    font-weight:'bold';
-    font-size:10px;
-    color:"#333333";
-    text-shadow: "-1px 0 #777777, 0 1px #777777, 1px 0 #777777, 0 -1px #777777";
-}

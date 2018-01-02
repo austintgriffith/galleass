@@ -58,7 +58,7 @@ class Metamask extends Component {
       //not installed
       metamask = (
         <a target="_blank" href="https://metamask.io/">
-        <span style={{paddingRight:8}}>
+        <span style={this.props.textStyle}>
         Unable to connect to network
         </span>
         <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
@@ -73,7 +73,7 @@ class Metamask extends Component {
       //not installed
       metamask = (
         <a target="_blank" href="https://metamask.io/">
-        <span style={{paddingRight:8}}>
+        <span style={this.props.textStyle}>
         Install MetaMask and reload to play
         </span>
         <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
@@ -85,7 +85,7 @@ class Metamask extends Component {
       //not installed
       metamask = (
         <div>
-        <span style={{paddingRight:8}}>
+        <span style={this.props.textStyle}>
         MetaMask is on the wrong network
         </span>
         <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
@@ -97,7 +97,7 @@ class Metamask extends Component {
       //not installed
       metamask = (
         <div>
-          <span style={{paddingRight:8}}>
+          <span style={this.props.textStyle}>
             Unlock Metamask to play
           </span>
           <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
@@ -109,7 +109,7 @@ class Metamask extends Component {
 
       metamask = (
         <div>
-        <span style={{paddingRight:8}}>
+        <span style={this.props.textStyle}>
         Error Connecting
         </span>
         <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
@@ -145,7 +145,7 @@ class Metamask extends Component {
       )
     }
     return (
-      <div style={{float:'right',padding:2}}>
+      <div style={{float:'right',padding:2,paddingRight:10}}>
       {metamask}
       </div>
     )

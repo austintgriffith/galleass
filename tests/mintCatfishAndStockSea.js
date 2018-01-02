@@ -25,3 +25,13 @@ galleass.testMint("Catfish",0,1,15)
 galleass.approveContract("Catfish",1,"Sea",15)
 
 galleass.stock("Catfish",1,15)
+
+
+
+
+
+
+galleass.allowSpecies("Pinner",0)
+galleass.testMint("Pinner",0,1,25)
+galleass.approveContract("Pinner",1,"Sea",25)
+galleass.stock("Pinner",1,25)

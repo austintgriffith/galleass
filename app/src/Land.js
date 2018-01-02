@@ -67,8 +67,11 @@ class Land extends Component {
         {this.mainTile(2000,"0x34aA3F359A9D614239015126635CE7732c18fDF3")}
         {this.landTile(2000+60,"grass")}
         {this.landTile(2000+60+87,"mountain")}
+        {this.landTile(2000+60+87*2,"forest")}
+        {this.landTile(2000+60+87*3,"grass")}
+        {this.landTile(2000+60+87*4,"corn")}
 
-        {this.edgeTile(2000+60+87*2,"right")}
+        {this.edgeTile(2000+60+87*5,"right")}
 
       </div>
     )

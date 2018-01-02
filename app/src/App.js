@@ -37,6 +37,15 @@ const GAS = 100000;
 const FISHINGBOAT = 0;
 
 
+let textStyle = {
+  zIndex:210,
+  fontWeight:'bold',
+  fontSize:22,
+  paddingRight:10,
+  color:"#dddddd",
+  textShadow: "-1px 0 #777777, 0 1px #777777, 1px 0 #777777, 0 -1px #777777"
+}
+
 class App extends Component {
   constructor(props) {
     super(props);
@@ -50,7 +59,8 @@ class App extends Component {
       ships:[],
       clouds:[],
       blockNumber:0,
-      metamaskDip:0
+      metamaskDip:0,
+      readyToEmbark:false,
     }
 
     try{
@@ -113,7 +123,7 @@ class App extends Component {
 
       if(inventory['Ships']>0){
         let myShipArray = await contracts["Ships"].methods.shipsOfOwner(this.state.account).call()
-        if(!isEquivalent(myShipArray,inventoryDetail['Ships'])){
+        if(myShipArray && !isEquivalent(myShipArray,inventoryDetail['Ships'])){
           inventoryDetail['Ships']=myShipArray
           updateDetail=true
 
@@ -148,21 +158,24 @@ class App extends Component {
     }
   }
   async syncMyShip() {
-    //console.log("SYNCING MY SHIP")
+    const DEBUG_SYNCMYSHIP = false;
+    if(DEBUG_SYNCMYSHIP) console.log("SYNCING MY SHIP")
     let myship = this.state.ship;
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+    if(DEBUG_SYNCMYSHIP) console.log("Getting ship for account "+accounts[0])
     let getMyShip = await contracts["Sea"].methods.getShip(accounts[0]).call();
-    //console.log("COMPARE",this.state.ship,getMyShip)
+    if(DEBUG_SYNCMYSHIP) console.log("COMPARE",this.state.ship,getMyShip)
     //if(JSON.stringify(this.state.ship)!=JSON.stringify(getMyShip)) {
-    if(!isEquivalent(this.state.ship,getMyShip)){
-      console.log("UPDATE MY SHIP",JSON.stringify(this.state.ship),JSON.stringify(getMyShip))
+    if(getMyShip && !isEquivalent(this.state.ship,getMyShip)){
+      if(DEBUG_SYNCMYSHIP) console.log("UPDATE MY SHIP",JSON.stringify(this.state.ship),JSON.stringify(getMyShip))
       let myLocation = 2000;
       if(getMyShip.floating){
         myLocation = 4000 * getMyShip.location / 65535
-        console.log("myLocation",myLocation)
+        if(DEBUG_SYNCMYSHIP) console.log("myLocation",myLocation)
         this.setState({scrollLeft:myLocation-(window.innerWidth/2)})
       }
       this.setState({ship:getMyShip,waitingForShipUpdate:false,myLocation:myLocation},()=>{
+        //if(DEBUG_SYNCMYSHIP)
         //console.log("SET getMyShip",this.state.ship)
       })
     }
@@ -224,6 +237,7 @@ class App extends Component {
     })
     if(DEBUG_SYNCFISH) console.log("catchEvent",catchEvent)
     for(let f in catchEvent){
+      console.log(catchEvent[f])
       let id = catchEvent[f].returnValues.id
       let species = catchEvent[f].returnValues.species
       let timestamp = catchEvent[f].returnValues.timestamp
@@ -243,10 +257,11 @@ class App extends Component {
       let id = fish[f].returnValues.id
       let species = fish[f].returnValues.species
       let timestamp = fish[f].returnValues.timestamp
+      let image = fish[f].returnValues.image
       if(!storedFish[id] || storedFish[id].timestamp < timestamp){
         if(DEBUG_SYNCFISH) console.log(id)
         let result = await contracts["Sea"].methods.fishLocation(id).call()
-        storedFish[id]={timestamp:timestamp,species:species,x:result[0],y:result[1],dead:false};
+        storedFish[id]={timestamp:timestamp,species:species,x:result[0],y:result[1],dead:false,image:web3.utils.hexToAscii(image)};
       }
     }
 
@@ -266,19 +281,29 @@ class App extends Component {
       //hint to install metamask
       this.metamaskHint()
     }else{
-      const accounts = await promisify(cb => web3.eth.getAccounts(cb));
-      console.log(accounts)
-      let currentPrice = await contracts["Harbor"].methods.currentPrice(FISHINGBOAT).call()
-      console.log("current price for",FISHINGBOAT,"is",currentPrice)
-      contracts["Harbor"].methods.buyShip(FISHINGBOAT).send({
-        value: currentPrice,
-        from: accounts[0],
-        gas:GAS,
-        gasPrice:GWEI * 1000000000
-      }).then((receipt)=>{
-        console.log("RESULT:",receipt)
-        this.startWaiting(receipt.transactionHash,"inventoryUpdate")
-      })
+      try{
+        const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+        console.log(accounts)
+        if(!accounts[0]){
+            this.metamaskHint()
+        }else{
+          let currentPrice = await contracts["Harbor"].methods.currentPrice(FISHINGBOAT).call()
+          console.log("current price for",FISHINGBOAT,"is",currentPrice)
+          contracts["Harbor"].methods.buyShip(FISHINGBOAT).send({
+            value: currentPrice,
+            from: accounts[0],
+            gas:GAS,
+            gasPrice:GWEI * 1000000000
+          }).then((receipt)=>{
+            console.log("RESULT:",receipt)
+            this.startWaiting(receipt.transactionHash,"inventoryUpdate")
+          })
+        }
+
+      }catch(e){
+        console.log(e)
+        this.metamaskHint()
+      }
     }
   }
   async approveAndEmbark() {
@@ -306,6 +331,39 @@ class App extends Component {
       })
     })
 
+  }
+  async approve() {
+    console.log("approve")
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+    console.log(accounts)
+    let seaContractAddress = await contracts["Galleass"].methods.getContract(web3.utils.asciiToHex("Sea")).call()
+    console.log("seaContractAddress",seaContractAddress)
+    console.log("MY FIRST SHIP ",this.state.inventoryDetail['Ships'][0])
+    console.log("methods.approve(",seaContractAddress,this.state.inventoryDetail['Ships'][0])
+    contracts["Ships"].methods.approve(seaContractAddress,this.state.inventoryDetail['Ships'][0]).send({
+      from: accounts[0],
+      gas:50000,
+      gasPrice:GWEI * 1000000000
+    }).then((receipt)=>{
+      console.log("RESULT:",receipt)
+      setTimeout(()=>{
+        this.setState({readyToEmbark:true})
+      },5000)/////////////////////////////////WHY YOU TIMEOUT BRAH?
+    })
+  }
+  async embark() {
+    console.log("embark")
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+    console.log(accounts)
+    console.log("methods.embark(",this.state.inventoryDetail['Ships'][0])
+    contracts["Sea"].methods.embark(this.state.inventoryDetail['Ships'][0]).send({
+      from: accounts[0],
+      gas:200000,
+      gasPrice:GWEI * 1000000000
+    }).then((receipt)=>{
+      console.log("RESULT:",receipt)
+      this.startWaiting(receipt.transactionHash)
+    })
   }
   async startWaitingForTransaction(hash){
     console.log("WAITING FOR TRANSACTION ",hash,this.state.waitingForTransaction,this.state.waitingForTransactionTime)
@@ -493,9 +551,10 @@ class App extends Component {
     }
 
     let myShip
-    if(this.state&&this.state.shipsOfOwner){
+    if(this.state/*&&this.state.shipsOfOwner*/){
       myShip = this.state.ship;
     }
+    //console.log("myShip",myShip)
 
     //both of these are in sync and we need to test which is fastest
     // one is all of the ship events while the other is doing a get ship
@@ -533,16 +592,29 @@ class App extends Component {
     }
 
     if(!myShip||!myShip.floating){
+
       if(this.state.inventoryDetail && (!this.state.inventoryDetail['Ships']||this.state.inventoryDetail['Ships'].length<=0)){
+        let clickFn = this.buyShip.bind(this)
+        if(buttonDisabled){clickFn=()=>{}}
         buttons.push(
-          <div style={{zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} onClick={this.buyShip.bind(this)}>
+          <div style={{zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} onClick={clickFn}>
             <img src="buyship.png" style={{maxWidth:150}}/>
           </div>
         )
-      }else{
+      }else if(this.state.readyToEmbark){
+        let clickFn = this.embark.bind(this)
+        if(buttonDisabled){clickFn=()=>{}}
         buttons.push(
-          <div style={{zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} onClick={this.approveAndEmbark.bind(this)}>
+          <div style={{zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} onClick={clickFn}>
             <img src="approveAndEmbark.png" style={{maxWidth:150}}/>
+          </div>
+        )
+      }else{
+        let clickFn = this.approve.bind(this)
+        if(buttonDisabled){clickFn=()=>{}}
+        buttons.push(
+          <div style={{zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} onClick={clickFn}>
+            <img src="approveShipForSea.png" style={{maxWidth:150}}/>
           </div>
         )
       }
@@ -554,34 +626,40 @@ class App extends Component {
         </div>
       )*/
     }else if(myShip.sailing){
+      let clickFn = this.dropAnchor.bind(this)
+      if(buttonDisabled){clickFn=()=>{}}
       buttons.push(
-        <div style={{zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} onClick={this.dropAnchor.bind(this)}>
+        <div style={{zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} onClick={clickFn}>
           <img src="dropanchor.png" style={{maxWidth:150}}/>
         </div>
       )
     }else if(myShip.fishing){
       let clickFn = this.reelIn.bind(this);
-      if(buttonDisabled){
-        clickFn=()=>{}
-      }
+      if(buttonDisabled){clickFn=()=>{}}
       buttons.push(
-        <div style={{zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} disabled={buttonDisabled} onClick={clickFn}>
+        <div style={{zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} onClick={clickFn}>
           <img src="reelin.png" style={{maxWidth:150}}/>
         </div>
       )
     }else{
+      let clickFn1 = this.setSail.bind(this,true)
+      if(buttonDisabled){clickFn1=()=>{}}
       buttons.push(
-        <div style={{zIndex:200,position:'absolute',left:buttonsLeft+180-75,top:buttonsTop,opacity:buttonOpacity}} onClick={this.setSail.bind(this,true)}>
+        <div style={{zIndex:200,position:'absolute',left:buttonsLeft+180-75,top:buttonsTop,opacity:buttonOpacity}} onClick={clickFn1}>
           <img src="saileast.png" style={{maxWidth:150}}/>
         </div>
       )
+      let clickFn2 = this.castLine.bind(this,true)
+      if(buttonDisabled){clickFn2=()=>{}}
       buttons.push(
-        <div style={{zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} onClick={this.castLine.bind(this,false)}>
+        <div style={{zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} onClick={clickFn2}>
           <img src="castLine.png" style={{maxWidth:150}}/>
         </div>
       )
+      let clickFn3 = this.setSail.bind(this,false)
+      if(buttonDisabled){clickFn3=()=>{}}
       buttons.push(
-        <div style={{zIndex:200,position:'absolute',left:buttonsLeft-180-75,top:buttonsTop,opacity:buttonOpacity}} onClick={this.setSail.bind(this,false)}>
+        <div style={{zIndex:200,position:'absolute',left:buttonsLeft-180-75,top:buttonsTop,opacity:buttonOpacity}} onClick={clickFn3}>
           <img src="sailwest.png" style={{maxWidth:150}}/>
         </div>
       )
@@ -596,8 +674,8 @@ class App extends Component {
     let menuSize = 60;
     let menu = (
       <div style={{position:"fixed",left:0,top:0,width:"100%",height:menuSize,overflow:'hidden',borderBottom:"0px solid #a0aab5",color:"#DDDDDD",zIndex:99}} >
-        <div style={{float:'left',opacity:0.01}}>
-          <img src="ethfishtitle.png" alt="eth.fish" />
+        <div style={{float:'left',opacity:0.5}}>
+          ...
         </div>
 
         <Motion
@@ -611,7 +689,7 @@ class App extends Component {
           {currentStyles => {
             return (
               <div style={currentStyles}>
-                <Metamask account={this.state.account} init={this.init.bind(this)} Blockies={Blockies} blockNumber={this.state.blockNumber}/>
+                <Metamask textStyle={textStyle} account={this.state.account} init={this.init.bind(this)} Blockies={Blockies} blockNumber={this.state.blockNumber}/>
               </div>
             )
           }}
@@ -621,10 +699,11 @@ class App extends Component {
       </div>
     )
     let inventory = (
-      <div style={{position:"fixed",right:0,top:75,width:200,border:"0px solid #a0aab5",color:"#DDDDDD",zIndex:99}} >
+      <div style={{position:"fixed",right:5,top:75,width:200,border:"0px solid #a0aab5",color:"#DDDDDD",zIndex:99}} >
         <Inventory
           inventory={this.state.inventory}
           Ships={this.state.Ships}
+          textStyle={textStyle}
         />
       </div>
     )
@@ -706,9 +785,9 @@ function waitForAllContracts(){
 }
 
 function isEquivalent(a, b) {
-    if(!a||!b) return false;
-    var aProps = Object.getOwnPropertyNames(a);
-    var bProps = Object.getOwnPropertyNames(b);
+    if((!a||!b)&&(a||b)) return false;
+    let aProps = Object.getOwnPropertyNames(a);
+    let bProps = Object.getOwnPropertyNames(b);
     if (aProps.length != bProps.length) {
         return false;
     }
