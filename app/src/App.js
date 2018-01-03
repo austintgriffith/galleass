@@ -29,7 +29,9 @@ let loadContracts = [
   "Harbor",
   "Ships",
   "Timber",
-  "Catfish"
+  "Catfish",
+  "Pinner",
+  "Redbass"
 ]
 
 const GWEI = 4;
@@ -138,6 +140,22 @@ class App extends Component {
         update=true
       }
 
+      if(DEBUG_INVENTORY) console.log(contracts["Pinner"])
+      let balanceOfPinner = await contracts["Pinner"].methods.balanceOf(this.state.account).call()
+      if(DEBUG_INVENTORY) console.log("balanceOf",balanceOfPinner)
+      if(inventory['Pinner']!=balanceOfPinner){
+        inventory['Pinner'] = balanceOfPinner;
+        update=true
+      }
+
+      if(DEBUG_INVENTORY) console.log(contracts["Redbass"])
+      let balanceOfRedbass = await contracts["Redbass"].methods.balanceOf(this.state.account).call()
+      if(DEBUG_INVENTORY) console.log("balanceOf",balanceOfRedbass)
+      if(inventory['Pinner']!=balanceOfRedbass){
+        inventory['Pinner'] = balanceOfRedbass;
+        update=true
+      }
+
       let balanceOfEther = Math.round(web3.utils.fromWei(await web3.eth.getBalance(this.state.account),"Ether")*1000)/1000;
       if(DEBUG_INVENTORY) console.log("balanceOfEther",balanceOfEther)
       if(inventory['Ether']!=balanceOfEther){
@@ -237,7 +255,7 @@ class App extends Component {
     })
     if(DEBUG_SYNCFISH) console.log("catchEvent",catchEvent)
     for(let f in catchEvent){
-      console.log(catchEvent[f])
+      //console.log(catchEvent[f])
       let id = catchEvent[f].returnValues.id
       let species = catchEvent[f].returnValues.species
       let timestamp = catchEvent[f].returnValues.timestamp
@@ -261,7 +279,7 @@ class App extends Component {
       if(!storedFish[id] || storedFish[id].timestamp < timestamp){
         if(DEBUG_SYNCFISH) console.log(id)
         let result = await contracts["Sea"].methods.fishLocation(id).call()
-        storedFish[id]={timestamp:timestamp,species:species,x:result[0],y:result[1],dead:false,image:web3.utils.hexToAscii(image)};
+        storedFish[id]={timestamp:timestamp,species:species,x:result[0],y:result[1],dead:false,image:web3.utils.hexToUtf8(image)};
       }
     }
 
@@ -800,6 +818,24 @@ function isEquivalent(a, b) {
     return true;
 }
 
+
+class WindowScrollSink extends Component {
+  componentDidUpdate (prevProps) {
+    if (prevProps.scrollLeft !== this.props.scrollLeft) {
+      document.scrollingElement.scrollLeft = this.props.scrollLeft
+    }
+  }
+
+  render () {
+    return null
+  }
+}
+
+var toUtf8 = function(hex) {
+    var buf = new Buffer(hex.replace('0x',''),'hex');
+    return buf.toString();
+}
+
 const promisify = (inner) =>
   new Promise((resolve, reject) =>
     inner((err, res) => {
@@ -809,16 +845,5 @@ const promisify = (inner) =>
     })
   );
 
-  class WindowScrollSink extends Component {
-    componentDidUpdate (prevProps) {
-      if (prevProps.scrollLeft !== this.props.scrollLeft) {
-        document.scrollingElement.scrollLeft = this.props.scrollLeft
-      }
-    }
-
-    render () {
-      return null
-    }
-  }
 
 export default App;

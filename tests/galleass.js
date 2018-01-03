@@ -496,6 +496,8 @@ module.exports = {
         loadAbi("Ships")
         loadAbi("Timber")
         loadAbi("Catfish")
+        loadAbi("Pinner")
+        loadAbi("Redbass")
       });
     });
   },

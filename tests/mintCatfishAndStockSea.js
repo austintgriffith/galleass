@@ -35,3 +35,9 @@ galleass.allowSpecies("Pinner",0)
 galleass.testMint("Pinner",0,1,25)
 galleass.approveContract("Pinner",1,"Sea",25)
 galleass.stock("Pinner",1,25)
+
+
+galleass.allowSpecies("Redbass",0)
+galleass.testMint("Redbass",0,1,10)
+galleass.approveContract("Redbass",1,"Sea",10)
+galleass.stock("Redbass",1,10)

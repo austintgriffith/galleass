@@ -20,3 +20,6 @@ galleass.setContract("Catfish",0)
 
 galleass.deploy("Pinner",0)
 galleass.setContract("Pinner",0)
+
+galleass.deploy("Redbass",0)
+galleass.setContract("Redbass",0)
