@@ -73,7 +73,7 @@ contract Sea is Galleasset, HasNoEther {
     require( !ships[msg.sender].floating );
     NFT shipsContract = NFT(getContract("Ships"));
     require( shipsContract.ownerOf(shipId)==msg.sender );
-    shipsContract.transferFrom(msg.sender,address(this),shipId);
+    shipsContract.galleassetTransferFrom(msg.sender,address(this),shipId);
     require( shipsContract.ownerOf(shipId)==address(this) );
 
     ships[msg.sender].id = shipId;
@@ -91,7 +91,7 @@ contract Sea is Galleasset, HasNoEther {
   //
   // sail east (true) or west (false)
   //
-  function setSail(bool direction) public returns (bool) {
+  function setSail(bool direction) public isGalleasset("Sea") returns (bool) {
     require( ships[msg.sender].floating );
     require( !ships[msg.sender].fishing );
     require( !ships[msg.sender].sailing );
@@ -109,7 +109,7 @@ contract Sea is Galleasset, HasNoEther {
   //
   // drop anchor to stop the ship
   //
-  function dropAnchor() public returns (bool) {
+  function dropAnchor() public isGalleasset("Sea") returns (bool) {
     require( ships[msg.sender].floating );
     require( ships[msg.sender].sailing );
 
@@ -125,7 +125,7 @@ contract Sea is Galleasset, HasNoEther {
   //
   // bait the hook and cast the line
   //
-  function castLine(bytes32 baitHash) public returns (bool) {
+  function castLine(bytes32 baitHash) public isGalleasset("Sea") returns (bool) {
     require( ships[msg.sender].floating );
     require( !ships[msg.sender].sailing );
     require( !ships[msg.sender].fishing );
@@ -142,7 +142,7 @@ contract Sea is Galleasset, HasNoEther {
   //
   //  try to catch a fish with your bait
   //
-  function reelIn(bytes32 _fish, bytes32 _bait) public returns (bool) {
+  function reelIn(bytes32 _fish, bytes32 _bait) public isGalleasset("Sea") returns (bool) {
     require( ships[msg.sender].floating );
     require( ships[msg.sender].fishing );
     require( block.number > ships[msg.sender].blockNumber);//must be next block after so we have a new block hash
@@ -291,6 +291,7 @@ contract Ships {
 
 contract NFT {
   function transferFrom(address _from,address _to,uint256 _tokenId) external { }
+  function galleassetTransferFrom(address _from,address _to,uint256 _tokenId) external { }
   function ownerOf(uint256 _tokenId) external view returns (address owner) { }
 }
 

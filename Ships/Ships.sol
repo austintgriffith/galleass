@@ -39,9 +39,9 @@ contract Ships is Galleasset, NFT {
       //Build(msg.sender,model,model==Model.FISHING);
 
       if(model==Model.FISHING){
-        require( getTokens(msg.sender,"Timber",2) );
         bool hasPermissionResult = hasPermission(msg.sender,"buildShip");
         require( hasPermissionResult );
+        require( getTokens(msg.sender,"Timber",2) );
         Build(msg.sender,model,hasPermissionResult);
         return _createShip(msg.sender, model);
       }
@@ -49,6 +49,17 @@ contract Ships is Galleasset, NFT {
     }
     //event Build(address _sender,Model model,bool fishing,bool _get);
     event Build(address _sender,Model model,bool hasPermissionResult);
+
+
+    function galleassetTransferFrom(address _from,address _to,uint256 _tokenId) external {
+        require(_to != address(0));
+        require(_to != address(this));
+        require(_owns(_from, _tokenId));
+        require(hasPermission(msg.sender,"transferShips"));
+        _transfer(_from, _to, _tokenId);
+    }
+
+
 
 /*
     function buildShips(Model model,uint amount) public returns (uint){

@@ -3,12 +3,18 @@ import React, { Component } from 'react';
 
 const horizonFishPad = 60
 
+const fishWidth = {
+  "pinner": 50,
+  "redbass": 60,
+  "catfish": 60,
+  "dangler": 60,
+  "snark": 90
+}
+
 class Fish extends Component {
   constructor(props) {
     super(props);
   }
-  //({fish[f].x},{fish[f].y})
-  //({//({f})
   render(){
     let {fish,width,height,horizon} = this.props
 
@@ -22,11 +28,18 @@ class Fish extends Component {
         //console.log(opacity)
         let widthRatio = fish[f].x/65536
         let image = ""+fish[f].image+".png"
+        let fishwidthpx = fishWidth[fish[f].image];
+
+        let fishClass = ""
+        if((parseInt(f[f.length-1],16))>7){
+          fishClass="flip"
+        }
+        /*{f.substr(0,6)}*/
         renderedFish.push(
-          <div key={"fish"+f} style={{position:"absolute",left:widthRatio*width,top:horizon+depth}}>
+          <div key={"fish"+f} className={fishClass}  style={{position:"absolute",left:widthRatio*width,top:horizon+depth}}>
            <img
             src={image}
-            style={{maxWidth:60,opacity:opacity}}
+            style={{maxWidth:fishwidthpx,opacity:opacity}}
             onClick={()=>{console.log(f+" "+fish[f].species+" "+fish[f].x+" "+fish[f].y)}} />
           </div>
         )

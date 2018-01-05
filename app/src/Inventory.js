@@ -30,9 +30,9 @@ class Inventory extends Component {
           >
             {
               (value) => (
-                <div>
+                <div style={{padding:5}}>
                   <span style={this.props.textStyle}>{inventory[i]}</span>
-                  <img style={{maxWidth:64,maxHeight:32,marginRight:value.right}} src={i+".png"}/>
+                  <img style={{maxWidth:64,maxHeight:32,marginRight:value.right,verticalAlign:'bottom'}} src={i+".png"}/>
                 </div>
               )
             }

@@ -65,6 +65,7 @@ module.exports = {
       it('should setContract with main contract', async function() {
         this.timeout(60000)
         let contractAddress = localContractAddress(contract)
+        console.log(tab,"Setting "+contract+" in Galleass to "+contractAddress)
         const setResult = await clevis("contract","setContract","Galleass",accountindex,web3.utils.fromAscii(contract),contractAddress)
         printTxResult(setResult)
         const getResult = await clevis("contract","getContract","Galleass",web3.utils.fromAscii(contract))
@@ -81,7 +82,7 @@ module.exports = {
         this.timeout(60000)
         let contractAddress = localContractAddress(contract)
         const setResult = await clevis("contract","setPermission","Galleass",accountindex,contractAddress,web3.utils.fromAscii(permission),value)
-        console.log(tab+contract+" permission ("+permission.magenta+"): "+value)
+        console.log(tab+contract+" permission ("+permission.cyan+"): "+value)
         const getResult = await clevis("contract","hasPermission","Galleass",contractAddress,web3.utils.fromAscii(permission))
         assert(""+getResult===value,"Contract Permission did not set correctly")
       });
@@ -480,6 +481,50 @@ module.exports = {
       });
     });
   },
+  transferTokens:(contract,accountindex,toContract,amount)=>{
+    describe('#transferTokens() '+contract.magenta, function() {
+      it('should transfer '+amount+' '+contract+' tokens to '+toContract, async function() {
+        this.timeout(60000)
+        let toContractAddress = localContractAddress(toContract);
+        console.log("Transferring "+amount+" "+contract+" to "+toContract+" ("+toContractAddress+")")
+        const accounts = await clevis("accounts")
+        const startingBalance = await clevis("contract","balanceOf",contract,accounts[accountindex])
+        const startingBalanceTo = await clevis("contract","balanceOf",contract,toContractAddress)
+        const result = await clevis("contract","transfer",contract,accountindex,toContractAddress,amount)
+        printTxResult(result)
+        const endingBalance = await clevis("contract","balanceOf",contract,accounts[accountindex])
+        const endingBalanceTo = await clevis("contract","balanceOf",contract,toContractAddress)
+        const balanceDifference = endingBalance-startingBalance;
+        assert(balanceDifference == amount*-1,"The balance of "+accounts[accountindex]+" in contract "+contract+" went down "+balanceDifference+" but it should have gone down "+amount)
+        const balanceDifferenceTo = endingBalanceTo-startingBalanceTo;
+        assert(balanceDifferenceTo == amount,"The balance of "+toContractAddress+" in contract "+contract+" went up "+balanceDifferenceTo+" but it should have gone up "+amount)
+      });
+    });
+  },
+  setFishPrice:(accountindex,species,price)=>{
+    describe('#setFishPrice()', function() {
+      it('should set price of species at the Fishmonger', async function() {
+        this.timeout(60000)
+        let speciesAddress = localContractAddress(species);
+        const result = await clevis("contract","setPrice","Fishmonger",accountindex,speciesAddress,price)
+        printTxResult(result)
+        const newprice = await clevis("contract","price","Fishmonger",speciesAddress)
+        assert(newprice==price,"Price at Fishmonger is "+newprice+" and it should be "+price)
+      });
+    });
+  },
+  sellFish:(accountindex,species,amount)=>{
+    describe('#sellFish()', function() {
+      it('should sell species to Fishmonger (and butcher and stock)', async function() {
+        this.timeout(60000)
+        let speciesAddress = localContractAddress(species);
+        console.log("Selling "+amount+" "+speciesAddress+" fish to Fishmonger to butcher from "+accountindex)
+        const result = await clevis("contract","sellFish","Fishmonger",accountindex,speciesAddress,amount)
+        printTxResult(result)
+      });
+    });
+  },
+
 
   publish:()=>{
     describe('#publish() ', function() {
@@ -498,6 +543,8 @@ module.exports = {
         loadAbi("Catfish")
         loadAbi("Pinner")
         loadAbi("Redbass")
+        loadAbi("Snark")
+        loadAbi("Dangler")
       });
     });
   },

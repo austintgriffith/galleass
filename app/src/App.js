@@ -31,7 +31,9 @@ let loadContracts = [
   "Timber",
   "Catfish",
   "Pinner",
-  "Redbass"
+  "Redbass",
+  "Snark",
+  "Dangler"
 ]
 
 const GWEI = 4;
@@ -151,8 +153,24 @@ class App extends Component {
       if(DEBUG_INVENTORY) console.log(contracts["Redbass"])
       let balanceOfRedbass = await contracts["Redbass"].methods.balanceOf(this.state.account).call()
       if(DEBUG_INVENTORY) console.log("balanceOf",balanceOfRedbass)
-      if(inventory['Pinner']!=balanceOfRedbass){
-        inventory['Pinner'] = balanceOfRedbass;
+      if(inventory['Redbass']!=balanceOfRedbass){
+        inventory['Redbass'] = balanceOfRedbass;
+        update=true
+      }
+
+      if(DEBUG_INVENTORY) console.log(contracts["Snark"])
+      let balanceOfSnark = await contracts["Snark"].methods.balanceOf(this.state.account).call()
+      if(DEBUG_INVENTORY) console.log("balanceOf",balanceOfSnark)
+      if(inventory['Snark']!=balanceOfSnark){
+        inventory['Snark'] = balanceOfSnark;
+        update=true
+      }
+
+      if(DEBUG_INVENTORY) console.log(contracts["Dangler"])
+      let balanceOfDangler = await contracts["Dangler"].methods.balanceOf(this.state.account).call()
+      if(DEBUG_INVENTORY) console.log("balanceOf",balanceOfDangler)
+      if(inventory['Dangler']!=balanceOfDangler){
+        inventory['Dangler'] = balanceOfDangler;
         update=true
       }
 
@@ -303,7 +321,7 @@ class App extends Component {
         const accounts = await promisify(cb => web3.eth.getAccounts(cb));
         console.log(accounts)
         if(!accounts[0]){
-            this.metamaskHint()
+          this.metamaskHint()
         }else{
           let currentPrice = await contracts["Harbor"].methods.currentPrice(FISHINGBOAT).call()
           console.log("current price for",FISHINGBOAT,"is",currentPrice)
@@ -427,7 +445,7 @@ class App extends Component {
       console.log(_accounts)
       contracts["Sea"].methods.setSail(direction).send({
         from: _accounts[0],
-        gas:GAS,
+        gas:40000,
         gasPrice:GWEI * 1000000000
       }).then((receipt)=>{
         console.log("RESULT:",receipt)
@@ -441,7 +459,7 @@ class App extends Component {
       console.log(_accounts)
       contracts["Sea"].methods.dropAnchor().send({
         from: _accounts[0],
-        gas:GAS,
+        gas:40000,
         gasPrice:GWEI * 1000000000
       }).then((receipt)=>{
         console.log("RESULT:",receipt)
@@ -458,7 +476,7 @@ class App extends Component {
       this.setState({bait:bait,baitHash:baitHash})
       contracts["Sea"].methods.castLine(baitHash).send({
         from: _accounts[0],
-        gas:GAS,
+        gas:60000,
         gasPrice:GWEI * 1000000000
       }).then((receipt)=>{
         console.log("RESULT:",receipt)
@@ -487,14 +505,16 @@ class App extends Component {
           let x = myShip.location-this.state.fish[f].x
           let y = 0-this.state.fish[f].y
           if(DEBUG_REEL_IN) console.log(x,y)
-          let diff = Math.sqrt(x*x + (y*y/8));
-          if(DEBUG_REEL_IN) console.log(diff)
+          let diff = Math.sqrt(x*x + (y*y/90));
+          if(DEBUG_REEL_IN) console.log("DIFF TO ",f,"IS",diff)
+          if(DEBUG_REEL_IN) console.log(f,diff)
           //console.log("this.state.fish.x",this.state.fish[f].x,"myShip.location",myShip.location,diff)
           if( diff < bestDist ){
 
             bestDist=diff
             bestId=f
-            if(DEBUG_REEL_IN) console.log("found closer ",bestDist,bestId)
+            //if(DEBUG_REEL_IN)
+            console.log("========== found closer ",bestDist,bestId)
           }
         }
       }
@@ -509,7 +529,7 @@ class App extends Component {
 
       contracts["Sea"].methods.reelIn(bestId,baitToUse,).send({
         from: _accounts[0],
-        gas:300000,
+        gas:100000,
         gasPrice:GWEI * 1000000000
       }).then((receipt)=>{
         if(DEBUG_REEL_IN) console.log("RESULT:",receipt)
@@ -619,7 +639,7 @@ class App extends Component {
             <img src="buyship.png" style={{maxWidth:150}}/>
           </div>
         )
-      }else if(this.state.readyToEmbark){
+      }else/* if(this.state.readyToEmbark)*/{
         let clickFn = this.embark.bind(this)
         if(buttonDisabled){clickFn=()=>{}}
         buttons.push(
@@ -627,7 +647,7 @@ class App extends Component {
             <img src="approveAndEmbark.png" style={{maxWidth:150}}/>
           </div>
         )
-      }else{
+      }/*else{
         let clickFn = this.approve.bind(this)
         if(buttonDisabled){clickFn=()=>{}}
         buttons.push(
@@ -635,7 +655,7 @@ class App extends Component {
             <img src="approveShipForSea.png" style={{maxWidth:150}}/>
           </div>
         )
-      }
+      }*/
 
     /*}else if(!myShip.floating){
       buttons.push(
@@ -717,7 +737,7 @@ class App extends Component {
       </div>
     )
     let inventory = (
-      <div style={{position:"fixed",right:5,top:75,width:200,border:"0px solid #a0aab5",color:"#DDDDDD",zIndex:99}} >
+      <div style={{position:"fixed",right:0,top:75,width:200,border:"0px solid #a0aab5",color:"#DDDDDD",zIndex:99}} >
         <Inventory
           inventory={this.state.inventory}
           Ships={this.state.Ships}
