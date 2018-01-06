@@ -33,7 +33,9 @@ let loadContracts = [
   "Pinner",
   "Redbass",
   "Snark",
-  "Dangler"
+  "Dangler",
+  "Fishmonger",
+  "Copper"
 ]
 
 const GWEI = 50;
@@ -132,6 +134,14 @@ class App extends Component {
           updateDetail=true
 
         }
+      }
+
+      if(DEBUG_INVENTORY) console.log(contracts["Copper"])
+      let balanceOfCopper = await contracts["Copper"].methods.balanceOf(this.state.account).call()
+      if(DEBUG_INVENTORY) console.log("balanceOf",balanceOfCopper)
+      if(inventory['Copper']!=balanceOfCopper){
+        inventory['Copper'] = balanceOfCopper;
+        update=true
       }
 
       if(DEBUG_INVENTORY) console.log(contracts["Catfish"])
@@ -311,6 +321,7 @@ class App extends Component {
       },500)
     })
   }
+
   async buyShip() {
     console.log("BUYSHIP")
     if(!web3){
@@ -328,7 +339,7 @@ class App extends Component {
           contracts["Harbor"].methods.buyShip(FISHINGBOAT).send({
             value: currentPrice,
             from: accounts[0],
-            gas:GAS,
+            gas:90000,
             gasPrice:GWEI * 1000000000
           }).then((receipt)=>{
             console.log("RESULT:",receipt)
@@ -352,7 +363,7 @@ class App extends Component {
     console.log("MY FIRST SHIP ",this.state.inventoryDetail['Ships'][0])
     contracts["Ships"].methods.approve(seaContractAddress,this.state.inventoryDetail['Ships'][0]).send({
       from: accounts[0],
-      gas:GAS,
+      gas:110000,
       gasPrice:GWEI * 1000000000
     }).then((receipt)=>{
       console.log("RESULT:",receipt)
@@ -395,6 +406,22 @@ class App extends Component {
     contracts["Sea"].methods.embark(this.state.inventoryDetail['Ships'][0]).send({
       from: accounts[0],
       gas:200000,
+      gasPrice:GWEI * 1000000000
+    }).then((receipt)=>{
+      console.log("RESULT:",receipt)
+      this.startWaiting(receipt.transactionHash)
+    })
+  }
+  async sellFish(fish){
+    console.log("SELL FISH "+fish)
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+    let fishContract = contracts[fish];
+    console.log("fishContractAddress:",fishContract._address)
+    let paying = await contracts["Fishmonger"].methods.price(fishContract._address).call()
+    console.log("Fishmonger is paying ",paying," for ",fishContract._address)
+    contracts["Fishmonger"].methods.sellFish(fishContract._address,1).send({
+      from: accounts[0],
+      gas:290000,
       gasPrice:GWEI * 1000000000
     }).then((receipt)=>{
       console.log("RESULT:",receipt)
@@ -537,6 +564,7 @@ class App extends Component {
       })
     })
   }
+
   startWaiting(hash,nextPhase){
     if(hash){
       console.log("STARTWAITING",hash,nextPhase)
@@ -557,10 +585,10 @@ class App extends Component {
     clearInterval(waitInterval);
     this.setState({contractsLoaded:true})
     setInterval(this.syncMyShip.bind(this),301)
-    setInterval(this.syncBlockNumber.bind(this),503)
-    setInterval(this.syncFish.bind(this),3001)
-    setInterval(this.syncShips.bind(this),2003)
-    setInterval(this.syncInventory.bind(this),1009)
+    setInterval(this.syncBlockNumber.bind(this),301)
+    setInterval(this.syncFish.bind(this),301)
+    setInterval(this.syncShips.bind(this),301)
+    setInterval(this.syncInventory.bind(this),301)
     this.syncEverythingOnce()
     //dev loop only...
     //setInterval(this.syncContacts.bind(this),4001)
@@ -742,6 +770,7 @@ class App extends Component {
           inventory={this.state.inventory}
           Ships={this.state.Ships}
           textStyle={textStyle}
+          sellFish={this.sellFish}
         />
       </div>
     )

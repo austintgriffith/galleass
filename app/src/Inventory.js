@@ -10,18 +10,27 @@ class Inventory extends Component {
   componentDidMount(){
 
   }
-  click(){
-    console.log("CLICK")
-
+  click(item){
+    console.log("CLICK",item)
+    this.props.sellFish(item)
   }
   render(){
     let {inventory} = this.props
 
     let display = [];
 
+    let sellForCopper = (item)=>{
+      return (
+        <img onClick={this.click.bind(this,item)} style={{maxHeight:25,paddingRight:20,verticalAlign:'bottom'}} src={"copper_small.png"} />
+      )
+    }
+
+
     for(let pass in [0,1])
     for(let i in inventory){
       if((pass==0 && i=="Ether" || pass==1 && i!="Ether")&&inventory[i]>0){
+        let extra = "";
+        if(i!="Ether" && i!="Copper" && i!="Ships" ) extra = sellForCopper(i);
         display.push(
           <Motion
              key={"inventory"+i}
@@ -31,6 +40,7 @@ class Inventory extends Component {
             {
               (value) => (
                 <div style={{padding:5}}>
+                  <span>{extra}</span>
                   <span style={this.props.textStyle}>{inventory[i]}</span>
                   <img style={{maxWidth:64,maxHeight:32,marginRight:value.right,verticalAlign:'bottom'}} src={i.toLowerCase()+".png"}/>
                 </div>
@@ -42,7 +52,7 @@ class Inventory extends Component {
     }
 
     return (
-      <div style={{float:'right',padding:2,paddingRight:10,textAlign:'right'}} onClick={this.click.bind(this)}>
+      <div style={{float:'right',padding:2,paddingRight:10,textAlign:'right'}} >
         {display}
       </div>
     )

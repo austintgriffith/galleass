@@ -9,7 +9,7 @@ class Metamask extends Component {
     }
   }
   componentDidMount(){
-    setInterval(this.checkMetamask.bind(this),401)
+    setInterval(this.checkMetamask.bind(this),2003)
     this.checkMetamask()
   }
   checkMetamask() {

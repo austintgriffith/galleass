@@ -51,7 +51,11 @@ module.exports = {
   deploy:(contract,accountindex)=>{
     describe('#deploy() '+contract.magenta, function() {
       it('should deploy '+contract.magenta+' as account '+accountindex, async function() {
+<<<<<<< HEAD
         this.timeout(360000)
+=======
+        this.timeout(120000)
+>>>>>>> d4594c6bd1f31e872838900ee6133398f2bd0bc3
         const result = await clevis("deploy",contract,accountindex)
         printTxResult(result)
         console.log(tab+"Address: "+result.contractAddress.blue)
@@ -63,7 +67,7 @@ module.exports = {
   setContract:(contract,accountindex)=>{
     describe('#setContract() '+contract.magenta, function() {
       it('should setContract with main contract', async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         let contractAddress = localContractAddress(contract)
         console.log(tab,"Setting "+contract+" in Galleass to "+contractAddress)
         const setResult = await clevis("contract","setContract","Galleass",accountindex,web3.utils.fromAscii(contract),contractAddress)
@@ -79,7 +83,7 @@ module.exports = {
   setPermission:(contract,accountindex,permission,value)=>{
     describe('#setPermission() '+contract.magenta, function() {
       it('should setPermission with main contract', async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         let contractAddress = localContractAddress(contract)
         const setResult = await clevis("contract","setPermission","Galleass",accountindex,contractAddress,web3.utils.fromAscii(permission),value)
         console.log(tab+contract+" permission ("+permission.cyan+"): "+value)
@@ -91,7 +95,7 @@ module.exports = {
   approveContract:(contract,accountindex,toContract,amount)=>{
     describe('#approve() '+contract.magenta, function() {
       it('should approve tokens', async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         const accounts = await clevis("accounts")
         let toContractAddress = localContractAddress(toContract)
         const result = await clevis("contract","approve",contract,accountindex,toContractAddress,amount)
@@ -104,7 +108,7 @@ module.exports = {
   testMint:(contract,accountindex,toIndex,amount)=>{
     describe('#testMint() '+contract.magenta, function() {
       it('should mint tokens', async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         const accounts = await clevis("accounts")
         const result = await clevis("contract","mint",contract,accountindex,accounts[toIndex],amount)
         const balance = await clevis("contract","balanceOf",contract,accounts[toIndex])
@@ -116,7 +120,7 @@ module.exports = {
   buyShip:(accountindex,model)=>{
     describe('#buyShip()', function() {
       it('should buy ship from the Harbor', async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         const accounts = await clevis("accounts")
         //const wei = await clevis("wei",ether,"ether")
         const wei = await clevis("contract","currentPrice","Harbor",model)
@@ -130,7 +134,7 @@ module.exports = {
   attemptBuyShipCheap:(accountindex,model)=>{
     describe('#buyShip()', function() {
       it('should fail to buy ship from the Harbor for half price', async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         const accounts = await clevis("accounts")
         //const wei = await clevis("wei",ether,"ether")
         const wei = await clevis("contract","currentPrice","Harbor",model)/2;
@@ -138,11 +142,12 @@ module.exports = {
         let error
         try{
           const result = await clevis("contract","buyShip","Harbor",accountindex,wei,model)
-          console.log(tab,"WARNING".red,"WAS ABLE TO BUY HALF PRICED SHIP!".yellow)
+          assert(!result.status,"Transaction status is 1, should be 0")
+          if(result.status) console.log(tab,"WARNING".red,"WAS ABLE TO BUY HALF PRICED SHIP!".yellow)
         }catch(e){
           error = e.toString()
+          assert(error.indexOf("VM Exception while processing transaction: revert")>0)
         }
-        assert(error.indexOf("VM Exception while processing transaction: revert")>0)
         const ships = await clevis("contract","shipsOfOwner","Ships",accounts[accountindex])
         console.log(tab,"Ships belonging to "+accounts[accountindex].blue+":",ships)
       });
@@ -151,7 +156,7 @@ module.exports = {
   approveFirst:(contract,accountindex,toContract)=>{
     describe('#approveFirst() '+contract.magenta, function() {
       it('should approve first '+contract+' to be transferred', async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         const accounts = await clevis("accounts")
         let toContractAddress = localContractAddress(toContract)
         let tokens = await clevis("contract","shipsOfOwner",contract,accounts[accountindex])
@@ -166,7 +171,7 @@ module.exports = {
   sellFirstShip:(accountindex)=>{
     describe('#sellFirstShip()', function() {
       it('should sell first ship owned', async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         const accounts = await clevis("accounts")
         let ships = await clevis("contract","shipsOfOwner","Ships",accounts[accountindex])
         console.log(tab,"Selling ship id "+(""+ships[0]).magenta+" back to the Harbor...");
@@ -181,7 +186,7 @@ module.exports = {
   attemptToSellFirstShip:(accountindex)=>{
     describe('#attemptToSellFirstShip()', function() {
       it('should fail sell first ship', async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         const accounts = await clevis("accounts")
         let ships = await clevis("contract","shipsOfOwner","Ships",accounts[accountindex])
         let error
@@ -192,18 +197,20 @@ module.exports = {
           }
           console.log(tab,"Attempting to sell ship id "+(""+fakeShip).magenta+" back to the Harbor...");
           const result = await clevis("contract","sellShip","Harbor",accountindex,fakeShip)
-          console.log(tab,"WARNING".red,"WAS ABLE TO SELL SHIP!".yellow)
+          assert(!result.status,"Transaction status is 1, should be 0")
+          if(result.status) console.log(tab,"WARNING".red,"WAS ABLE TO SELL SHIP!".yellow)
         }catch(e){
           error = e.toString()
+          assert(error.indexOf("VM Exception while processing transaction: revert")>0)
         }
-        assert(error.indexOf("VM Exception while processing transaction: revert")>0)
+
       });
     });
   },
   buildShip:(accountindex,model)=>{
     describe('#buildShip()', function() {
       it('should build Ships at the Harbor', async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         const result = await clevis("contract","buildShip","Harbor",accountindex,model)
         printTxResult(result)
         const ships = await clevis("contract","balanceOf","Ships",localContractAddress("Harbor"))
@@ -215,22 +222,23 @@ module.exports = {
   attemptBuildShip:(accountindex,model)=>{
     describe('#attemptBuildShip()', function() {
       it('should fail to build Ships at the Harbor', async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         let error = ""
         try{
           const result = await clevis("contract","buildShip","Harbor",accountindex,model)
-          console.log(tab,"WARNING".red,"WAS ABLE TO BUILD SHIP!".yellow)
+          assert(!result.status,"Transaction status is 1, should be 0")
+          if(result.status) console.log(tab,"WARNING".red,"WAS ABLE TO BUILD SHIP!".yellow)
         }catch(e){
           error = e.toString()
+          assert(error.indexOf("VM Exception while processing transaction: revert")>0)
         }
-        assert(error.indexOf("VM Exception while processing transaction: revert")>0)
       });
     });
   },
   buildShips:(accountindex,model,amount)=>{
     describe('#buildShips()', function() {
       it('should build Ships', async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         const result = await clevis("contract","buildShips","Ships",accountindex,model,amount)
         printTxResult(result)
         const accounts = await clevis("accounts")
@@ -243,37 +251,39 @@ module.exports = {
   attemptBuildShipDirectly:(accountindex,model)=>{
     describe('#attemptBuildShipDirectly()', function() {
       it('should fail to build Ships directly', async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         let error = ""
         try{
           const result = await clevis("contract","buildShip","Ships",accountindex,model)
-          console.log(tab,"WARNING".red,"WAS ABLE TO BUILD SHIP WITHOUT HARBOR!".yellow)
+          assert(!result.status,"Transaction status is 1, should be 0")
+          if(result.status) console.log(tab,"WARNING".red,"WAS ABLE TO BUILD SHIP WITHOUT HARBOR!".yellow)
         }catch(e){
           error = e.toString()
+          assert(error.indexOf("VM Exception while processing transaction: revert")>0)
         }
-        assert(error.indexOf("VM Exception while processing transaction: revert")>0)
       });
     });
   },
   attemptToBuildShip:(accountindex,model)=>{
     describe('#attemptToBuildShip()', function() {
       it('should fail to build Ships at the Harbor', async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         let error = ""
         try{
           const result = await clevis("contract","buildShip","Harbor",accountindex,model)
-          console.log(tab,"WARNING".red,"WAS ABLE TO BUILD SHIP!".yellow)
+          assert(!result.status,"Transaction status is 1, should be 0")
+          if(result.status) console.log(tab,"WARNING".red,"WAS ABLE TO BUILD SHIP!".yellow)
         }catch(e){
           error = e.toString()
+          assert(error.indexOf("VM Exception while processing transaction: revert")>0,"NOT REVERT:"+(error.red))
         }
-        assert(error.indexOf("VM Exception while processing transaction: revert")>0,"NOT REVERT:"+(error.red))
       });
     });
   },
   allowSpecies:(contract,accountindex)=>{
     describe('#allowSpecies() '+contract.magenta, function() {
       it('should allow species '+contract.magenta, async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         let contractAddress = localContractAddress(contract);
         const result = await clevis("contract","allowSpecies","Sea",accountindex,contractAddress)
         console.log(tab,result.transactionHash.gray,contractAddress.blue,(""+result.gasUsed).yellow)
@@ -284,7 +294,7 @@ module.exports = {
   stock:(species,accountindex,amount)=>{
     describe('#stock() '+species.magenta, function() {
       it('should stock '+amount+' '+species.magenta+' as account '+accountindex, async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         let speciesAddress = localContractAddress(species);
         const result = await clevis("contract","stock","Sea",accountindex,speciesAddress,amount)
         console.log(tab,result.transactionHash.gray,speciesAddress.blue,(""+result.gasUsed).yellow)
@@ -295,16 +305,17 @@ module.exports = {
   attemptStock:(species,accountindex,amount)=>{
     describe('#stock() '+species.magenta, function() {
       it('should fail to stock '+amount+' '+species.magenta+' as account '+accountindex, async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         let speciesAddress = localContractAddress(species);
         let error = ""
         try{
           const result = await clevis("contract","stock","Sea",accountindex,speciesAddress,amount)
-          console.log(tab,"WARNING".red,"WAS ABLE TO STOCK!".yellow)
+          assert(!result.status,"Transaction status is 1, should be 0")
+          if(result.status) console.log(tab,"WARNING".red,"WAS ABLE TO STOCK!".yellow)
         }catch(e){
           error = e.toString()
+          assert(error.indexOf("VM Exception while processing transaction: revert")>0)
         }
-        assert(error.indexOf("VM Exception while processing transaction: revert")>0)
       });
     });
   },
@@ -312,7 +323,7 @@ module.exports = {
     const tab = "\t\t";
     describe('#cloud() ', function() {
       it('should add cloud', async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         let width = await clevis("contract","width","Sea")
         let location = rand(0,width);
         let result = await clevis("contract","addCloud","Sea",accountindex,location,speed,image)
@@ -323,7 +334,7 @@ module.exports = {
   embarkWithFirst:(accountindex)=>{
     describe('#embark() ', function() {
       it('should embark (transfer first ship to sea)', async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         const accounts = await clevis("accounts")
         let tokens = await clevis("contract","shipsOfOwner","Ships",accounts[accountindex])
         console.log(tab,"Embarking with ship id "+(""+tokens[0]).magenta+"");
@@ -335,7 +346,7 @@ module.exports = {
   findFish:(accountindex)=>{
     describe('#findFish() ', function() {
       it('should find a fish', async function() {
-        this.timeout(60000)
+        this.timeout(120000)
 
         let accounts = await clevis("accounts")
         let myAddress = accounts[accountindex];
@@ -384,7 +395,7 @@ module.exports = {
   setSailTowardFish:(accountindex)=>{
     describe('#setSailTowardFish() ', function() {
       it('should setSailTowardFish', async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         assert(TARGET_LOCATION>0,"We need to findFish before this function runs")
 
         let accounts = await clevis("accounts")
@@ -406,7 +417,7 @@ module.exports = {
   transactionsUntilAtFish:(accountindex)=>{
     describe('#transactionsUntilAtFish() ', function() {
       it('should add a new block to the chain', async function() {
-        this.timeout(60000)
+        this.timeout(600000)
 
         let accounts = await clevis("accounts")
         let myAddress = accounts[accountindex];
@@ -434,7 +445,7 @@ module.exports = {
   dropAnchor:(accountindex)=>{
     describe('#dropAnchor() ', function() {
       it('should dropAnchor', async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         let result = await clevis("contract","dropAnchor","Sea",accountindex)
         console.log(tab,result.transactionHash.gray,(""+result.gasUsed).yellow)
       })
@@ -443,7 +454,7 @@ module.exports = {
   castLine:(accountindex)=>{
     describe('#castLine() ', function() {
       it('should castLine with random bait', async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         let web3 = new Web3()
         BAIT = web3.utils.sha3(Math.random()+Date.now()+"LIVEBAIT!");
         console.log(tab,"Using Bait:",BAIT.blue)
@@ -457,7 +468,7 @@ module.exports = {
   reelIn(accountindex){
     describe('#reelIn() ', function() {
       it('should reelIn TARGET_FISH', async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         //run one transaction to make sure it's the next block
         let result = await clevis("send","0.1","1","2")
         console.log(tab,result.transactionHash.gray,(""+result.gasUsed).yellow)
@@ -471,7 +482,7 @@ module.exports = {
   transferAndCall:(contract,accountindex,toContract,amount,data)=>{
     describe('#transferAndCall() '+contract.magenta, function() {
       it('should transfer '+amount+' '+contract+' tokens to '+toContract+' and then call function '+data, async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         let toContractAddress = localContractAddress(toContract);
         console.log("Transferring "+amount+" "+contract+" to "+toContract+" ("+toContractAddress+") and then calling "+data)
         const result = await clevis("contract","transferAndCall",contract,accountindex,toContractAddress,amount,web3.utils.fromAscii(data))
@@ -484,7 +495,7 @@ module.exports = {
   transferTokens:(contract,accountindex,toContract,amount)=>{
     describe('#transferTokens() '+contract.magenta, function() {
       it('should transfer '+amount+' '+contract+' tokens to '+toContract, async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         let toContractAddress = localContractAddress(toContract);
         console.log("Transferring "+amount+" "+contract+" to "+toContract+" ("+toContractAddress+")")
         const accounts = await clevis("accounts")
@@ -501,10 +512,29 @@ module.exports = {
       });
     });
   },
+  transferTokensToAccount:(contract,accountindex,toAccount,amount)=>{
+    describe('#transferTokens() '+contract.magenta, function() {
+      it('should transfer '+amount+' '+contract+' tokens to '+toAccount, async function() {
+        this.timeout(120000)
+        console.log("Transferring "+amount+" "+contract+" to ("+toAccount+")")
+        const accounts = await clevis("accounts")
+        const startingBalance = await clevis("contract","balanceOf",contract,accounts[accountindex])
+        const startingBalanceTo = await clevis("contract","balanceOf",contract,toAccount)
+        const result = await clevis("contract","transfer",contract,accountindex,toAccount,amount)
+        printTxResult(result)
+        const endingBalance = await clevis("contract","balanceOf",contract,accounts[accountindex])
+        const endingBalanceTo = await clevis("contract","balanceOf",contract,toAccount)
+        const balanceDifference = endingBalance-startingBalance;
+        assert(balanceDifference == amount*-1,"The balance of "+accounts[accountindex]+" in contract "+contract+" went down "+balanceDifference+" but it should have gone down "+amount)
+        const balanceDifferenceTo = endingBalanceTo-startingBalanceTo;
+        assert(balanceDifferenceTo == amount,"The balance of "+toAccount+" in contract "+contract+" went up "+balanceDifferenceTo+" but it should have gone up "+amount)
+      });
+    });
+  },
   setFishPrice:(accountindex,species,price)=>{
     describe('#setFishPrice()', function() {
       it('should set price of species at the Fishmonger', async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         let speciesAddress = localContractAddress(species);
         const result = await clevis("contract","setPrice","Fishmonger",accountindex,speciesAddress,price)
         printTxResult(result)
@@ -516,7 +546,7 @@ module.exports = {
   sellFish:(accountindex,species,amount)=>{
     describe('#sellFish()', function() {
       it('should sell species to Fishmonger (and butcher and stock)', async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         let speciesAddress = localContractAddress(species);
         console.log("Selling "+amount+" "+speciesAddress+" fish to Fishmonger to butcher from "+accountindex)
         const result = await clevis("contract","sellFish","Fishmonger",accountindex,speciesAddress,amount)
@@ -529,7 +559,7 @@ module.exports = {
   publish:()=>{
     describe('#publish() ', function() {
       it('should inject contract address and abi into web app', async function() {
-        this.timeout(60000)
+        this.timeout(120000)
         const fs = require("fs")
         let address = fs.readFileSync("Galleass/Galleass.address").toString().trim()
         console.log(tab,"ADDRESS:",address.blue)
@@ -545,17 +575,20 @@ module.exports = {
         loadAbi("Redbass")
         loadAbi("Snark")
         loadAbi("Dangler")
+        loadAbi("Copper")
+        loadAbi("Fishmonger")
       });
     });
   },
   metamask:()=>{
     describe('#transfer() ', function() {
       it('should give metamask account some ether', async function() {
-        this.timeout(60000)
+        this.timeout(600000)
         await clevis("sendTo","0.1","0","0x34aA3F359A9D614239015126635CE7732c18fDF3")
         await clevis("sendTo","0.1","0","0xB2ac59aE04d0f7310dC3519573BF70387b3b6E3a")
         await clevis("sendTo","0.1","0","0xfdE139e04963094650bAAD2686ca65A0cF04373C")
         await clevis("sendTo","0.1","0","0x1D1B2B691Aaf5E5490864ED91c818B200C0fA0E2")
+        await clevis("sendTo","0.1","0","0x9921d057a7931b1ee5040ff82a3722dd3decb6cd")
       });
     });
   },
@@ -642,6 +675,8 @@ module.exports = {
       });
     });
 
+
+
     describe(bigHeader('EMBARK AND GO FISHING'), function() {
       it('should embarkAndGoFishing', async function() {
         this.timeout(6000000)
@@ -650,7 +685,13 @@ module.exports = {
       });
     });
 
-
+    describe(bigHeader('MINT Copper AND TEST FISH MONGER'), function() {
+      it('should mintCopperTestFishmonger', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","mintCopperTestFishmonger")
+        assert(result==0,"mintCopperTestFishmonger ERRORS")
+      });
+    });
 
     describe(bigHeader('FINISHING TOUCHES'), function() {
       it('should finishingTouches', async function() {
