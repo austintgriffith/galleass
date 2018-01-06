@@ -1,5 +1,5 @@
 {
-  "provider": "http://localhost:8545",
+  "provider": "http://localhost:7545",
   "gasprice": 10,
   "ethprice": 400,
   "deploygas": 4000000,

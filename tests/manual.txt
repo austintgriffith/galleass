@@ -1,0 +1,9 @@
+mocha tests/metamask
+mocha tests/publish
+mocha tests/finishingTouches
+mocha tests/mintCopperTestFishmonger
+mocha tests/embarkAndGoFishing
+mocha tests/mintCatfishAndStockSea
+mocha tests/buyAndSellShips
+mocha tests/mintTimberBuildShips
+mocha tests/deploy

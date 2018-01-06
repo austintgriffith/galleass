@@ -328,7 +328,7 @@ class App extends Component {
           contracts["Harbor"].methods.buyShip(FISHINGBOAT).send({
             value: currentPrice,
             from: accounts[0],
-            gas:GAS,
+            gas:90000,
             gasPrice:GWEI * 1000000000
           }).then((receipt)=>{
             console.log("RESULT:",receipt)
@@ -352,7 +352,7 @@ class App extends Component {
     console.log("MY FIRST SHIP ",this.state.inventoryDetail['Ships'][0])
     contracts["Ships"].methods.approve(seaContractAddress,this.state.inventoryDetail['Ships'][0]).send({
       from: accounts[0],
-      gas:GAS,
+      gas:110000,
       gasPrice:GWEI * 1000000000
     }).then((receipt)=>{
       console.log("RESULT:",receipt)
@@ -557,10 +557,10 @@ class App extends Component {
     clearInterval(waitInterval);
     this.setState({contractsLoaded:true})
     setInterval(this.syncMyShip.bind(this),301)
-    setInterval(this.syncBlockNumber.bind(this),503)
-    setInterval(this.syncFish.bind(this),3001)
-    setInterval(this.syncShips.bind(this),2003)
-    setInterval(this.syncInventory.bind(this),1009)
+    setInterval(this.syncBlockNumber.bind(this),301)
+    setInterval(this.syncFish.bind(this),301)
+    setInterval(this.syncShips.bind(this),301)
+    setInterval(this.syncInventory.bind(this),301)
     this.syncEverythingOnce()
     //dev loop only...
     //setInterval(this.syncContacts.bind(this),4001)

@@ -1,12 +1,12 @@
 const galleass = require("./galleass.js")
 
-galleass.compile("Fishmonger")
-
-
-galleass.deploy("Fishmonger",0)
-galleass.setContract("Fishmonger",0)
-galleass.setPermission("Fishmonger",0,"transferFish","true")
-galleass.setPermission("Fishmonger",0,"mintFillet","true")
+// galleass.compile("Fishmonger")
+//
+//
+// galleass.deploy("Fishmonger",0)
+// galleass.setContract("Fishmonger",0)
+// galleass.setPermission("Fishmonger",0,"transferFish","true")
+// galleass.setPermission("Fishmonger",0,"mintFillet","true")
 
 
 //give account 1 a couple catfish
