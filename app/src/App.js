@@ -36,7 +36,7 @@ let loadContracts = [
   "Dangler"
 ]
 
-const GWEI = 4;
+const GWEI = 50;
 const GAS = 100000;
 const FISHINGBOAT = 0;
 

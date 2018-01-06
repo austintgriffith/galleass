@@ -7,14 +7,18 @@ const galleass = require("./galleass.js")
 //
 //
 
-// //Make sure it is the Sea contract in Galleass
-// // if not it should fail to stock
-// galleass.deploy("Sea",0)
-// //galleass.setContract("Sea",0)
-// galleass.testMint("Catfish",0,1,10)
-// galleass.allowSpecies("Catfish",0)
-// galleass.approveContract("Catfish",1,"Sea",10)
-// galleass.attemptStock("Catfish",1,10)
+//Make sure it is the Sea contract in Galleass
+// if not it should fail to stock
+//galleass.deploy("Sea",0)
+//galleass.setContract("Sea",0)
+//
+//
+//
+//
+galleass.testMint("Catfish",0,1,10)
+galleass.allowSpecies("Catfish",0)
+galleass.approveContract("Catfish",1,"Sea",10)
+galleass.attemptStock("Catfish",1,10)
 
 
 galleass.allowSpecies("Catfish",0)

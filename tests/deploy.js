@@ -12,7 +12,7 @@ galleass.setContract("Ships",0)
 galleass.deploy("Harbor",0)
 galleass.setContract("Harbor",0)
 galleass.setPermission("Harbor",0,"buildShip","true")
-
+//
 galleass.deploy("Fishmonger",0)
 galleass.setContract("Fishmonger",0)
 galleass.setPermission("Fishmonger",0,"transferFish","true")
