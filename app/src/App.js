@@ -33,7 +33,9 @@ let loadContracts = [
   "Pinner",
   "Redbass",
   "Snark",
-  "Dangler"
+  "Dangler",
+  "Fishmonger",
+  "Copper"
 ]
 
 const GWEI = 4;
@@ -132,6 +134,14 @@ class App extends Component {
           updateDetail=true
 
         }
+      }
+
+      if(DEBUG_INVENTORY) console.log(contracts["Copper"])
+      let balanceOfCopper = await contracts["Copper"].methods.balanceOf(this.state.account).call()
+      if(DEBUG_INVENTORY) console.log("balanceOf",balanceOfCopper)
+      if(inventory['Copper']!=balanceOfCopper){
+        inventory['Copper'] = balanceOfCopper;
+        update=true
       }
 
       if(DEBUG_INVENTORY) console.log(contracts["Catfish"])
@@ -311,6 +321,7 @@ class App extends Component {
       },500)
     })
   }
+
   async buyShip() {
     console.log("BUYSHIP")
     if(!web3){
@@ -395,6 +406,22 @@ class App extends Component {
     contracts["Sea"].methods.embark(this.state.inventoryDetail['Ships'][0]).send({
       from: accounts[0],
       gas:200000,
+      gasPrice:GWEI * 1000000000
+    }).then((receipt)=>{
+      console.log("RESULT:",receipt)
+      this.startWaiting(receipt.transactionHash)
+    })
+  }
+  async sellFish(fish){
+    console.log("SELL FISH "+fish)
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+    let fishContract = contracts[fish];
+    console.log("fishContractAddress:",fishContract._address)
+    let paying = await contracts["Fishmonger"].methods.price(fishContract._address).call()
+    console.log("Fishmonger is paying ",paying," for ",fishContract._address)
+    contracts["Fishmonger"].methods.sellFish(fishContract._address,1).send({
+      from: accounts[0],
+      gas:290000,
       gasPrice:GWEI * 1000000000
     }).then((receipt)=>{
       console.log("RESULT:",receipt)
@@ -537,6 +564,7 @@ class App extends Component {
       })
     })
   }
+
   startWaiting(hash,nextPhase){
     if(hash){
       console.log("STARTWAITING",hash,nextPhase)
@@ -742,6 +770,7 @@ class App extends Component {
           inventory={this.state.inventory}
           Ships={this.state.Ships}
           textStyle={textStyle}
+          sellFish={this.sellFish}
         />
       </div>
     )

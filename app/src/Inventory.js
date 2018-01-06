@@ -12,7 +12,7 @@ class Inventory extends Component {
   }
   click(item){
     console.log("CLICK",item)
-
+    this.props.sellFish(item)
   }
   render(){
     let {inventory} = this.props
@@ -30,7 +30,7 @@ class Inventory extends Component {
     for(let i in inventory){
       if((pass==0 && i=="Ether" || pass==1 && i!="Ether")&&inventory[i]>0){
         let extra = "";
-        if(i!="Ether" && i!="Copper" ) extra = sellForCopper(i);
+        if(i!="Ether" && i!="Copper" && i!="Ships" ) extra = sellForCopper(i);
         display.push(
           <Motion
              key={"inventory"+i}

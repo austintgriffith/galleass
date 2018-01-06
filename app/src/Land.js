@@ -59,7 +59,7 @@ class Land extends Component {
   click(e){
     console.log(e.target)
   }
-  fishMongerTile(location){
+  fishMongerTile(location,owner){
     let mainWidth = 120
     let mainHeight = 125
     return (
@@ -71,6 +71,14 @@ class Land extends Component {
         width:mainWidth,
         height:mainHeight
       }}>
+        <img style={{position:'absolute',top:-28,left:24}} src="castleback.png" />
+        <img style={{position:'absolute',top:-67,left:45}} src="flagpolesmaller.png" />
+        <div style={{position:'absolute',left:14,top:-65}}>
+          <this.props.Blockies
+            seed={owner.toLowerCase()}
+            scale={4}
+          />
+        </div>
         <img style={{position:'absolute',top:-30,left:6}} src="newcastlefront.png" />
       </div>
     )
@@ -87,7 +95,7 @@ class Land extends Component {
         {this.landTile(2000+60,"grass")}
         {this.landTile(2000+60+87,"mountain")}
         {this.landTile(2000+60+87*2,"forest")}
-        {this.fishMongerTile(2000+60+87*3+60)}
+        {this.fishMongerTile(2000+60+87*3+60,"0x34aA3F359A9D614239015126635CE7732c18fDF3")}
         {this.landTile(2000+60+120+87*3,"grass")}
         {this.landTile(2000+60+120+87*4,"corn")}
 

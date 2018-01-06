@@ -1,11 +1,13 @@
 const galleass = require("./galleass.js")
 
-// galleass.compile("Sea")
-//
-// galleass.deploy("Sea",0)
-// galleass.setContract("Sea",0)
-//
-//
+galleass.compile("Sea")
+
+galleass.deploy("Sea",0)
+galleass.setContract("Sea",0)
+galleass.setPermission("Sea",0,"transferShips","true")
+
+
+
 
 // //Make sure it is the Sea contract in Galleass
 // // if not it should fail to stock
@@ -15,10 +17,35 @@ const galleass = require("./galleass.js")
 // galleass.allowSpecies("Catfish",0)
 // galleass.approveContract("Catfish",1,"Sea",10)
 // galleass.attemptStock("Catfish",1,10)
+/*
+const fish = {
+  "Pinner": 1,
+  "Redbass": 1,
+  "Catfish": 1,
+  "Snark": 1,
+  "Dangler": 1
+}
+*/
 
+const fish = {
+  "Pinner": 25,
+  "Redbass": 20,
+  "Catfish": 15,
+  "Snark": 10,
+  "Dangler": 5
+}
 
+for(let f in fish){
+  galleass.allowSpecies(f,0)
+  galleass.testMint(f,0,1,fish[f])
+  galleass.approveContract(f,1,"Sea",fish[f])
+  galleass.stock(f,1,fish[f])
+}
+
+galleass.publish()
+
+/*
 galleass.allowSpecies("Catfish",0)
-//mint 10 from account 0 to account 1
 galleass.testMint("Catfish",0,1,15)
 galleass.approveContract("Catfish",1,"Sea",15)
 galleass.stock("Catfish",1,15)
@@ -42,3 +69,4 @@ galleass.allowSpecies("Snark",0)
 galleass.testMint("Snark",0,1,10)
 galleass.approveContract("Snark",1,"Sea",10)
 galleass.stock("Snark",1,10)
+*/

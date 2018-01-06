@@ -508,6 +508,25 @@ module.exports = {
       });
     });
   },
+  transferTokensToAccount:(contract,accountindex,toAccount,amount)=>{
+    describe('#transferTokens() '+contract.magenta, function() {
+      it('should transfer '+amount+' '+contract+' tokens to '+toAccount, async function() {
+        this.timeout(120000)
+        console.log("Transferring "+amount+" "+contract+" to ("+toAccount+")")
+        const accounts = await clevis("accounts")
+        const startingBalance = await clevis("contract","balanceOf",contract,accounts[accountindex])
+        const startingBalanceTo = await clevis("contract","balanceOf",contract,toAccount)
+        const result = await clevis("contract","transfer",contract,accountindex,toAccount,amount)
+        printTxResult(result)
+        const endingBalance = await clevis("contract","balanceOf",contract,accounts[accountindex])
+        const endingBalanceTo = await clevis("contract","balanceOf",contract,toAccount)
+        const balanceDifference = endingBalance-startingBalance;
+        assert(balanceDifference == amount*-1,"The balance of "+accounts[accountindex]+" in contract "+contract+" went down "+balanceDifference+" but it should have gone down "+amount)
+        const balanceDifferenceTo = endingBalanceTo-startingBalanceTo;
+        assert(balanceDifferenceTo == amount,"The balance of "+toAccount+" in contract "+contract+" went up "+balanceDifferenceTo+" but it should have gone up "+amount)
+      });
+    });
+  },
   setFishPrice:(accountindex,species,price)=>{
     describe('#setFishPrice()', function() {
       it('should set price of species at the Fishmonger', async function() {
@@ -552,6 +571,8 @@ module.exports = {
         loadAbi("Redbass")
         loadAbi("Snark")
         loadAbi("Dangler")
+        loadAbi("Copper")
+        loadAbi("Fishmonger")
       });
     });
   },
