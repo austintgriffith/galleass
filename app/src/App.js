@@ -88,7 +88,7 @@ class App extends Component {
     this.setState({account:account,scrollLeft:2000-(window.innerWidth/2)})
   }
   async syncBlockNumber(){
-    console.log("checking block number....")
+    //console.log("checking block number....")
     let blockNumber = await web3.eth.getBlockNumber();
     if(this.state.blockNumber!=blockNumber){
       console.log("BLOCKNUMBER:",blockNumber)
@@ -194,11 +194,11 @@ class App extends Component {
 
       if(update){
         console.log("INVENTORY UPDATE....")
-        this.setState({inventory:inventory,waitingForInventoryUpdate:false})
+        this.setState({loading:0,inventory:inventory,waitingForInventoryUpdate:false})
       }
       if(updateDetail){
         console.log("DETAIL INVENTORY UPDATE....")
-        this.setState({inventoryDetail:inventoryDetail,waitingForInventoryUpdate:false})
+        this.setState({loading:0,inventoryDetail:inventoryDetail,waitingForInventoryUpdate:false})
       }
 
     }
@@ -220,7 +220,7 @@ class App extends Component {
         if(DEBUG_SYNCMYSHIP) console.log("myLocation",myLocation)
         this.setState({scrollLeft:myLocation-(window.innerWidth/2)})
       }
-      this.setState({ship:getMyShip,waitingForShipUpdate:false,myLocation:myLocation},()=>{
+      this.setState({loading:0,ship:getMyShip,waitingForShipUpdate:false,myLocation:myLocation},()=>{
         //if(DEBUG_SYNCMYSHIP)
         //console.log("SET getMyShip",this.state.ship)
       })
@@ -428,6 +428,12 @@ class App extends Component {
       this.startWaiting(receipt.transactionHash)
     })
   }
+  updateLoader(){
+    let next = parseInt(this.state.loading)+1;
+    if(next>24) next=24;
+    console.log("loading next",next)
+    this.setState({loading:next})
+  }
   async startWaitingForTransaction(hash){
     console.log("WAITING FOR TRANSACTION ",hash,this.state.waitingForTransaction,this.state.waitingForTransactionTime)
     try {
@@ -439,6 +445,7 @@ class App extends Component {
           //DONE
           console.log("DONE WITH TX",receipt)
           clearInterval(txWaitIntervals[hash]);
+          clearInterval(txWaitIntervals["loader"])
           this.setState({waitingForTransaction:false})
           console.log("CALL A SYNC OF EVERYTHING!!")
           this.syncEverythingOnce()
@@ -446,7 +453,7 @@ class App extends Component {
     } catch(e) {
         console.log("ERROR WAITING FOR TX",e)
         clearInterval(txWaitIntervals[hash]);
-        this.setState({waitingForTransaction:false})
+        this.setState({loading:0,waitingForTransaction:false})
     }
     console.log("DONE WAITING ON TRANSACTION")
   }
@@ -496,6 +503,8 @@ class App extends Component {
   }
   castLine(){
     console.log("CAST LINE")
+    console.log("LOAD()")
+    this.load();
     window.web3.eth.getAccounts((err,_accounts)=>{
       let bait = web3.utils.sha3(Math.random()+_accounts[0])
       console.log(bait)
@@ -513,6 +522,7 @@ class App extends Component {
   }
   reelIn(){
     console.log("REEL IN")
+    this.load();
     const DEBUG_REEL_IN = false;
     window.web3.eth.getAccounts((err,_accounts)=>{
       //console.log(_accounts)
@@ -564,7 +574,12 @@ class App extends Component {
       })
     })
   }
-
+  load(){
+    console.log("LOAD!")
+    this.setState({loading:1},()=>{
+      txWaitIntervals["loader"] = setInterval(this.updateLoader.bind(this),999)
+    })
+  }
   startWaiting(hash,nextPhase){
     if(hash){
       console.log("STARTWAITING",hash,nextPhase)
@@ -645,7 +660,13 @@ class App extends Component {
 
     let buttonOpacity = 0.9
     let buttonDisabled = false
-    if(this.state.waitingForTransaction || this.state.waitingForShipUpdate || this.state.waitingForInventoryUpdate){
+    if(this.state.loading){
+      buttonOpacity = 0.5
+      buttonDisabled = true
+      loadingBar = (
+        <img src={"preloader_"+this.state.loading+".png"} />
+      )
+    } else if( this.state.waitingForTransaction || this.state.waitingForShipUpdate || this.state.waitingForInventoryUpdate){
       buttonOpacity = 0.3
       buttonDisabled = true
       let timeSpentWaiting = Date.now() - this.state.waitingForTransactionTime
