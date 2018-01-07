@@ -430,9 +430,14 @@ class App extends Component {
   }
   updateLoader(){
     let next = parseInt(this.state.loading)+1;
-    if(next>24) next=24;
-    console.log("loading next",next)
-    this.setState({loading:next})
+    if(next>24) {
+      console.log("done with initial wait...")
+      this.setState({loading:0})
+      clearInterval(txWaitIntervals["loader"])
+    }else{
+      console.log("loading next",next,web3)
+      this.setState({loading:next})
+    }
   }
   async startWaitingForTransaction(hash){
     console.log("WAITING FOR TRANSACTION ",hash,this.state.waitingForTransaction,this.state.waitingForTransactionTime)
@@ -503,8 +508,6 @@ class App extends Component {
   }
   castLine(){
     console.log("CAST LINE")
-    console.log("LOAD()")
-    this.load();
     window.web3.eth.getAccounts((err,_accounts)=>{
       let bait = web3.utils.sha3(Math.random()+_accounts[0])
       console.log(bait)
@@ -514,7 +517,22 @@ class App extends Component {
         from: _accounts[0],
         gas:60000,
         gasPrice:GWEI * 1000000000
-      }).then((receipt)=>{
+      },(error,hash)=>{
+        console.log("CALLBACK!",error,hash)
+        if(!error) this.load()
+      }).on('error', function(error){
+        console.log("error",error)
+      })
+      .on('transactionHash', function(transactionHash){
+        console.log("transactionHash",transactionHash)
+      })
+      .on('receipt', function(receipt){
+         console.log("receipt",receipt) // contains the new contract address
+      })
+      .on('confirmation', function(confirmationNumber, receipt){
+        console.log("confirmation",confirmationNumber,receipt)
+      })
+      .then((receipt)=>{
         console.log("RESULT:",receipt)
         this.startWaiting(receipt.transactionHash,"shipUpdate")
       })
@@ -522,7 +540,6 @@ class App extends Component {
   }
   reelIn(){
     console.log("REEL IN")
-    this.load();
     const DEBUG_REEL_IN = false;
     window.web3.eth.getAccounts((err,_accounts)=>{
       //console.log(_accounts)
@@ -568,6 +585,9 @@ class App extends Component {
         from: _accounts[0],
         gas:100000,
         gasPrice:GWEI * 1000000000
+      },(error,hash)=>{
+        console.log("CALLBACK!",error,hash)
+        if(!error) this.load()
       }).then((receipt)=>{
         if(DEBUG_REEL_IN) console.log("RESULT:",receipt)
         this.startWaiting(receipt.transactionHash,"shipUpdate")
@@ -577,7 +597,7 @@ class App extends Component {
   load(){
     console.log("LOAD!")
     this.setState({loading:1},()=>{
-      txWaitIntervals["loader"] = setInterval(this.updateLoader.bind(this),999)
+      txWaitIntervals["loader"] = setInterval(this.updateLoader.bind(this),1100)
     })
   }
   startWaiting(hash,nextPhase){
