@@ -431,15 +431,17 @@ class App extends Component {
   updateLoader(){
     let next = parseInt(this.state.loading)+1;
     if(next>24) {
-      console.log("done with initial wait...")
-      this.setState({loading:0})
-      clearInterval(txWaitIntervals["loader"])
+      next=23;
     }else{
-      console.log("loading next",next,web3)
+      //console.log("loading next",next,web3)
       this.setState({loading:next})
     }
   }
   async startWaitingForTransaction(hash){
+
+    this.setState({loading:0})
+    clearInterval(txWaitIntervals["loader"])
+
     console.log("WAITING FOR TRANSACTION ",hash,this.state.waitingForTransaction,this.state.waitingForTransactionTime)
     try {
         var receipt = await web3.eth.getTransactionReceipt(this.state.waitingForTransaction);
@@ -690,8 +692,8 @@ class App extends Component {
       buttonOpacity = 0.3
       buttonDisabled = true
       let timeSpentWaiting = Date.now() - this.state.waitingForTransactionTime
-      timeSpentWaiting = Math.floor(timeSpentWaiting/1000)+1;
-      console.log("timeSpentWaiting",timeSpentWaiting)
+      timeSpentWaiting = Math.floor(timeSpentWaiting/800)+1;
+      //console.log("timeSpentWaiting",timeSpentWaiting)
       if(timeSpentWaiting>12) timeSpentWaiting=12
       loadingBar = (
         <img src={"loader_"+timeSpentWaiting+".png"} />

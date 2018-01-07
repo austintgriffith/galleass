@@ -51,11 +51,7 @@ module.exports = {
   deploy:(contract,accountindex)=>{
     describe('#deploy() '+contract.magenta, function() {
       it('should deploy '+contract.magenta+' as account '+accountindex, async function() {
-<<<<<<< HEAD
         this.timeout(360000)
-=======
-        this.timeout(120000)
->>>>>>> d4594c6bd1f31e872838900ee6133398f2bd0bc3
         const result = await clevis("deploy",contract,accountindex)
         printTxResult(result)
         console.log(tab+"Address: "+result.contractAddress.blue)
