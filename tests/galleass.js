@@ -35,7 +35,7 @@ module.exports = {
   compile:(contract)=>{
     describe('#compile() '+contract.magenta, function() {
       it('should compile '+contract.magenta+' contract to bytecode', async function() {
-        this.timeout(20000)
+        this.timeout(90000)
         const result = await clevis("compile",contract)
         assert(Object.keys(result.contracts).length>0, "No compiled contacts found.")
         let count = 0
@@ -51,7 +51,11 @@ module.exports = {
   deploy:(contract,accountindex)=>{
     describe('#deploy() '+contract.magenta, function() {
       it('should deploy '+contract.magenta+' as account '+accountindex, async function() {
+<<<<<<< HEAD
+        this.timeout(360000)
+=======
         this.timeout(120000)
+>>>>>>> d4594c6bd1f31e872838900ee6133398f2bd0bc3
         const result = await clevis("deploy",contract,accountindex)
         printTxResult(result)
         console.log(tab+"Address: "+result.contractAddress.blue)

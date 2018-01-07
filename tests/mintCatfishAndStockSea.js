@@ -9,6 +9,20 @@ galleass.setPermission("Sea",0,"transferShips","true")
 
 
 
+<<<<<<< HEAD
+//Make sure it is the Sea contract in Galleass
+// if not it should fail to stock
+//galleass.deploy("Sea",0)
+//galleass.setContract("Sea",0)
+//
+//
+//
+//
+galleass.testMint("Catfish",0,1,10)
+galleass.allowSpecies("Catfish",0)
+galleass.approveContract("Catfish",1,"Sea",10)
+galleass.attemptStock("Catfish",1,10)
+=======
 // //Make sure it is the Sea contract in Galleass
 // // if not it should fail to stock
 // galleass.deploy("Sea",0)
@@ -41,6 +55,7 @@ for(let f in fish){
   galleass.approveContract(f,1,"Sea",fish[f])
   galleass.stock(f,1,fish[f])
 }
+>>>>>>> d4594c6bd1f31e872838900ee6133398f2bd0bc3
 
 galleass.publish()
 

@@ -2,7 +2,7 @@ const galleass = require("./galleass.js")
 
 
 //should be able to buy a cheap ship
-galleass.attemptBuyShipCheap(2,0)
+galleass.attemptBuyShipCheap(2,0)// this went through, you should make sure it craps out instead of waiting for the transaction
 
 //shouldn't be able to see ship if you don't have one
 galleass.attemptToSellFirstShip(2)
