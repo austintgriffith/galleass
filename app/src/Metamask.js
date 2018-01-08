@@ -9,7 +9,7 @@ class Metamask extends Component {
     }
   }
   componentDidMount(){
-    setInterval(this.checkMetamask.bind(this),2003)
+    setInterval(this.checkMetamask.bind(this),1001)
     this.checkMetamask()
   }
   checkMetamask() {
@@ -17,6 +17,7 @@ class Metamask extends Component {
       if(this.state.metamask!=0) this.setState({metamask:0})
     } else {
       window.web3.version.getNetwork((err,network)=>{
+        //console.log("PEERS",window.web3.net)
         network = translateNetwork(network);
         let accounts
         try{
@@ -134,7 +135,7 @@ class Metamask extends Component {
               textAlign:"right"
             }}>
               <div>{this.state.accounts.length > 0 ? this.state.accounts[0].substring(0,12) : "Loading..."}</div>
-              <div>{this.state.network} @ {this.props.blockNumber%10000}</div>
+              <div>{this.state.network} @ {this.props.blockNumber} </div>
             </span>
             <this.props.Blockies
             seed={this.state.accounts[0]}

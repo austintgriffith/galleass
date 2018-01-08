@@ -38,7 +38,7 @@ let loadContracts = [
   "Copper"
 ]
 
-const GWEI = 50;
+const GWEI = 10;
 const GAS = 100000;
 const FISHINGBOAT = 0;
 
@@ -341,6 +341,9 @@ class App extends Component {
             from: accounts[0],
             gas:90000,
             gasPrice:GWEI * 1000000000
+          },(error,hash)=>{
+            console.log("CALLBACK!",error,hash)
+            if(!error) this.load()
           }).then((receipt)=>{
             console.log("RESULT:",receipt)
             this.startWaiting(receipt.transactionHash,"inventoryUpdate")
@@ -372,6 +375,9 @@ class App extends Component {
         from: accounts[0],
         gas:300000,
         gasPrice:GWEI * 1000000000
+      },(error,hash)=>{
+        console.log("CALLBACK!",error,hash)
+        if(!error) this.load()
       }).then((receipt)=>{
         console.log("RESULT:",receipt)
         this.startWaiting(receipt.transactionHash,"shipUpdate")
@@ -391,6 +397,9 @@ class App extends Component {
       from: accounts[0],
       gas:50000,
       gasPrice:GWEI * 1000000000
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      if(!error) this.load()
     }).then((receipt)=>{
       console.log("RESULT:",receipt)
       setTimeout(()=>{
@@ -407,6 +416,9 @@ class App extends Component {
       from: accounts[0],
       gas:200000,
       gasPrice:GWEI * 1000000000
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      if(!error) this.load()
     }).then((receipt)=>{
       console.log("RESULT:",receipt)
       this.startWaiting(receipt.transactionHash)
@@ -423,7 +435,10 @@ class App extends Component {
       from: accounts[0],
       gas:290000,
       gasPrice:GWEI * 1000000000
-    }).then((receipt)=>{
+    },/*(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      if(!error) this.load()
+    }*/).then((receipt)=>{
       console.log("RESULT:",receipt)
       this.startWaiting(receipt.transactionHash)
     })
@@ -488,6 +503,9 @@ class App extends Component {
         from: _accounts[0],
         gas:40000,
         gasPrice:GWEI * 1000000000
+      },(error,hash)=>{
+        console.log("CALLBACK!",error,hash)
+        if(!error) this.load()
       }).then((receipt)=>{
         console.log("RESULT:",receipt)
         this.startWaiting(receipt.transactionHash,"shipUpdate")
@@ -502,6 +520,9 @@ class App extends Component {
         from: _accounts[0],
         gas:40000,
         gasPrice:GWEI * 1000000000
+      },(error,hash)=>{
+        console.log("CALLBACK!",error,hash)
+        if(!error) this.load()
       }).then((receipt)=>{
         console.log("RESULT:",receipt)
         this.startWaiting(receipt.transactionHash,"shipUpdate")

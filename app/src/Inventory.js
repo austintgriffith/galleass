@@ -30,7 +30,10 @@ class Inventory extends Component {
     for(let i in inventory){
       if((pass==0 && i=="Ether" || pass==1 && i!="Ether")&&inventory[i]>0){
         let extra = "";
+        let maxWidth = 64
+        let maxHeight = 32
         if(i!="Ether" && i!="Copper" && i!="Ships" ) extra = sellForCopper(i);
+        if(i=="Ships") maxHeight=58
         display.push(
           <Motion
              key={"inventory"+i}
@@ -42,7 +45,7 @@ class Inventory extends Component {
                 <div style={{padding:5}}>
                   <span>{extra}</span>
                   <span style={this.props.textStyle}>{inventory[i]}</span>
-                  <img style={{maxWidth:64,maxHeight:32,marginRight:value.right,verticalAlign:'bottom'}} src={i.toLowerCase()+".png"}/>
+                  <img style={{maxWidth:maxWidth,maxHeight:maxHeight,marginRight:value.right,verticalAlign:'bottom'}} src={i.toLowerCase()+".png"}/>
                 </div>
               )
             }

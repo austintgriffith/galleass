@@ -295,6 +295,7 @@ module.exports = {
         const result = await clevis("contract","stock","Sea",accountindex,speciesAddress,amount)
         console.log(tab,result.transactionHash.gray,speciesAddress.blue,(""+result.gasUsed).yellow)
         assert(result.transactionHash,"No transaction hash!?")
+        assert(result.status=="0x1","Failed Transaction?")
       });
     });
   },

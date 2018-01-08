@@ -41,7 +41,7 @@ contract Fishmonger is Galleasset, HasNoEther {
 
     return true;
   }
-  //event Debug(address _sender,address _species,uint256 _amount,bool _permission);
+  //event sellFish(address _sender,address _species,uint256 _amount,bool _permission);
 }
 
 contract Sea{
