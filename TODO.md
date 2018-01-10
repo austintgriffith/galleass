@@ -11,4 +11,5 @@
 [ ] add in fake land tiles just to see how it will look
 [ ] clicking on an inventory item should probably bring up a send modal asking for an address and how many to send? does meta mask have that built in?
 [ ] when you switch accounts in Metamask it should detect the account changed and reload or something
-[ ] reimplement the multibutton green thumbs up and then green arrow for embark 
+[ ] reimplement the multibutton green thumbs up and then green arrow for embark
+[ ] oceanfront.png is too large, needs to be optimized 

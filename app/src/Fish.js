@@ -39,7 +39,7 @@ class Fish extends Component {
           <div key={"fish"+f} className={fishClass}  style={{position:"absolute",left:widthRatio*width,top:horizon+depth}}>
            <img
             src={image}
-            style={{maxWidth:fishwidthpx,opacity:opacity}}
+            style={{width:"70%",height:"90%",maxWidth:fishwidthpx,opacity:opacity}}
             onClick={()=>{console.log(f+" "+fish[f].species+" "+fish[f].x+" "+fish[f].y)}} />
           </div>
         )
