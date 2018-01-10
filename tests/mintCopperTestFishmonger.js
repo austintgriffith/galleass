@@ -16,9 +16,13 @@ const galleass = require("./galleass.js")
 // galleass.testMint("Catfish",0,1,2)
 //
 // //give the fishmonger a bunch of copper
-galleass.testMint("Copper",0,1,10000)
-galleass.approveContract("Copper",1,"Fishmonger",10000)
-galleass.transferTokens("Copper",1,"Fishmonger",10000)
+//
+//
+//galleass.testMint("Copper",0,1,100)
+//galleass.approveContract("Copper",1,"Fishmonger",100)
+//galleass.transferTokens("Copper",1,"Fishmonger",100)
+//
+//
 //
 // galleass.setFishPrice(0,"Pinner",1)
 // galleass.setFishPrice(0,"Redbass",2)

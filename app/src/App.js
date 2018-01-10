@@ -433,7 +433,7 @@ class App extends Component {
     console.log("Fishmonger is paying ",paying," for ",fishContract._address)
     contracts["Fishmonger"].methods.sellFish(fishContract._address,1).send({
       from: accounts[0],
-      gas:290000,
+      gas:500000,
       gasPrice:GWEI * 1000000000
     },/*(error,hash)=>{
       console.log("CALLBACK!",error,hash)
