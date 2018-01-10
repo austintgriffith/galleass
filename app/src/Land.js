@@ -71,6 +71,23 @@ class Land extends Component {
         width:mainWidth,
         height:mainHeight
       }}>
+        <img style={{position:'absolute',top:0,left:10}} src="fishmonger.png" />
+
+      </div>
+    )
+  }
+  castleTile(location,owner){
+    let mainWidth = 120
+    let mainHeight = 125
+    return (
+      <div style={{
+        position:'absolute',
+        left:location-(mainWidth/2),
+        backgroundImage:'url("blank_grass_base.png")',
+        backgroundRepeat:'no-repeat',
+        width:mainWidth,
+        height:mainHeight
+      }}>
         <img style={{position:'absolute',top:-28,left:24}} src="castleback.png" />
         <img style={{position:'absolute',top:-67,left:45}} src="flagpolesmaller.png" />
         <div style={{position:'absolute',left:14,top:-65}}>
@@ -89,7 +106,7 @@ class Land extends Component {
 
         {this.edgeTile(2000-60-87*2,"left")}
 
-        {this.landTile(2000-60-87*2,"silvermountain")}
+        {this.landTile(2000-60-87*2,"forest")}
         {this.landTile(2000-60-87,"forest")}
         {this.mainTile(2000,"0x34aA3F359A9D614239015126635CE7732c18fDF3")}
         {this.landTile(2000+60,"grass")}
