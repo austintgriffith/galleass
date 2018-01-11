@@ -858,6 +858,29 @@ class App extends Component {
 
     if(!this.state.contractsLoaded) buttons="";
 
+    let galley= (
+      <div key={"galley"} style={{
+        zIndex:20,
+        position:'absolute',
+        left:2000,
+        top:320,
+        opacity:0.9,
+        height:75,
+        width:140
+      }}>
+      <img src={"galley.png"} />
+      <div style={{
+        position:'absolute',
+        top:24,
+        left:21
+      }}>
+      <Blockies
+        seed={"galley"}
+        scale={2.3}
+      />
+      </div>
+      </div>
+    )
 
 
     return (
@@ -866,6 +889,7 @@ class App extends Component {
         {inventory}
         {sea}
         {land}
+        {galley}
         <Motion
           defaultStyle={{
             scrollLeft:document.scrollingElement.scrollLeft

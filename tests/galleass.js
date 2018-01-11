@@ -586,6 +586,11 @@ module.exports = {
         await clevis("sendTo","0.1","0","0xfdE139e04963094650bAAD2686ca65A0cF04373C")
         await clevis("sendTo","0.1","0","0x1D1B2B691Aaf5E5490864ED91c818B200C0fA0E2")
         await clevis("sendTo","0.1","0","0x9921d057a7931b1ee5040ff82a3722dd3decb6cd")
+
+        await clevis("sendTo","0.1","0","0x2a906694D15Df38F59e76ED3a5735f8AAbccE9cb")
+        await clevis("sendTo","0.1","0","0x9319Bbb4e2652411bE15BB74f339b7F6218b2508")
+        await clevis("sendTo","0.1","0","0xE68b423E49e13C704d2E403014a9C90d7961B98c")
+        await clevis("sendTo","0.1","0","0x841b8C25Ce434B9Ca3ff12492a5468321e933A5b")
       });
     });
   },
