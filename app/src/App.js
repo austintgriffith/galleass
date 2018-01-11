@@ -107,8 +107,7 @@ class App extends Component {
     }
     this.setState({clouds:storedClouds})
   }
-/*  async syncContacts() {
-}*/
+
   async syncInventory() {
     const DEBUG_INVENTORY = false;
     if(this.state && this.state.account && this.state.inventory){
@@ -267,15 +266,29 @@ class App extends Component {
       this.setState({ships:storedShips})
     }
   }
+  debugClick(){
+    console.log("CL:ICK")
+    this.syncFish()
+  }
   async syncFish() {
-    let DEBUG_SYNCFISH = false;
-    //if(DEBUG_SYNCFISH) console.log("Sync Fish")
+    let DEBUG_SYNCFISH = true;
+    if(DEBUG_SYNCFISH) console.log("Sync Fish")
     //this wont scale
     //you'll need to work through the chain
     // in chunks and then stay up to date
     //
 
+
+    let galleassAddressCheck = await contracts["Sea"].methods.galleass().call();
+    console.log("galleassAddressCheck",galleassAddressCheck)
+
     let storedFish = this.state.fish;
+
+    console.log("Sea address:",contracts["Sea"]._address)
+
+    contracts["Sea"]._address = contracts["Sea"]._address.toLowerCase();
+
+    console.log("Sea address:",contracts["Sea"]._address)
 
     let catchEvent = await contracts["Sea"].getPastEvents('Catch', {
         fromBlock: 0,
@@ -313,6 +326,7 @@ class App extends Component {
 
     if(DEBUG_SYNCFISH) console.log("storedFish",storedFish)
     this.setState({fish:storedFish})
+
   }
   metamaskHint(){
     this.setState({metamaskDip:8},()=>{
@@ -433,7 +447,7 @@ class App extends Component {
     console.log("Fishmonger is paying ",paying," for ",fishContract._address)
     contracts["Fishmonger"].methods.sellFish(fishContract._address,1).send({
       from: accounts[0],
-      gas:290000,
+      gas:500000,
       gasPrice:GWEI * 1000000000
     },/*(error,hash)=>{
       console.log("CALLBACK!",error,hash)
@@ -641,13 +655,25 @@ class App extends Component {
   startSync() {
     console.log("Finished Loading")
     clearInterval(waitInterval);
+
+
     this.setState({contractsLoaded:true})
+
+    this.syncFish()
+
+    setInterval(this.syncBlockNumber.bind(this),2003)
+
+
     setInterval(this.syncMyShip.bind(this),301)
-    setInterval(this.syncBlockNumber.bind(this),301)
+
     setInterval(this.syncFish.bind(this),301)
     setInterval(this.syncShips.bind(this),301)
     setInterval(this.syncInventory.bind(this),301)
     this.syncEverythingOnce()
+    
+
+
+
     //dev loop only...
     //setInterval(this.syncContacts.bind(this),4001)
     //this.syncContacts()
@@ -804,8 +830,8 @@ class App extends Component {
     let menuSize = 60;
     let menu = (
       <div style={{position:"fixed",left:0,top:0,width:"100%",height:menuSize,overflow:'hidden',borderBottom:"0px solid #a0aab5",color:"#DDDDDD",zIndex:99}} >
-        <div style={{float:'left',opacity:0.5}}>
-          ...
+        <div style={{float:'left',opacity:0.5}} onClick={this.debugClick.bind(this)}>
+          ||||||||||||||||
         </div>
 
         <Motion
@@ -917,7 +943,9 @@ let loadContract = async (contract)=>{
     let hexContractName = web3.utils.asciiToHex(contract);
     if(DEBUGCONTRACTLOAD) console.log(hexContractName)
     let thisContractAddress = await contracts["Galleass"].methods.getContract(hexContractName).call()
-    if(DEBUGCONTRACTLOAD) console.log("ADDRESS OF SEA:",thisContractAddress)
+    thisContractAddress = thisContractAddress.toLowerCase() //this is needed for metamask to get events !?!
+    console.log("CONTRACT",contract,thisContractAddress)
+    if(DEBUGCONTRACTLOAD) console.log("ADDRESS:",thisContractAddress)
     let thisContractAbi = require('./'+contract+'.abi.js');
     if(DEBUGCONTRACTLOAD) console.log("LOADING",contract,thisContractAddress,thisContractAbi)
     contracts[contract] = new web3.eth.Contract(thisContractAbi,thisContractAddress)
@@ -932,7 +960,10 @@ function waitForAllContracts(){
   console.log("waitForAllContracts")
   let finishedLoading = true;
   for(let c in loadContracts){
-    if(!contracts[loadContracts[c]]) finishedLoading=false;
+    if(!contracts[loadContracts[c]]) {
+      finishedLoading=false;
+      console.log(loadContracts[c]+" is still loadin")
+    }
   }
   if(finishedLoading) {
     this.startSync();

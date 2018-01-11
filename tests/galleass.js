@@ -552,7 +552,6 @@ module.exports = {
     });
   },
 
-
   publish:()=>{
     describe('#publish() ', function() {
       it('should inject contract address and abi into web app', async function() {
@@ -599,8 +598,35 @@ module.exports = {
     describe(bigHeader('STATUS'), function() {
       it('should display status', async function() {
         this.timeout(6000000)
-        const ships = await clevis("contract","balanceOf","Ships",localContractAddress("Harbor"))
-        console.log(tab,"Harbor has "+((ships+"").yellow+" Ships"))
+        const accounts = await clevis("accounts")
+
+        const galleassAddress = localContractAddress("Galleass")
+        console.log(tab,"Galleass contract address is "+(galleassAddress+"").magenta)
+
+        let FishmongerAddress = await checkContractDeployment("Fishmonger")
+        let SeaAddress = await checkContractDeployment("Sea")
+
+        let PinnerAddress = await checkContractDeployment("Pinner")
+        await checkFishPrice("Pinner",PinnerAddress)
+        let RedbassAddress = await checkContractDeployment("Redbass")
+        await checkFishPrice("Redbass",RedbassAddress)
+        let CatfishAddress = await checkContractDeployment("Catfish")
+        await checkFishPrice("Catfish",CatfishAddress)
+        let SnarkAddress = await checkContractDeployment("Snark")
+        await checkFishPrice("Snark",SnarkAddress)
+        let DanglerAddress = await checkContractDeployment("Dangler")
+        await checkFishPrice("Dangler",DanglerAddress)
+
+        await makeSureUserHasFish("Catfish",accounts[1])
+        await makeSureContractHasPermission("Fishmonger",FishmongerAddress,"transferFish")
+        await makeSureContractHasPermission("Fishmonger",FishmongerAddress,"mintFillet")
+
+        let FilletAddress = await checkContractDeployment("Fillet")
+        let CopperAddress = await checkContractDeployment("Copper")
+
+        //await makeSureContractHasTokens("Account 1",accounts[1],"Copper")
+        await makeSureContractHasTokens("Fishmonger",FishmongerAddress,"Copper")
+
       });
     });
   },
@@ -721,4 +747,38 @@ module.exports = {
 
 
   },
+}
+
+
+checkContractDeployment = async (contract)=>{
+  const localAddress = localContractAddress(contract)
+  const address = await clevis("contract","getContract","Galleass",web3.utils.fromAscii(contract))
+  console.log(tab,contract.blue+" contract address is "+(localAddress+"").magenta+" deployed as: "+(address+"").magenta)
+  assert(localAddress==address,contract.red+" isn't deployed correctly!?")
+  return address
+}
+
+checkFishPrice = async (contract,contractAddress)=>{
+  const price = await clevis("contract","price","Fishmonger",contractAddress)
+  console.log(tab,contract.magenta+" is selling for "+(price+"").yellow)
+  assert(price>0,contract.red+" doesn't have a price!")
+}
+
+makeSureUserHasFish = async (contract,account)=>{
+  const getBalance = await clevis("contract","balanceOf",contract,account)
+  console.log(tab,"Account "+account.magenta+" has "+getBalance+" "+contract.gray)
+  assert(getBalance>0,account.red+" doesn't have any "+contract.red)
+}
+
+//hasPermission(address _contract, bytes32 _permission)
+makeSureContractHasPermission = async (contract,contractAddress,permission)=>{
+  const permissionBool = await clevis("contract","hasPermission","Galleass",contractAddress,web3.utils.fromAscii(permission))
+  console.log(tab,"Contract "+contract.magenta+" (@ "+contractAddress+") permission "+permission+": "+permissionBool)
+  assert(permissionBool,contract.red+" doesn't have permission "+permission.red)
+}
+
+makeSureContractHasTokens = async (contract,contractAddress,token)=>{
+  const TokenBalance = await clevis("contract","balanceOf",token,contractAddress)
+  console.log(tab,contract.magenta+" has "+TokenBalance+" "+token)
+  assert(TokenBalance>0,contract.red+" doesn't have any "+token.red)
 }

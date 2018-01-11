@@ -105,7 +105,6 @@ class Land extends Component {
       <div style={{zIndex:20,position:'absolute',left:0,top:0,width:4000}}>
 
         {this.edgeTile(2000-60-87*2,"left")}
-
         {this.landTile(2000-60-87*2,"forest")}
         {this.landTile(2000-60-87,"forest")}
         {this.mainTile(2000,"0x34aA3F359A9D614239015126635CE7732c18fDF3")}
@@ -115,11 +114,7 @@ class Land extends Component {
         {this.fishMongerTile(2000+60+87*3+60,"0x34aA3F359A9D614239015126635CE7732c18fDF3")}
         {this.landTile(2000+60+120+87*3,"grass")}
         {this.landTile(2000+60+120+87*4,"corn")}
-
         {this.edgeTile(2000+60+120+87*5,"right")}
-
-
-
 
         {this.edgeTile(500-60-87*2,"left")}
         {this.landTile(500-60-87*2,"corn")}

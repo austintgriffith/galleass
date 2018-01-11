@@ -16,8 +16,6 @@ contract Fishmonger is Galleasset, HasNoEther {
   }
 
   function sellFish(address _species,uint256 _amount) public isGalleasset("Fishmonger") returns (bool) {
-
-
     require( _species != address(0) );
     uint256 fishPrice = price[_species];
     require( fishPrice>0 );
