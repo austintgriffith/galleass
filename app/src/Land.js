@@ -63,7 +63,7 @@ class Land extends Component {
       <div style={{
         position:'absolute',
         left:location-(mainWidth/2),
-        backgroundImage:'url("blank_grass_base.png")',
+        backgroundImage:'url("blank_grass_harbor.png")',
         backgroundRepeat:'no-repeat',
         width:mainWidth,
         height:mainHeight
