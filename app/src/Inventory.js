@@ -10,9 +10,22 @@ class Inventory extends Component {
   componentDidMount(){
 
   }
-  click(item){
-    console.log("CLICK",item)
+  sellForCopper(item){
+    console.log("sellForCopperCLICK",item)
     this.props.sellFish(item)
+  }
+  invClick(item){
+    console.log("INV",item)
+
+    let url;
+    if(item!="Ether"){
+      let contractOfItem = this.props.contracts[item]
+      console.log(contractOfItem)
+      url = this.props.etherscan+"/address/"+contractOfItem._address
+    }else{
+      url = "https://wallet.ethereum.org/";
+    }
+    window.open(url)
   }
   render(){
     let {inventory} = this.props
@@ -21,7 +34,7 @@ class Inventory extends Component {
 
     let sellForCopper = (item)=>{
       return (
-        <img onClick={this.click.bind(this,item)} style={{maxHeight:25,paddingRight:20,verticalAlign:'bottom'}} src={"copper_small.png"} />
+        <img onClick={this.sellForCopper.bind(this,item)} style={{maxHeight:25,paddingRight:20,verticalAlign:'bottom'}} src={"copper_small.png"} />
       )
     }
 
@@ -34,6 +47,7 @@ class Inventory extends Component {
         let maxHeight = 32
         if(i!="Ether" && i!="Copper" && i!="Ships" ) extra = sellForCopper(i);
         if(i=="Ships") maxHeight=58
+
         display.push(
           <Motion
              key={"inventory"+i}
@@ -43,9 +57,11 @@ class Inventory extends Component {
             {
               (value) => (
                 <div style={{padding:5}}>
-                  <span>{extra}</span>
-                  <span style={this.props.textStyle}>{inventory[i]}</span>
-                  <img style={{maxWidth:maxWidth,maxHeight:maxHeight,marginRight:value.right,verticalAlign:'bottom'}} src={i.toLowerCase()+".png"}/>
+                  <span style={{cursor:'pointer'}}>{extra}</span>
+                  <span style={{cursor:'pointer'}} onClick={this.invClick.bind(this,i)}>
+                    <span style={this.props.textStyle}>{inventory[i]}</span>
+                    <img style={{maxWidth:maxWidth,maxHeight:maxHeight,marginRight:value.right,verticalAlign:'bottom'}} src={i.toLowerCase()+".png"}/>
+                  </span>
                 </div>
               )
             }

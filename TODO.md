@@ -1,5 +1,6 @@
 # TODO
 
+[ ] figure out how to get the contract verified on etherscan (I think clevis will need to output the full source code before it's compiled)
 [x] fishing png doesn't have flag right, I think there needs to be a fishing east pic
 [ ] make event parsing scale.. start with latest and work your way backwards to block number
 [ ] can you detect metamask changing accounts and reload?
@@ -12,4 +13,4 @@
 [ ] clicking on an inventory item should probably bring up a send modal asking for an address and how many to send? does meta mask have that built in?
 [ ] when you switch accounts in Metamask it should detect the account changed and reload or something
 [ ] reimplement the multibutton green thumbs up and then green arrow for embark
-[ ] oceanfront.png is too large, needs to be optimized 
+[ ] oceanfront.png is too large, needs to be optimized

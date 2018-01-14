@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import './App.css';
 import galleassAddress from './Address.js'
+import galleassBlockNumber from './blockNumber.js'
 import galleassAbi from './Galleass.abi.js'
 import Blockies from 'react-blockies';
 import Fish from './Fish.js'
@@ -19,10 +20,9 @@ let height = 1050;
 let horizon = 300;
 let shipSpeed = 1000;
 let contracts = {};
+let blocksLoaded = {};
 let txWaitIntervals = [];
 let web3;
-
-
 
 let loadContracts = [
   "Sea",
@@ -38,10 +38,12 @@ let loadContracts = [
   "Copper"
 ]
 
-const GWEI = 10;
+const GWEI = 50;
 const GAS = 100000;
 const FISHINGBOAT = 0;
-
+const LOADERSPEED = 1237 //this * 24 should be close to a long block time
+const ETHERPREC = 10000 //decimals to show on eth inv
+const EVENTLOADCHUNK = 5760;//load a days worth of blocks of events at a time? (this should probably be more right?)
 
 let textStyle = {
   zIndex:210,
@@ -57,6 +59,7 @@ class App extends Component {
     super(props);
 
     this.state = {
+      etherscan:"https://etherscan.io",
       scrollLeft:2000-(window.innerWidth/2),
       scrollConfig:{stiffness: 80, damping: 20},
       inventory:[],
@@ -67,6 +70,7 @@ class App extends Component {
       blockNumber:0,
       metamaskDip:0,
       readyToEmbark:false,
+      buttonBumps:[]
     }
 
     try{
@@ -77,11 +81,14 @@ class App extends Component {
       for(let c in loadContracts){
         loadContract(loadContracts[c])
       }
-      waitInterval = setInterval(waitForAllContracts.bind(this),1000)
+      waitInterval = setInterval(waitForAllContracts.bind(this),229)
     } catch(e) {
       console.log(e)
     }
 
+  }
+  setEtherscan(url){
+    this.setState({etherscan:url})
   }
   init(account) {
     console.log("Init "+account+"...")
@@ -107,7 +114,6 @@ class App extends Component {
     }
     this.setState({clouds:storedClouds})
   }
-
   async syncInventory() {
     const DEBUG_INVENTORY = false;
     if(this.state && this.state.account && this.state.inventory){
@@ -183,7 +189,7 @@ class App extends Component {
         update=true
       }
 
-      let balanceOfEther = Math.round(web3.utils.fromWei(await web3.eth.getBalance(this.state.account),"Ether")*1000)/1000;
+      let balanceOfEther = Math.round(web3.utils.fromWei(await web3.eth.getBalance(this.state.account),"Ether")*ETHERPREC)/ETHERPREC;
       if(DEBUG_INVENTORY) console.log("balanceOfEther",balanceOfEther)
       if(inventory['Ether']!=balanceOfEther){
         inventory['Ether']=balanceOfEther
@@ -271,7 +277,7 @@ class App extends Component {
     this.syncFish()
   }
   async syncFish() {
-    let DEBUG_SYNCFISH = true;
+    let DEBUG_SYNCFISH = false;
     if(DEBUG_SYNCFISH) console.log("Sync Fish")
     //this wont scale
     //you'll need to work through the chain
@@ -280,15 +286,15 @@ class App extends Component {
 
 
     let galleassAddressCheck = await contracts["Sea"].methods.galleass().call();
-    console.log("galleassAddressCheck",galleassAddressCheck)
+    //console.log("galleassAddressCheck",galleassAddressCheck)
 
     let storedFish = this.state.fish;
 
-    console.log("Sea address:",contracts["Sea"]._address)
+    //console.log("Sea address:",contracts["Sea"]._address)
 
-    contracts["Sea"]._address = contracts["Sea"]._address.toLowerCase();
+    //contracts["Sea"]._address = contracts["Sea"]._address.toLowerCase();
 
-    console.log("Sea address:",contracts["Sea"]._address)
+    //console.log("Sea address:",contracts["Sea"]._address)
 
     let catchEvent = await contracts["Sea"].getPastEvents('Catch', {
         fromBlock: 0,
@@ -335,9 +341,15 @@ class App extends Component {
       },500)
     })
   }
-
+  handleError(error){
+    console.log("HANDLETHIS:",error)
+    if(error.toString().indexOf("Error: Transaction was not mined")>=0){
+      console.log("FIRE MESSAGE ABOUT UPPING YOUR GAS PRICE BECAUSE TX WASNT MINED")
+    }
+  }
   async buyShip() {
     console.log("BUYSHIP")
+    this.bumpButton("buyship")
     if(!web3){
       //hint to install metamask
       this.metamaskHint()
@@ -358,7 +370,8 @@ class App extends Component {
           },(error,hash)=>{
             console.log("CALLBACK!",error,hash)
             if(!error) this.load()
-          }).then((receipt)=>{
+            this.resetButton("buyship")
+          }).on('error',this.handleError).then((receipt)=>{
             console.log("RESULT:",receipt)
             this.startWaiting(receipt.transactionHash,"inventoryUpdate")
           })
@@ -392,7 +405,7 @@ class App extends Component {
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
         if(!error) this.load()
-      }).then((receipt)=>{
+      }).on('error',this.handleError).then((receipt)=>{
         console.log("RESULT:",receipt)
         this.startWaiting(receipt.transactionHash,"shipUpdate")
       })
@@ -414,7 +427,7 @@ class App extends Component {
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
       if(!error) this.load()
-    }).then((receipt)=>{
+    }).on('error',this.handleError).then((receipt)=>{
       console.log("RESULT:",receipt)
       setTimeout(()=>{
         this.setState({readyToEmbark:true})
@@ -433,7 +446,7 @@ class App extends Component {
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
       if(!error) this.load()
-    }).then((receipt)=>{
+    }).on('error',this.handleError).then((receipt)=>{
       console.log("RESULT:",receipt)
       this.startWaiting(receipt.transactionHash)
     })
@@ -452,7 +465,7 @@ class App extends Component {
     },/*(error,hash)=>{
       console.log("CALLBACK!",error,hash)
       if(!error) this.load()
-    }*/).then((receipt)=>{
+    }*/).on('error',this.handleError).then((receipt)=>{
       console.log("RESULT:",receipt)
       this.startWaiting(receipt.transactionHash)
     })
@@ -511,6 +524,8 @@ class App extends Component {
   */
   setSail(direction){
     console.log("SET SAIL")
+    if(direction) this.bumpButton("saileast")
+    else this.bumpButton("sailwest")
     window.web3.eth.getAccounts((err,_accounts)=>{
       console.log(_accounts)
       contracts["Sea"].methods.setSail(direction).send({
@@ -520,7 +535,9 @@ class App extends Component {
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
         if(!error) this.load()
-      }).then((receipt)=>{
+        if(direction) this.resetButton("saileast")
+        else this.resetButton("sailwest")
+      }).on('error',this.handleError).then((receipt)=>{
         console.log("RESULT:",receipt)
         this.startWaiting(receipt.transactionHash,"shipUpdate")
       })
@@ -528,6 +545,7 @@ class App extends Component {
   }
   dropAnchor(){
     console.log("DROP ANCHOR")
+    this.bumpButton("dropanchor")
     window.web3.eth.getAccounts((err,_accounts)=>{
       console.log(_accounts)
       contracts["Sea"].methods.dropAnchor().send({
@@ -537,7 +555,8 @@ class App extends Component {
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
         if(!error) this.load()
-      }).then((receipt)=>{
+        this.resetButton("dropanchor")
+      }).on('error',this.handleError).then((receipt)=>{
         console.log("RESULT:",receipt)
         this.startWaiting(receipt.transactionHash,"shipUpdate")
       })
@@ -545,6 +564,7 @@ class App extends Component {
   }
   castLine(){
     console.log("CAST LINE")
+    this.bumpButton("castline")
     window.web3.eth.getAccounts((err,_accounts)=>{
       let bait = web3.utils.sha3(Math.random()+_accounts[0])
       console.log(bait)
@@ -557,9 +577,8 @@ class App extends Component {
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
         if(!error) this.load()
-      }).on('error', function(error){
-        console.log("error",error)
-      })
+        this.resetButton("castline")
+      }).on('error',this.handleError)
       .on('transactionHash', function(transactionHash){
         console.log("transactionHash",transactionHash)
       })
@@ -575,8 +594,21 @@ class App extends Component {
       })
     })
   }
+  bumpButton(name){
+    let currentBumps = this.state.buttonBumps
+    if(!currentBumps[name]) currentBumps[name]= 15
+    else currentBumps[name]+= 15
+    this.setState({currentBumps:currentBumps})
+  }
+  resetButton(name){
+    let currentBumps = this.state.buttonBumps
+    currentBumps[name]=0
+    this.setState({currentBumps:currentBumps})
+  }
   reelIn(){
     console.log("REEL IN")
+    this.bumpButton("reelin")
+
     const DEBUG_REEL_IN = false;
     window.web3.eth.getAccounts((err,_accounts)=>{
       //console.log(_accounts)
@@ -618,14 +650,15 @@ class App extends Component {
 
       if(DEBUG_REEL_IN) console.log("FINAL ID BAIT & ACCOUNT",bestId,baitToUse,_accounts[0])
 
-      contracts["Sea"].methods.reelIn(bestId,baitToUse,).send({
+      contracts["Sea"].methods.reelIn(bestId,baitToUse).send({
         from: _accounts[0],
         gas:100000,
         gasPrice:GWEI * 1000000000
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
         if(!error) this.load()
-      }).then((receipt)=>{
+        this.resetButton("reelin")
+      }).on('error',this.handleError).then((receipt)=>{
         if(DEBUG_REEL_IN) console.log("RESULT:",receipt)
         this.startWaiting(receipt.transactionHash,"shipUpdate")
       })
@@ -634,7 +667,7 @@ class App extends Component {
   load(){
     console.log("LOAD!")
     this.setState({loading:1},()=>{
-      txWaitIntervals["loader"] = setInterval(this.updateLoader.bind(this),1100)
+      txWaitIntervals["loader"] = setInterval(this.updateLoader.bind(this),LOADERSPEED)
     })
   }
   startWaiting(hash,nextPhase){
@@ -652,28 +685,15 @@ class App extends Component {
       })
     }
   }
-  startSync() {
-    console.log("Finished Loading")
+  startEventSync() {
+    console.log("Finished loading contracts and block number, start syncing events...",this.state.blockNumber)
     clearInterval(waitInterval);
-
-
     this.setState({contractsLoaded:true})
-
-    this.syncFish()
-
-    setInterval(this.syncBlockNumber.bind(this),2003)
-
-
-    setInterval(this.syncMyShip.bind(this),301)
-
-    setInterval(this.syncFish.bind(this),301)
-    setInterval(this.syncShips.bind(this),301)
-    setInterval(this.syncInventory.bind(this),301)
+    setInterval(this.syncMyShip.bind(this),1381)
+    setInterval(this.syncFish.bind(this),3167)
+    setInterval(this.syncShips.bind(this),1427)
+    setInterval(this.syncInventory.bind(this),2437)
     this.syncEverythingOnce()
-    
-
-
-
     //dev loop only...
     //setInterval(this.syncContacts.bind(this),4001)
     //this.syncContacts()
@@ -691,7 +711,23 @@ class App extends Component {
     this.syncInventory()
     this.syncClouds()
   }
-
+  bumpableButton(name,buttonsTop,fn){
+    let buttonBounce = parseInt(this.state.buttonBumps[name])
+    if(!buttonBounce) buttonBounce = 0
+    //console.log("buttonBounce",buttonBounce)
+    return (
+      <Motion
+        defaultStyle={{
+          top:buttonsTop
+        }}
+        style={{
+          top:spring(buttonsTop+buttonBounce,{stiffness: 150, damping: 5})// presets.noWobble)
+        }}
+      >
+      {fn}
+      </Motion>
+    )
+  }
   render() {
     let buttons = [];
     if(!this.state){
@@ -739,7 +775,7 @@ class App extends Component {
       buttonOpacity = 0.3
       buttonDisabled = true
       let timeSpentWaiting = Date.now() - this.state.waitingForTransactionTime
-      timeSpentWaiting = Math.floor(timeSpentWaiting/800)+1;
+      timeSpentWaiting = Math.floor(timeSpentWaiting/1200)+1;
       //console.log("timeSpentWaiting",timeSpentWaiting)
       if(timeSpentWaiting>12) timeSpentWaiting=12
       loadingBar = (
@@ -753,15 +789,21 @@ class App extends Component {
         let clickFn = this.buyShip.bind(this)
         if(buttonDisabled){clickFn=()=>{}}
         buttons.push(
-          <div style={{zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} onClick={clickFn}>
-            <img src="buyship.png" style={{maxWidth:150}}/>
-          </div>
+          this.bumpableButton("buyship",buttonsTop,(animated) => {
+            let extraWidth = animated.top - buttonsTop
+              return (
+                <div style={{cursor:"pointer",zIndex:200,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
+                  <img src="buyship.png" style={{maxWidth:150-(extraWidth)}}/>
+                </div>
+              )
+            }
+          )
         )
       }else/* if(this.state.readyToEmbark)*/{
         let clickFn = this.embark.bind(this)
         if(buttonDisabled){clickFn=()=>{}}
         buttons.push(
-          <div style={{zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} onClick={clickFn}>
+          <div style={{cursor:"pointer",zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} onClick={clickFn}>
             <img src="approveAndEmbark.png" style={{maxWidth:150}}/>
           </div>
         )
@@ -785,39 +827,73 @@ class App extends Component {
       let clickFn = this.dropAnchor.bind(this)
       if(buttonDisabled){clickFn=()=>{}}
       buttons.push(
-        <div style={{zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} onClick={clickFn}>
-          <img src="dropanchor.png" style={{maxWidth:150}}/>
-        </div>
+        this.bumpableButton("dropanchor",buttonsTop,(animated) => {
+          let extraWidth = animated.top - buttonsTop
+            return (
+              <div style={{cursor:"pointer",zIndex:200,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
+                <img src="dropanchor.png" style={{maxWidth:150-(extraWidth)}}/>
+              </div>
+            )
+          }
+        )
       )
     }else if(myShip.fishing){
       let clickFn = this.reelIn.bind(this);
       if(buttonDisabled){clickFn=()=>{}}
+      let buttonBounce = parseInt(this.state.buttonBumps['reelin'])
+      if(!buttonBounce) buttonBounce = 0
+      //console.log("buttonBounce",buttonBounce)
       buttons.push(
-        <div style={{zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} onClick={clickFn}>
-          <img src="reelin.png" style={{maxWidth:150}}/>
-        </div>
+        this.bumpableButton("reelin",buttonsTop,(animated) => {
+          let extraWidth = animated.top - buttonsTop
+            return (
+              <div style={{cursor:"pointer",zIndex:200,position:'absolute',top:animated.top,left:buttonsLeft-75+((extraWidth)/2),opacity:buttonOpacity}} onClick={clickFn}>
+                  <img src="reelin.png" style={{maxWidth:150-(extraWidth)}}/>
+              </div>
+            )
+          }
+        )
       )
     }else{
       let clickFn1 = this.setSail.bind(this,true)
       if(buttonDisabled){clickFn1=()=>{}}
       buttons.push(
-        <div style={{zIndex:200,position:'absolute',left:buttonsLeft+180-75,top:buttonsTop,opacity:buttonOpacity}} onClick={clickFn1}>
-          <img src="saileast.png" style={{maxWidth:150}}/>
-        </div>
+        this.bumpableButton("saileast",buttonsTop,(animated) => {
+          let extraWidth = animated.top - buttonsTop
+            return (
+              <div style={{cursor:"pointer",zIndex:200,position:'absolute',left:buttonsLeft+180-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn1}>
+                <img src="saileast.png" style={{maxWidth:150-(extraWidth)}}/>
+              </div>
+            )
+          }
+        )
       )
       let clickFn2 = this.castLine.bind(this,true)
       if(buttonDisabled){clickFn2=()=>{}}
       buttons.push(
-        <div style={{zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} onClick={clickFn2}>
-          <img src="castLine.png" style={{maxWidth:150}}/>
-        </div>
+        this.bumpableButton("castline",buttonsTop,(animated) => {
+          let extraWidth = animated.top - buttonsTop
+            return (
+              <div style={{cursor:"pointer",zIndex:200,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn2}>
+                <img src="castLine.png" style={{maxWidth:150-(extraWidth)}}/>
+              </div>
+            )
+          }
+        )
+
       )
       let clickFn3 = this.setSail.bind(this,false)
       if(buttonDisabled){clickFn3=()=>{}}
       buttons.push(
-        <div style={{zIndex:200,position:'absolute',left:buttonsLeft-180-75,top:buttonsTop,opacity:buttonOpacity}} onClick={clickFn3}>
-          <img src="sailwest.png" style={{maxWidth:150}}/>
-        </div>
+        this.bumpableButton("sailwest",buttonsTop,(animated) => {
+          let extraWidth = animated.top - buttonsTop
+            return (
+              <div style={{cursor:"pointer",zIndex:200,position:'absolute',left:buttonsLeft-180-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn3}>
+                <img src="sailwest.png" style={{maxWidth:150-(extraWidth)}}/>
+              </div>
+            )
+          }
+        )
       )
     }
     buttons.push(
@@ -831,7 +907,7 @@ class App extends Component {
     let menu = (
       <div style={{position:"fixed",left:0,top:0,width:"100%",height:menuSize,overflow:'hidden',borderBottom:"0px solid #a0aab5",color:"#DDDDDD",zIndex:99}} >
         <div style={{float:'left',opacity:0.5}} onClick={this.debugClick.bind(this)}>
-          ||||||||||||||||
+
         </div>
 
         <Motion
@@ -845,7 +921,15 @@ class App extends Component {
           {currentStyles => {
             return (
               <div style={currentStyles}>
-                <Metamask textStyle={textStyle} account={this.state.account} init={this.init.bind(this)} Blockies={Blockies} blockNumber={this.state.blockNumber}/>
+                <Metamask
+                  textStyle={textStyle}
+                  account={this.state.account}
+                  init={this.init.bind(this)}
+                  Blockies={Blockies}
+                  blockNumber={this.state.blockNumber}
+                  etherscan={this.state.etherscan}
+                  setEtherscan={this.setEtherscan.bind(this)}
+                />
               </div>
             )
           }}
@@ -861,6 +945,8 @@ class App extends Component {
           Ships={this.state.Ships}
           textStyle={textStyle}
           sellFish={this.sellFish}
+          contracts={contracts}
+          etherscan={this.state.etherscan}
         />
       </div>
     )
@@ -870,7 +956,17 @@ class App extends Component {
         <Clouds clouds={this.state.clouds} horizon={horizon} width={width} blockNumber={this.state.blockNumber}/>
         <div style={{position:'absolute',left:0,top:horizon,opacity:1,backgroundImage:"url('oceanblackblur.jpg')",backgroundRepeat:'no-repeat',height:height+horizon,width:width}}></div>
         {buttons}
-        <Ships ships={this.state.ships} width={width} height={height} horizon={horizon+100} Blockies={Blockies} web3={web3} shipSpeed={shipSpeed} blockNumber={this.state.blockNumber}/>
+        <Ships
+          ships={this.state.ships}
+          width={width}
+          height={height}
+          horizon={horizon+100}
+          Blockies={Blockies}
+          web3={web3}
+          shipSpeed={shipSpeed}
+          blockNumber={this.state.blockNumber}
+          etherscan={this.state.etherscan}
+        />
         <Fish fish={this.state.fish} width={width} height={height} horizon={horizon+150} />
         <div style={{zIndex:11,position:'absolute',left:0,top:horizon,opacity:.7,backgroundImage:"url('oceanfront.png')",backgroundRepeat:'no-repeat',height:height+horizon,width:width}}></div>
       </div>
@@ -889,7 +985,7 @@ class App extends Component {
         zIndex:20,
         position:'absolute',
         left:2000,
-        top:320,
+        top:500,
         opacity:0.9,
         height:75,
         width:140
@@ -958,6 +1054,7 @@ let loadContract = async (contract)=>{
 let waitInterval
 function waitForAllContracts(){
   console.log("waitForAllContracts")
+  setInterval(this.syncBlockNumber.bind(this),1783)
   let finishedLoading = true;
   for(let c in loadContracts){
     if(!contracts[loadContracts[c]]) {
@@ -965,8 +1062,8 @@ function waitForAllContracts(){
       console.log(loadContracts[c]+" is still loadin")
     }
   }
-  if(finishedLoading) {
-    this.startSync();
+  if(finishedLoading&&this.state&&this.state.blockNumber) {
+    this.startEventSync();
   }
 }
 

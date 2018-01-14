@@ -557,10 +557,17 @@ module.exports = {
       it('should inject contract address and abi into web app', async function() {
         this.timeout(120000)
         const fs = require("fs")
+
         let address = fs.readFileSync("Galleass/Galleass.address").toString().trim()
         console.log(tab,"ADDRESS:",address.blue)
         assert(address,"No Address!?")
         fs.writeFileSync("app/src/Address.js","module.exports = \""+address+"\"");
+
+        let blockNumber = fs.readFileSync("Galleass/Galleass.blockNumber").toString().trim()
+        console.log(tab,"blockNumber:",blockNumber.blue)
+        assert(blockNumber,"No blockNumber!?")
+        fs.writeFileSync("app/src/blockNumber.js","module.exports = \""+blockNumber+"\"");
+
         loadAbi("Galleass")
         loadAbi("Sea")
         loadAbi("Harbor")

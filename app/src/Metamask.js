@@ -36,6 +36,12 @@ class Metamask extends Component {
                 window.location.reload(true);
               }else{
                 if(this.state.metamask!=3) {
+                  let etherscan = "https://etherscan.io"
+                  if(network!="Mainnet"){
+                    etherscan = "https://"+network.toLowerCase()+".etherscan.io"
+                  }
+                  this.props.setEtherscan(etherscan)
+
                   this.setState({metamask:3,accounts:accounts,network:network},()=>{
                     this.props.init(accounts[0])
                   })
@@ -123,7 +129,7 @@ class Metamask extends Component {
       //console.log("goodblock",this.state.accounts[0])
       metamask = (
         <div style={{padding:4}}>
-          <a target="_blank" href={"https://etherscan.io/search?q="+this.state.accounts[0]}>
+          <a target="_blank" href={this.props.etherscan+"/search?q="+this.state.accounts[0]}>
             <span style={{
               float:'left',
               marginTop:3,

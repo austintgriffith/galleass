@@ -6,6 +6,9 @@ class Ships extends Component {
   constructor(props) {
     super(props);
   }
+  openUrl(url){
+    window.open(url)
+  }
   render(){
     let {ships,web3,blockNumber,shipSpeed,width,height,horizon} = this.props
     let renderedShips = []
@@ -53,22 +56,31 @@ class Ships extends Component {
       let lastTwoBytes = idHash.substring(idHash.length-2);
       let idTopOffset = lastTwoBytes.substring(0,1);
       let idLeftOffset = lastTwoBytes.substring(1);
-      idTopOffset = 1+parseInt(idTopOffset, 16)
-      idLeftOffset = (7-parseInt(idLeftOffset, 16))*2
+      idTopOffset = 1+parseInt(idTopOffset, 16)*3
+      idLeftOffset = (7-parseInt(idLeftOffset, 16))*6
 
       //console.log("RENDER SHIP",translatedX,idLeftOffset)
 
       renderedShips.push(
-        <div key={"ship"+b} style={{
-          zIndex:20+idTopOffset,
-          position:'absolute',
-          left:translatedX+idLeftOffset-(shipwidth/2),
-          top:horizon-28+idTopOffset,
-          opacity:0.9,
-          height:75,
-          width:shipwidth
-        }}>
-        <img src={image} />
+        <div key={"ship"+b} onClick={this.openUrl.bind(this,this.props.etherscan+"/address/"+b)}
+          style={{
+            zIndex:20+idTopOffset,
+            position:'absolute',
+            left:translatedX+idLeftOffset-(shipwidth/2),
+            top:horizon-28+idTopOffset,
+            opacity:0.9,
+            height:75,
+            width:shipwidth,
+            cursor:"pointer"
+          }
+        }>
+
+        <a style={{zIndex:99}}>
+          <img src={image} />
+        </a>
+
+
+
         <div style={{
           position:'absolute',
           top:8,
@@ -78,6 +90,7 @@ class Ships extends Component {
           seed={b.toLowerCase()}
           scale={2}
         />
+
         </div>
         </div>
       )

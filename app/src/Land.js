@@ -56,6 +56,22 @@ class Land extends Component {
       </div>
     )
   }
+  harborTile(location,owner){
+    let mainWidth = 120
+    let mainHeight = 125
+    return (
+      <div style={{
+        position:'absolute',
+        left:location-(mainWidth/2),
+        backgroundImage:'url("blank_grass_base.png")',
+        backgroundRepeat:'no-repeat',
+        width:mainWidth,
+        height:mainHeight
+      }}>
+        <img style={{position:'absolute',top:3,left:20}} src="harbor.png" />
+      </div>
+    )
+  }
   click(e){
     console.log(e.target)
   }
@@ -107,7 +123,7 @@ class Land extends Component {
         {this.edgeTile(2000-60-87*2,"left")}
         {this.landTile(2000-60-87*2,"forest")}
         {this.landTile(2000-60-87,"forest")}
-        {this.mainTile(2000,"0x34aA3F359A9D614239015126635CE7732c18fDF3")}
+        {this.harborTile(2000,"0x34aA3F359A9D614239015126635CE7732c18fDF3")}
         {this.landTile(2000+60,"grass")}
         {this.landTile(2000+60+87,"mountain")}
         {this.landTile(2000+60+87*2,"forest")}
