@@ -221,8 +221,10 @@ class App extends Component {
       if(DEBUG_SYNCMYSHIP) console.log("UPDATE MY SHIP",JSON.stringify(this.state.ship),JSON.stringify(getMyShip))
       let myLocation = 2000;
       if(getMyShip.floating){
+        console.log("======MY myLocation",getMyShip.location)
         myLocation = 4000 * getMyShip.location / 65535
         if(DEBUG_SYNCMYSHIP) console.log("myLocation",myLocation)
+        console.log("======MY adjusted  myLocation",myLocation)
         this.setState({scrollLeft:myLocation-(window.innerWidth/2)})
       }
       this.setState({loading:0,ship:getMyShip,waitingForShipUpdate:false,myLocation:myLocation},()=>{
@@ -383,6 +385,7 @@ class App extends Component {
       }
     }
   }
+  /*
   async approveAndEmbark() {
     //"contract","approve",contract,accountindex,toContractAddress,tokens[0]
     console.log("approveAndEmbark")
@@ -412,6 +415,8 @@ class App extends Component {
     })
 
   }
+  */
+  /*
   async approve() {
     console.log("approve")
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
@@ -433,9 +438,11 @@ class App extends Component {
         this.setState({readyToEmbark:true})
       },5000)/////////////////////////////////WHY YOU TIMEOUT BRAH?
     })
-  }
+  }*/
   async embark() {
     console.log("embark")
+    this.bumpButton("approveandembark")
+
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
     console.log(accounts)
     console.log("methods.embark(",this.state.inventoryDetail['Ships'][0])
@@ -446,6 +453,7 @@ class App extends Component {
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
       if(!error) this.load()
+      this.resetButton("approveandembark")
     }).on('error',this.handleError).then((receipt)=>{
       console.log("RESULT:",receipt)
       this.startWaiting(receipt.transactionHash)
@@ -803,9 +811,15 @@ class App extends Component {
         let clickFn = this.embark.bind(this)
         if(buttonDisabled){clickFn=()=>{}}
         buttons.push(
-          <div style={{cursor:"pointer",zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} onClick={clickFn}>
-            <img src="approveAndEmbark.png" style={{maxWidth:150}}/>
-          </div>
+          this.bumpableButton("approveandembark",buttonsTop,(animated) => {
+            let extraWidth = animated.top - buttonsTop
+              return (
+                <div style={{cursor:"pointer",zIndex:200,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
+                  <img src="approveAndEmbark.png" style={{maxWidth:150-(extraWidth)}}/>
+                </div>
+              )
+            }
+          )
         )
       }/*else{
         let clickFn = this.approve.bind(this)

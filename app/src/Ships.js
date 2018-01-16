@@ -27,12 +27,13 @@ class Ships extends Component {
         translatedX = width*(adjustedLocation/65535);
         while(translatedX>width)
         {
-          translatedX-=(width+shipwidth);
+          translatedX-=(width);
         }
         while(translatedX<(shipwidth*-1))
         {
-          translatedX+=(width+shipwidth);
+          translatedX+=(width);
         }
+
       }else if(ships[b].fishing){
           image+="fishing";
           translatedX = width*(ships[b].location/65535);
@@ -57,7 +58,7 @@ class Ships extends Component {
       let idTopOffset = lastTwoBytes.substring(0,1);
       let idLeftOffset = lastTwoBytes.substring(1);
       idTopOffset = 1+parseInt(idTopOffset, 16)*3
-      idLeftOffset = (7-parseInt(idLeftOffset, 16))*6
+      idLeftOffset = (7-parseInt(idLeftOffset, 16))
 
       //console.log("RENDER SHIP",translatedX,idLeftOffset)
 
