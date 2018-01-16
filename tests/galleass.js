@@ -580,6 +580,8 @@ module.exports = {
         loadAbi("Dangler")
         loadAbi("Copper")
         loadAbi("Fishmonger")
+
+        loadAbi("Land")
       });
     });
   },
