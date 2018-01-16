@@ -35,7 +35,8 @@ let loadContracts = [
   "Snark",
   "Dangler",
   "Fishmonger",
-  "Copper"
+  "Copper",
+  "Land"
 ]
 
 const GWEI = 50;
@@ -70,7 +71,8 @@ class App extends Component {
       blockNumber:0,
       metamaskDip:0,
       readyToEmbark:false,
-      buttonBumps:[]
+      buttonBumps:[],
+      zoom:"100%"
     }
 
     try{
@@ -208,6 +210,18 @@ class App extends Component {
 
     }
   }
+  async syncLand() {
+    const DEBUG_SYNCMYSHIP = false;
+    if(DEBUG_SYNCMYSHIP) console.log("SYNCING LAND")
+    let land = this.state.land;
+    if(!land) land=[]
+    for(let l=0;l<18;l++){
+      let currentTileHere = await contracts["Land"].methods.tiles(l).call();
+      console.log("currentTileHere",l,currentTileHere)
+      land[l]=currentTileHere
+    }
+    if(land!=this.state.land) this.setState({land:land})
+  }
   async syncMyShip() {
     const DEBUG_SYNCMYSHIP = false;
     if(DEBUG_SYNCMYSHIP) console.log("SYNCING MY SHIP")
@@ -216,16 +230,21 @@ class App extends Component {
     if(DEBUG_SYNCMYSHIP) console.log("Getting ship for account "+accounts[0])
     let getMyShip = await contracts["Sea"].methods.getShip(accounts[0]).call();
     if(DEBUG_SYNCMYSHIP) console.log("COMPARE",this.state.ship,getMyShip)
+    let zoom = 150
     //if(JSON.stringify(this.state.ship)!=JSON.stringify(getMyShip)) {
     if(getMyShip && !isEquivalent(this.state.ship,getMyShip)){
+      let zoomPercent = 1/(parseInt(this.state.zoom)/100)
+      console.log("zoomPercent",zoomPercent)
       if(DEBUG_SYNCMYSHIP) console.log("UPDATE MY SHIP",JSON.stringify(this.state.ship),JSON.stringify(getMyShip))
       let myLocation = 2000;
       if(getMyShip.floating){
         myLocation = 4000 * getMyShip.location / 65535
         if(DEBUG_SYNCMYSHIP) console.log("myLocation",myLocation)
-        this.setState({scrollLeft:myLocation-(window.innerWidth/2)})
+        console.log("scrolling with zoom ",this.state.zoom)
+        let windowWidthWithZoom = (window.innerWidth) * zoomPercent
+        this.setState({scrollLeft:myLocation-windowWidthWithZoom/2})
       }
-      this.setState({loading:0,ship:getMyShip,waitingForShipUpdate:false,myLocation:myLocation},()=>{
+      this.setState({zoom:"100%",loading:0,ship:getMyShip,waitingForShipUpdate:false,myLocation:myLocation},()=>{
         //if(DEBUG_SYNCMYSHIP)
         //console.log("SET getMyShip",this.state.ship)
       })
@@ -710,6 +729,7 @@ class App extends Component {
     this.syncShips()
     this.syncInventory()
     this.syncClouds()
+    this.syncLand()
   }
   bumpableButton(name,buttonsTop,fn){
     let buttonBounce = parseInt(this.state.buttonBumps[name])
@@ -974,7 +994,7 @@ class App extends Component {
 
     let land = (
       <div style={{position:"absolute",left:0,top:horizon-60,width:width}} >
-        <Land Blockies={Blockies} />
+        <Land land={this.state.land} Blockies={Blockies} />
       </div>
     )
 
@@ -1006,7 +1026,7 @@ class App extends Component {
 
 
     return (
-      <div className="App" >
+      <div className="App" style={{zoom:this.state.zoom}}>
         {menu}
         {inventory}
         {sea}
@@ -1017,6 +1037,7 @@ class App extends Component {
             scrollLeft:document.scrollingElement.scrollLeft
           }}
           style={{
+            zoom:this.state.zoom,
             scrollLeft: spring(this.state.scrollLeft,this.state.scrollConfig )// presets.noWobble)
           }}
         >
