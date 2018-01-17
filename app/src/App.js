@@ -575,10 +575,10 @@ class App extends Component {
     this.syncFish()
   }
   metamaskHint(){
-    this.setState({metamaskDip:8},()=>{
+    this.setState({metamaskDip:20},()=>{
       setTimeout(()=>{
         this.setState({metamaskDip:0})
-      },500)
+      },550)
     })
   }
   handleError(error){
@@ -899,10 +899,10 @@ class App extends Component {
 
         <Motion
           defaultStyle={{
-            marginTop:0
+            marginRight:0
           }}
           style={{
-            marginTop: spring(this.state.metamaskDip,{stiffness: 120, damping: 17})// presets.noWobble)
+            marginRight: spring(this.state.metamaskDip,{stiffness: 80, damping: 7})// presets.noWobble)
           }}
         >
           {currentStyles => {
@@ -991,8 +991,16 @@ class App extends Component {
       </div>
     )
 
+    let clickScreenWhenNotLoggedIn = (
+      <div style={{width:"100%",height:"100%",opacity:0.01,position:"absolute",left:0,top:0,zIndex:200}} onClick={this.metamaskHint.bind(this)}>
+      </div>
+    )
+
+    if(this.state.contractsLoaded) clickScreenWhenNotLoggedIn=""
+
     return (
       <div className="App" style={{zoom:this.state.zoom}}>
+        {clickScreenWhenNotLoggedIn}
         {menu}
         {inventory}
         {sea}

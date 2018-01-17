@@ -259,9 +259,9 @@ class Land extends Component {
 
 
           {this.edgeTile(500-60-87*2-114,"left")}
-          {this.landTile(500-60-87*2,"corn")}
-          {this.landTile(500-60-87,"corn")}
-          {this.castleTile(500-60,"0xab5801a7d398351b8be11c439e05c5b3259aec9b")}
+          {this.landTile(500-60-87*2,"forest")}
+          {this.landTile(500-60-87,"mountain")}
+          {this.villageTile(500-60,"0xab5801a7d398351b8be11c439e05c5b3259aec9b")}
           {this.landTile(500+60,"forest")}
           {this.edgeTile(500+60+87,"right")}
 

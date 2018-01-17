@@ -7,10 +7,8 @@ class Ships extends Component {
     super(props);
     let fillerShips = []
     //make some fake fish while it loads
-    for(let f=0;f<7;f++){
-      //this.props.web3.utils.randomHex(40)
-      let randomId = this.props.web3.utils.keccak256("asdF");
-
+    for(let f=0;f<14;f++){
+      let randomId = ""+this.props.web3.utils.randomHex(40);
       fillerShips[randomId]=this.createRandomFakeShipForLoading(f)
     }
     this.state = {
@@ -83,7 +81,7 @@ class Ships extends Component {
 
       //offset ships based on their ids so when they are in the same place
       //we can see both of them
-      let idHash = web3.utils.sha3(ships[b].id,b)
+      let idHash = web3.utils.sha3(""+ships[b].id,b)
       //console.log("idHash",idHash)
       let lastTwoBytes = idHash.substring(idHash.length-2);
       let idTopOffset = lastTwoBytes.substring(0,1);
