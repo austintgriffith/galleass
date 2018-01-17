@@ -551,6 +551,25 @@ module.exports = {
       });
     });
   },
+  buildTile:(accountindex,name,number)=>{
+    describe('#buildTile()', function() {
+      it('should build a tile at the center most open main tile', async function() {
+        this.timeout(120000)
+        let address = localContractAddress(name);
+        console.log(tab,name+" address is ",address.blue)
+
+        let openMainTile = await searchLandFromCenterOut(9,1)
+        console.log(tab,"Building "+name+" at tile ",openMainTile)
+
+        //clevis contract editTile Land 0 9 100 0x0
+        const result = await clevis("contract","editTile","Land",accountindex,openMainTile,number,address)
+        printTxResult(result)
+
+        const atThisTileNow = await clevis("contract","tiles","Land",openMainTile)
+        assert(atThisTileNow==number,name.red+" didn't get built in middle of land?!?")
+      });
+    });
+  },
 
   publish:()=>{
     describe('#publish() ', function() {
@@ -686,6 +705,13 @@ module.exports = {
       });
     });
 
+    describe(bigHeader('BUILD HARVOR AND FISH MONGER'), function() {
+      it('should buildHarborAndFishMonger', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","buildHarborAndFishMonger")
+        assert(result==0,"buildHarborAndFishMonger ERRORS")
+      });
+    });
 
 
     describe(bigHeader('TIMBER MINTING & BUILD SHIPS'), function() {
@@ -758,6 +784,32 @@ module.exports = {
   },
 }
 
+
+searchLandFromCenterOut = async (startingPoint,tileType) =>{
+  let bestTile = false;
+  let foundTile = false;
+  let upCounter = startingPoint
+  let downCounter = startingPoint-1
+  while(!foundTile){
+    const atThisTile = await clevis("contract","tiles","Land",upCounter)
+    console.log(tab,"Tile at "+upCounter+" is "+atThisTile)
+    if(atThisTile==tileType){
+      foundTile=true;
+      bestTile=upCounter;
+    }else{
+      upCounter++
+      const atThisTile = await clevis("contract","tiles","Land",downCounter)
+      console.log(tab,"Tile at "+downCounter+" is "+atThisTile)
+      if(atThisTile==tileType){
+        foundTile=true;
+        bestTile=downCounter;
+      }else{
+        downCounter--;
+      }
+    }
+  }
+  return bestTile;
+}
 
 checkContractDeployment = async (contract)=>{
   const localAddress = localContractAddress(contract)

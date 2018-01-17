@@ -32,12 +32,20 @@ contract Galleasset {
     _;
   }
 
+  modifier isBuilding() {
+    Galleass galleassContract = Galleass(galleass);
+    require(galleassContract.stagedMode() == Galleass.StagedMode.BUILD);
+    _;
+  }
+
 }
 
 
 contract Galleass {
   function getContract(bytes32 _name) public constant returns (address) { }
   function hasPermission(address _contract, bytes32 _permission) public view returns (bool) { }
+  enum StagedMode {PAUSED,BUILD,STAGE,PRODUCTION}
+  StagedMode public stagedMode;
 }
 
 contract StandardTokenInterface {

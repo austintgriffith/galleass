@@ -2,8 +2,8 @@ const galleass = require('./galleass.js')
 
 //galleass.compile("Land")
 
-
-//shouldn't be able to build a ship if the Harbor
-// contract isn't registered with galleass contract
 galleass.deploy("Land",0)
 galleass.setContract("Land",0)
+
+galleass.buildTile(0,"Harbor",100)
+galleass.buildTile(0,"Fishmonger",101)

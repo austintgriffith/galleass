@@ -7,6 +7,9 @@ galleass.deploy("Sea",0)
 galleass.setContract("Sea",0)
 galleass.setPermission("Sea",0,"transferShips","true")
 
+galleass.deploy("Land",0)
+galleass.setContract("Land",0)
+
 galleass.deploy("Ships",0)
 galleass.setContract("Ships",0)
 

@@ -76,10 +76,15 @@ contract Sea is Galleasset, HasNoEther {
     shipsContract.galleassetTransferFrom(msg.sender,address(this),shipId);
     require( shipsContract.ownerOf(shipId)==address(this) );
 
+    Land landContract = Land(getContract("Land"));
+    uint16 harborLocation = landContract.getTileLocation(getContract("Harbor"));
+    Debug(harborLocation);
+    harborLocation = uint16((65535 * uint256(harborLocation)) / 4000);
+    Debug(harborLocation);
     ships[msg.sender].id = shipId;
     ships[msg.sender].floating=true;
     ships[msg.sender].sailing=false;
-    ships[msg.sender].location=width/2;
+    ships[msg.sender].location=harborLocation;
     ships[msg.sender].blockNumber=uint32(block.number);
     ships[msg.sender].direction=false;
 
@@ -87,6 +92,7 @@ contract Sea is Galleasset, HasNoEther {
 
     return true;
   }
+  event Debug(uint16 harborLocation);
 
   //
   // sail east (true) or west (false)
@@ -287,6 +293,10 @@ contract Ships {
       FISHING
     }
     function getShipModel(uint256 _id) public view returns (Model) { }
+}
+
+contract Land {
+  function getTileLocation(address _address) public constant returns (uint16) { }
 }
 
 contract NFT {

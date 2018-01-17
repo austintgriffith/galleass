@@ -13,18 +13,42 @@ let cloudSizes = [
 class Clouds extends Component {
   constructor(props) {
     super(props);
+    let fillerClouds = []
+    //make some fake fish while it loads
+    for(let f=0;f<7;f++){
+      fillerClouds[this.props.web3.utils.keccak256(""+f+Math.random())]=this.createRandomFakeCloudForLoading()
+    }
+    this.state = {
+      fillerClouds:fillerClouds
+    }
   }
   componentDidMount(){
   }
+  createRandomFakeCloudForLoading(){
+    return {location:Math.random()*65500,speed:Math.random()*200,image:getRandomInt(1,7),block:1}
+  }
   render(){
     let renderedClouds = [];
-    for(let c in this.props.clouds){
-      let blocksTraveled = this.props.blockNumber - this.props.clouds[c].block;
-      let image = "cloud"+this.props.clouds[c].image+".png";
-      let speed = (256-(parseInt(this.props.clouds[c].speed*2)))
-      let startingLocation = parseInt(this.props.clouds[c].location);
+
+    let {clouds} = this.props
+
+    var thereAreClouds = false
+    for(var c in clouds) {
+      thereAreClouds=true
+      break
+    }
+    if(!thereAreClouds){
+      clouds=this.state.fillerClouds
+    }
+
+    console.log("CLOUDS",clouds)
+    for(let c in clouds){
+      let blocksTraveled = this.props.blockNumber - clouds[c].block;
+      let image = "cloud"+clouds[c].image+".png";
+      let speed = (256-(parseInt(clouds[c].speed*2)))
+      let startingLocation = parseInt(clouds[c].location);
       let location = startingLocation + blocksTraveled*speed;
-      let cloudSize = cloudSizes[this.props.clouds[c].image-1];
+      let cloudSize = cloudSizes[clouds[c].image-1];
       let cloudwidth = cloudSize[0];
       location = this.props.width * (location/65535);
       while(location>this.props.width)
@@ -36,7 +60,7 @@ class Clouds extends Component {
         location+=(this.props.width+cloudwidth);
       }
       let top = (this.props.horizon-cloudSize[1]+2);
-      if(this.props.clouds[c].image>=6) top=0;
+      if(clouds[c].image>=6) top=0;
       renderedClouds.push(
         <div
           key={"cloud"+c}
@@ -59,6 +83,10 @@ class Clouds extends Component {
       </div>
     )
   }
+}
+
+function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 export default Clouds;

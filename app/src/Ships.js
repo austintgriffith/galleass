@@ -5,6 +5,26 @@ const shipwidth = 62
 class Ships extends Component {
   constructor(props) {
     super(props);
+    let fillerShips = []
+    //make some fake fish while it loads
+    for(let f=0;f<7;f++){
+      //this.props.web3.utils.randomHex(40)
+      let randomId = this.props.web3.utils.keccak256("asdF");
+
+      fillerShips[randomId]=this.createRandomFakeShipForLoading(f)
+    }
+    this.state = {
+      fillerShips:fillerShips
+    }
+  }
+  createRandomFakeShipForLoading(f){
+    let sailing = (getRandomInt(0,5)>0)
+    let direction = (getRandomInt(0,1)==0)
+    let fishing = false;
+    if(!sailing){
+      fishing = (getRandomInt(0,1)==0)
+    }
+    return {timestamp:0,id:f,floating:true,sailing,sailing,direction:direction,fishing:fishing,location:Math.random()*65500,blockNumber:1}
   }
   openUrl(url){
     window.open(url)
@@ -12,6 +32,17 @@ class Ships extends Component {
   render(){
     let {ships,web3,blockNumber,shipSpeed,width,height,horizon} = this.props
     let renderedShips = []
+
+
+    var thereAreShips = false
+    for(var f in ships) {
+      thereAreShips=true
+      break
+    }
+    if(!thereAreShips){
+      ships=this.state.fillerShips
+    }
+
     for(let b in ships){
       //console.log(ships[b],b)
       let translatedX
@@ -102,6 +133,10 @@ class Ships extends Component {
       </div>
     )
   }
+}
+
+function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 export default Ships;
