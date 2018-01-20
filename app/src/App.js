@@ -484,7 +484,7 @@ class App extends Component {
     console.log("REEL IN")
     this.bumpButton("reelin")
 
-    const DEBUG_REEL_IN = true;
+    const DEBUG_REEL_IN = false;
     window.web3.eth.getAccounts((err,_accounts)=>{
       //console.log(_accounts)
 
