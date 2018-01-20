@@ -126,30 +126,57 @@ class Metamask extends Component {
       )
 
     }else{
-      //console.log("goodblock",this.state.accounts[0])
-      metamask = (
-        <div style={{padding:4}}>
-          <a target="_blank" href={this.props.etherscan+"/search?q="+this.state.accounts[0]}>
-            <span style={{
-              float:'left',
-              marginTop:3,
-              paddingRight:10,
-              zIndex:210,
-              fontWeight:'bold',
-              fontSize:21,
-              color:"#222",
-              textAlign:"right"
-            }}>
-              <div>{this.state.accounts.length > 0 ? this.state.accounts[0].substring(0,12) : "Loading..."}</div>
-              <div>{this.state.network} @ {this.props.blockNumber} </div>
-            </span>
-            <this.props.Blockies
-            seed={this.state.accounts[0]}
-            scale={6}
-            />
-          </a>
-        </div>
-      )
+      if(this.state.network=="Mainnet" || this.state.network=="Morden" || this.state.network=="Rinkeby" || this.state.network=="Kovan"){
+        //console.log("goodblock",this.state.accounts[0])
+        metamask = (
+          <div style={{padding:4}}>
+            <a target="_blank" href={this.props.etherscan+"/search?q="+this.state.accounts[0]}>
+              <span style={{
+                float:'left',
+                marginTop:3,
+                paddingRight:10,
+                zIndex:210,
+                fontWeight:'bold',
+                fontSize:21,
+                color:"#222",
+                textAlign:"right"
+              }}>
+                <div>Please switch your network to Ropsten in metamask.</div>
+              </span>
+              <this.props.Blockies
+              seed={this.state.accounts[0]}
+              scale={6}
+              />
+            </a>
+          </div>
+        )
+      }else{
+        //console.log("goodblock",this.state.accounts[0])
+        metamask = (
+          <div style={{padding:4}}>
+            <a target="_blank" href={this.props.etherscan+"/search?q="+this.state.accounts[0]}>
+              <span style={{
+                float:'left',
+                marginTop:3,
+                paddingRight:10,
+                zIndex:210,
+                fontWeight:'bold',
+                fontSize:21,
+                color:"#222",
+                textAlign:"right"
+              }}>
+                <div>{this.state.accounts.length > 0 ? this.state.accounts[0].substring(0,12) : "Loading..."}</div>
+                <div>{this.state.network} @ {this.props.blockNumber} </div>
+              </span>
+              <this.props.Blockies
+              seed={this.state.accounts[0]}
+              scale={6}
+              />
+            </a>
+          </div>
+        )
+      }
+
     }
     return (
       <div style={{float:'right',padding:2,paddingRight:10}}>
