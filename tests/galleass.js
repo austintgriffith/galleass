@@ -705,7 +705,7 @@ module.exports = {
       });
     });
 
-    describe(bigHeader('BUILD HARVOR AND FISH MONGER'), function() {
+    describe(bigHeader('BUILD HARBOR AND FISH MONGER'), function() {
       it('should buildHarborAndFishMonger', async function() {
         this.timeout(6000000)
         const result = await clevis("test","buildHarborAndFishMonger")

@@ -1,5 +1,6 @@
 # TODO
 
+[ ] button to cut line when getting revert or whatever on reelin
 [ ] figure out how to get the contract verified on etherscan (I think clevis will need to output the full source code before it's compiled)
 [x] fishing png doesn't have flag right, I think there needs to be a fishing east pic
 [ ] make event parsing scale.. start with latest and work your way backwards to block number

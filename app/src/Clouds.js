@@ -41,7 +41,7 @@ class Clouds extends Component {
       clouds=this.state.fillerClouds
     }
 
-    console.log("CLOUDS",clouds)
+    //console.log("CLOUDS",clouds)
     for(let c in clouds){
       let blocksTraveled = this.props.blockNumber - clouds[c].block;
       let image = "cloud"+clouds[c].image+".png";

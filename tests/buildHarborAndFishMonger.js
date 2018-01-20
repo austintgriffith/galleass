@@ -1,6 +1,6 @@
 const galleass = require('./galleass.js')
 
-//galleass.compile("Land")
+galleass.compile("Land")
 
 galleass.deploy("Land",0)
 galleass.setContract("Land",0)

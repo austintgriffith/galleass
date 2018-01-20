@@ -104,24 +104,19 @@ class Ships extends Component {
             cursor:"pointer"
           }
         }>
-
-        <a style={{zIndex:99}}>
-          <img src={image} />
-        </a>
-
-
-
-        <div style={{
-          position:'absolute',
-          top:8,
-          left:flagleft
-        }}>
-        <this.props.Blockies
-          seed={b.toLowerCase()}
-          scale={2}
-        />
-
-        </div>
+          <a style={{zIndex:99}}>
+            <img src={image} />
+          </a>
+          <div style={{
+            position:'absolute',
+            top:8,
+            left:flagleft
+          }}>
+            <this.props.Blockies
+              seed={b.toLowerCase()}
+              scale={2}
+            />
+          </div>
         </div>
       )
     }
