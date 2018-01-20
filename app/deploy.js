@@ -7,6 +7,11 @@ var client = s3.createClient({
   s3Options: awsCreds,
 });
 
+String.prototype.replaceAll = function(search, replacement) {
+    var target = this;
+    return target.replace(new RegExp(search, 'g'), replacement);
+};
+
 var params = {
   localDir: "build",
 
@@ -19,34 +24,67 @@ var params = {
   },
 };
 
-// Loop through all the files in the temp directory
-fs.readdir( params.localDir , function( err, files ) {
+//run the build for create react app
+const { exec } = require('child_process');
 
-    //the deployment address needs to be here so this needs to happen from the live box!
+exec('npm run build', (err, stdout, stderr) => {
+  if (err) {
+    // node couldn't execute the command
+    return;
+  }
 
-        if( err ) {
-            console.error( "Could not list the directory.", err );
-            process.exit( 1 );
-        }
+  // the *entire* stdout and stderr (buffered)
+  console.log(`${stdout}`);
+  console.log(`${stderr}`);
 
-        files.forEach( function( file, index ) {
-          if(file.indexOf(".psd")>=0){
-            console.log(file,index)
-            fs.unlinkSync(params.localDir+"/"+file)
+  //clean out / so it works on nested locations like ipfs
+  let index = fs.readFileSync("build/index.html").toString();
+  index = index.split("\"\/").join("\"");
+  console.log(index);
+  fs.writeFileSync("build/index.html",index);
+
+  fs.readdir( params.localDir , function( err, files ) {
+      //the deployment address needs to be here so this needs to happen from the live box!
+      if( err ) {
+          console.error( "Could not list the directory.", err );
+          process.exit( 1 );
+      }
+
+      //no need to do this now that psd files are moved out of public
+      // files.forEach( function( file, index ) {
+      //   if(file.indexOf(".psd")>=0){
+      //     console.log(file,index)
+      //     fs.unlinkSync(params.localDir+"/"+file)
+      //   }
+      // })
+
+      var uploader = client.uploadDir(params);
+      uploader.on('error', function(err) {
+        console.error("unable to sync:", err.stack);
+      });
+      uploader.on('progress', function() {
+        console.log("progress", uploader.progressAmount, uploader.progressTotal);
+      });
+      uploader.on('end', function() {
+        console.log("done uploading");
+        //uplaod to ipfs
+        exec('ipfs add -r build', (err, stdout, stderr) => {
+          if (err) {
+            // node couldn't execute the command
+            return;
           }
+
+          // the *entire* stdout and stderr (buffered)
+          console.log(`stdout: ${stdout}`);
+          console.log(`stderr: ${stderr}`);
         })
+      });
 
 
-        var uploader = client.uploadDir(params);
-        uploader.on('error', function(err) {
-          console.error("unable to sync:", err.stack);
-        });
-        uploader.on('progress', function() {
-          console.log("progress", uploader.progressAmount, uploader.progressTotal);
-        });
-        uploader.on('end', function() {
-          console.log("done uploading");
-        });
+  })
 
-        //you'll also want to uplaod to ipfs
-})
+
+
+
+
+});
