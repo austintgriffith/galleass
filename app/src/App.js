@@ -934,7 +934,7 @@ class App extends Component {
       <div key={"galley"} style={{
         zIndex:20,
         position:'absolute',
-        left:2000,
+        left:3500,
         top:500,
         opacity:0.9,
         height:75,
