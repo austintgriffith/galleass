@@ -2,6 +2,12 @@ import React, { Component } from 'react';
 import './App.css';
 import galleassAddress from './Address.js'
 import galleassBlockNumber from './blockNumber.js'
+/*
+assuming that galleassBlockNumber is the oldest block for all contracts
+that means if you redeploy the galleass contract you have to redeploy ALL
+of the other ones or rebuild this logic (maybe just always use the original)
+this is used for event look back
+ */
 import galleassAbi from './Galleass.abi.js'
 import Blockies from 'react-blockies';
 import Fish from './Fish.js'
@@ -23,6 +29,7 @@ let contracts = {};
 let blocksLoaded = {};
 let txWaitIntervals = [];
 let web3;
+let veryFirstLoad = true;
 
 let loadContracts = [
   "Sea",
@@ -39,12 +46,27 @@ let loadContracts = [
   "Land"
 ]
 
+let inventoryTokens = [
+  "Ships",
+  "Copper",
+  "Timber",
+  "Catfish",
+  "Pinner",
+  "Redbass",
+  "Snark",
+  "Dangler",
+]
+
 const GWEI = 50;
 const GAS = 100000;
 const FISHINGBOAT = 0;
 const LOADERSPEED = 1237 //this * 24 should be close to a long block time
 const ETHERPREC = 10000 //decimals to show on eth inv
 const EVENTLOADCHUNK = 5760;//load a days worth of blocks of events at a time? (this should probably be more right?)
+const FISHEVENTSYNCLIVEINTERVAL = 2357
+const SHIPSEVENTSYNCLIVEINTERVAL = 2341
+const CLOUDEVENTSYNCLIVEINTERVAL = 7919
+let eventLoadIndexes = {};
 
 let textStyle = {
   zIndex:210,
@@ -79,12 +101,11 @@ class App extends Component {
       web3 = new Web3(window.web3.currentProvider)
       if(DEBUGCONTRACTLOAD) console.log("galleassAddress",galleassAddress)
       contracts["Galleass"] = new web3.eth.Contract(galleassAbi,galleassAddress)
-
       for(let c in loadContracts){
         loadContract(loadContracts[c])
       }
       waitInterval = setInterval(waitForAllContracts.bind(this),229)
-      setInterval(this.syncBlockNumber.bind(this),1783)
+      setInterval(this.syncBlockNumber.bind(this),887)
     } catch(e) {
       console.log(e)
     }
@@ -98,195 +119,79 @@ class App extends Component {
     this.setState({account:account})
   }
 
-  async syncBlockNumber(){
-    //console.log("checking block number....")
-    let blockNumber = await web3.eth.getBlockNumber();
-    if(this.state.blockNumber!=blockNumber){
-      console.log("BLOCKNUMBER:",blockNumber)
-      this.setState({blockNumber:blockNumber})
+  async sync(name,doSyncFn,CRAWLBACKDELAY,SYNCINVERVAL) {
+    if(typeof eventLoadIndexes["sync"+name+"Down"] == "undefined"){
+      eventLoadIndexes["sync"+name+"Down"] = this.state.blockNumber;
+    }
+    if(typeof eventLoadIndexes["sync"+name+"Live"] == "undefined"){
+      eventLoadIndexes["sync"+name+"Live"] = this.state.blockNumber-1;
+      setInterval(()=>{
+        doSyncFn(eventLoadIndexes["sync"+name+"Live"],'latest')
+        eventLoadIndexes["syncFishLive"]= this.state.blockNumber-1;
+      },SYNCINVERVAL)
+    }
+    let nextChunk = eventLoadIndexes["sync"+name+"Down"]-EVENTLOADCHUNK;
+    if(nextChunk<=galleassBlockNumber) nextChunk=galleassBlockNumber;
+    await doSyncFn(nextChunk,eventLoadIndexes["sync"+name+"Down"])
+    eventLoadIndexes["sync"+name+"Down"]=nextChunk;
+    if(nextChunk>galleassBlockNumber) setTimeout(this.sync.bind(this,name,doSyncFn,CRAWLBACKDELAY,SYNCINVERVAL),CRAWLBACKDELAY)
+  }
+  async doSyncFish(from,to) {
+    let DEBUG_SYNCFISH = false
+    let storedFish = []
+    if(DEBUG_SYNCFISH) console.log("Sync Fish Chunk: "+from+" to "+to)
+    let catchEvent = await contracts["Sea"].getPastEvents('Catch', {
+        fromBlock: from-1,
+        toBlock: to
+    })
+    if(DEBUG_SYNCFISH) console.log("catch...",catchEvent)
+    for(let f in catchEvent){
+      let id = catchEvent[f].returnValues.id
+      let species = catchEvent[f].returnValues.species
+      let timestamp = catchEvent[f].returnValues.timestamp
+      if(!storedFish[id] || storedFish[id].timestamp < timestamp){
+        if(DEBUG_SYNCFISH) console.log("&&&& CAAAATTTCH!!!",id)
+        storedFish[id]={timestamp:timestamp,species:species,dead:true};
+      }
+    }
+    if(DEBUG_SYNCFISH) console.log("Sync Fish Chunk: "+from+" to "+to)
+    let fish = await contracts["Sea"].getPastEvents('Fish', {
+        fromBlock: from-1,
+        toBlock: to
+    })
+    if(DEBUG_SYNCFISH) console.log("fish...",fish)
+    for(let f in fish){
+      let id = fish[f].returnValues.id
+      let species = fish[f].returnValues.species
+      let timestamp = fish[f].returnValues.timestamp
+      let image = fish[f].returnValues.image
+      if(!storedFish[id] || storedFish[id].timestamp < timestamp){
+        if(DEBUG_SYNCFISH) console.log(id)
+        let result = await contracts["Sea"].methods.fishLocation(id).call()
+        storedFish[id]={timestamp:timestamp,species:species,x:result[0],y:result[1],dead:false,image:web3.utils.hexToUtf8(image)};
+      }
+    }
+    if(hasElements(storedFish)){
+      storedFish = mergeByTimestamp(storedFish,this.state.fish)
+      if(DEBUG_SYNCFISH) console.log("SETSTATE storedFish",storedFish)
+      this.setState({fish:storedFish})
     }
   }
-  async syncClouds() {
-    let clouds = await contracts["Sea"].getPastEvents('Cloud', {fromBlock: 0,toBlock: 'latest'})
-    let storedClouds = this.state.clouds;
-    let updates = false;
-    for(let c in clouds){
-      if(!storedClouds[clouds[c].transactionHash]){
-        storedClouds[clouds[c].transactionHash] = clouds[c].returnValues
-        updates=true;
-      }
-    }
-    console.log("clouds",clouds)
-    this.setState({clouds:storedClouds})
-  }
-  async syncInventory() {
-    const DEBUG_INVENTORY = false;
-    if(this.state && this.state.account && this.state.inventory){
-
-      let inventory = this.state.inventory
-      let inventoryDetail = this.state.inventoryDetail
-      let update = false
-      let updateDetail = false
-      if(DEBUG_INVENTORY) console.log("account",this.state.account)
-
-      if(DEBUG_INVENTORY) console.log(contracts["Ships"])
-      let balanceOfShips = await contracts["Ships"].methods.balanceOf(this.state.account).call()
-      if(DEBUG_INVENTORY) console.log("balanceOfShips",balanceOfShips)
-      if(inventory['Ships']!=balanceOfShips){
-        inventory['Ships'] = balanceOfShips;
-        update=true;
-      }
-
-      if(inventory['Ships']>0){
-        let myShipArray = await contracts["Ships"].methods.shipsOfOwner(this.state.account).call()
-        if(myShipArray && !isEquivalent(myShipArray,inventoryDetail['Ships'])){
-          inventoryDetail['Ships']=myShipArray
-          updateDetail=true
-
-        }
-      }
-
-      if(DEBUG_INVENTORY) console.log(contracts["Copper"])
-      let balanceOfCopper = await contracts["Copper"].methods.balanceOf(this.state.account).call()
-      if(DEBUG_INVENTORY) console.log("balanceOf",balanceOfCopper)
-      if(inventory['Copper']!=balanceOfCopper){
-        inventory['Copper'] = balanceOfCopper;
-        update=true
-      }
-
-      if(DEBUG_INVENTORY) console.log(contracts["Catfish"])
-      let balanceOfCatfish = await contracts["Catfish"].methods.balanceOf(this.state.account).call()
-      if(DEBUG_INVENTORY) console.log("balanceOf",balanceOfCatfish)
-      if(inventory['Catfish']!=balanceOfCatfish){
-        inventory['Catfish'] = balanceOfCatfish;
-        update=true
-      }
-
-      if(DEBUG_INVENTORY) console.log(contracts["Pinner"])
-      let balanceOfPinner = await contracts["Pinner"].methods.balanceOf(this.state.account).call()
-      if(DEBUG_INVENTORY) console.log("balanceOf",balanceOfPinner)
-      if(inventory['Pinner']!=balanceOfPinner){
-        inventory['Pinner'] = balanceOfPinner;
-        update=true
-      }
-
-      if(DEBUG_INVENTORY) console.log(contracts["Redbass"])
-      let balanceOfRedbass = await contracts["Redbass"].methods.balanceOf(this.state.account).call()
-      if(DEBUG_INVENTORY) console.log("balanceOf",balanceOfRedbass)
-      if(inventory['Redbass']!=balanceOfRedbass){
-        inventory['Redbass'] = balanceOfRedbass;
-        update=true
-      }
-
-      if(DEBUG_INVENTORY) console.log(contracts["Snark"])
-      let balanceOfSnark = await contracts["Snark"].methods.balanceOf(this.state.account).call()
-      if(DEBUG_INVENTORY) console.log("balanceOf",balanceOfSnark)
-      if(inventory['Snark']!=balanceOfSnark){
-        inventory['Snark'] = balanceOfSnark;
-        update=true
-      }
-
-      if(DEBUG_INVENTORY) console.log(contracts["Dangler"])
-      let balanceOfDangler = await contracts["Dangler"].methods.balanceOf(this.state.account).call()
-      if(DEBUG_INVENTORY) console.log("balanceOf",balanceOfDangler)
-      if(inventory['Dangler']!=balanceOfDangler){
-        inventory['Dangler'] = balanceOfDangler;
-        update=true
-      }
-
-      let balanceOfEther = Math.round(web3.utils.fromWei(await web3.eth.getBalance(this.state.account),"Ether")*ETHERPREC)/ETHERPREC;
-      if(DEBUG_INVENTORY) console.log("balanceOfEther",balanceOfEther)
-      if(inventory['Ether']!=balanceOfEther){
-        inventory['Ether']=balanceOfEther
-        update=true
-      }
-
-
-      if(update){
-        console.log("INVENTORY UPDATE....")
-        this.setState({loading:0,inventory:inventory,waitingForInventoryUpdate:false})
-      }
-      if(updateDetail){
-        console.log("DETAIL INVENTORY UPDATE....")
-        this.setState({loading:0,inventoryDetail:inventoryDetail,waitingForInventoryUpdate:false})
-      }
-
-    }
-  }
-  async syncLand() {
-    const DEBUG_SYNCMYSHIP = false;
-    if(DEBUG_SYNCMYSHIP) console.log("SYNCING LAND")
-    let land = this.state.land;
-    if(!land) land=[]
-    for(let l=0;l<18;l++){
-      let currentTileHere = await contracts["Land"].methods.tiles(l).call();
-      //console.log("currentTileHere",l,currentTileHere)
-      land[l]=currentTileHere
-    }
-    if(land!=this.state.land){
-      //console.log(land)
-      this.setState({land:land})
-    }
-    let harborLocation = await contracts["Land"].methods.getTileLocation(contracts["Harbor"]._address).call();
-    if(harborLocation!=this.state.harborLocation){
-      //console.log("harborLocation:",harborLocation)
-      this.setState({harborLocation:parseInt(harborLocation),scrollLeft:parseInt(harborLocation)-(window.innerWidth/2)})
-    }
-
-  }
-  async syncMyShip() {
-    const DEBUG_SYNCMYSHIP = false;
-    if(DEBUG_SYNCMYSHIP) console.log("SYNCING MY SHIP")
-    let myship = this.state.ship;
-    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
-    if(DEBUG_SYNCMYSHIP) console.log("Getting ship for account "+accounts[0])
-    let getMyShip = await contracts["Sea"].methods.getShip(accounts[0]).call();
-    if(DEBUG_SYNCMYSHIP) console.log("COMPARE",this.state.ship,getMyShip)
-    let zoom = 150
-    //if(JSON.stringify(this.state.ship)!=JSON.stringify(getMyShip)) {
-    if(getMyShip && !isEquivalent(this.state.ship,getMyShip)){
-      let zoomPercent = 1/(parseInt(this.state.zoom)/100)
-      console.log("zoomPercent",zoomPercent)
-      if(DEBUG_SYNCMYSHIP) console.log("UPDATE MY SHIP",JSON.stringify(this.state.ship),JSON.stringify(getMyShip))
-      let myLocation = 2000;
-      if(getMyShip.floating){
-        console.log("======MY myLocation",getMyShip.location)
-        myLocation = 4000 * getMyShip.location / 65535
-        if(DEBUG_SYNCMYSHIP) console.log("myLocation",myLocation)
-        console.log("scrolling with zoom ",this.state.zoom)
-        let windowWidthWithZoom = (window.innerWidth) * zoomPercent
-        this.setState({scrollLeft:myLocation-windowWidthWithZoom/2})
-      }
-      this.setState({zoom:"100%",loading:0,ship:getMyShip,waitingForShipUpdate:false,myLocation:myLocation},()=>{
-        //if(DEBUG_SYNCMYSHIP)
-        //console.log("SET getMyShip",this.state.ship)
-      })
-    }
-
-  }
-  async syncShips() {
-    /*
-    event ShipUpdate(uint256 id,address owner,uint timestamp,bool floating,bool sailing,bool direction,bool fishing,uint32 blockNumber,uint16 location);
-    */
+  async doSyncShips(from,to) {
     let DEBUG_SYNCSHIPS = false;
     if(DEBUG_SYNCSHIPS) console.log("Sync ships")
-    //this wont scale
-    //you'll need to work through the chain
-    // in chunks and then stay up to date
     let ships = await contracts["Sea"].getPastEvents('ShipUpdate', {
-        fromBlock: 0,
-        toBlock: 'latest'
+        fromBlock: from,
+        toBlock: to
     })
     if(DEBUG_SYNCSHIPS) console.log("ship...",ships)
-    let storedShips = this.state.ships;
+    let storedShips = [];
     let updated = false;
     for(let b in ships){
       let id = ships[b].returnValues.owner.toLowerCase()
-      //let id = ships[b].returnValues.id
       let timestamp = ships[b].returnValues.timestamp
       if(!storedShips[id]||storedShips[id].timestamp < timestamp){
         if(DEBUG_SYNCSHIPS) console.log(ships[b].returnValues)
-        updated=true;
         storedShips[id]={
           timestamp:timestamp,
           id:ships[b].returnValues.id,
@@ -299,68 +204,133 @@ class App extends Component {
         };
       }
     }
-    if(updated){
-      if(DEBUG_SYNCSHIPS) console.log(storedShips)
-      this.setState({ships:storedShips})
+    if(hasElements(storedShips)){
+      storedShips = mergeByTimestamp(storedShips,this.state.ships)
+      if(DEBUG_SYNCSHIPS) console.log("SETSTATE storedShips",storedShips)
+        this.setState({ships:storedShips})
     }
   }
-  async syncFish() {
-    let DEBUG_SYNCFISH = false;
-    if(DEBUG_SYNCFISH) console.log("Sync Fish")
-    //this wont scale
-    //you'll need to work through the chain
-    // in chunks and then stay up to date
-    //
-
-
-    let galleassAddressCheck = await contracts["Sea"].methods.galleass().call();
-    //console.log("galleassAddressCheck",galleassAddressCheck)
-
-    let storedFish = this.state.fish;
-
-    //console.log("Sea address:",contracts["Sea"]._address)
-
-    //contracts["Sea"]._address = contracts["Sea"]._address.toLowerCase();
-
-    //console.log("Sea address:",contracts["Sea"]._address)
-
-    let catchEvent = await contracts["Sea"].getPastEvents('Catch', {
-        fromBlock: 0,
-        toBlock: 'latest'
-    })
-    if(DEBUG_SYNCFISH) console.log("catchEvent",catchEvent)
-    for(let f in catchEvent){
-      //console.log(catchEvent[f])
-      let id = catchEvent[f].returnValues.id
-      let species = catchEvent[f].returnValues.species
-      let timestamp = catchEvent[f].returnValues.timestamp
-      if(!storedFish[id] || storedFish[id].timestamp < timestamp){
-        if(DEBUG_SYNCFISH) console.log(id)
-        storedFish[id]={timestamp:timestamp,species:species,dead:true};
+  async doSyncClouds(from,to) {
+    const DEBUG_SYNCCLOUDS = false;
+    let storedClouds = []
+    let clouds = await contracts["Sea"].getPastEvents('Cloud', {fromBlock: from,toBlock: to})
+    for(let c in clouds){
+      if(!storedClouds[clouds[c].transactionHash]){
+        storedClouds[clouds[c].transactionHash] = clouds[c].returnValues
       }
     }
+    if(hasElements(storedClouds)){
+      storedClouds = mergeByTimestamp(storedClouds,this.state.clouds)
+      if(DEBUG_SYNCCLOUDS) console.log("SETSTATE storedClouds",storedClouds)
+          this.setState({clouds:storedClouds})
+    }
+  }
+  async syncInventory() {
+    const DEBUG_INVENTORY = false;
+    if(this.state && this.state.account && this.state.inventory){
 
-    let fish = await contracts["Sea"].getPastEvents('Fish', {
-        fromBlock: 0,
-        toBlock: 'latest'
-    })
-    if(DEBUG_SYNCFISH) console.log("fish...",fish)
+      let inventory = this.state.inventory
+      let inventoryDetail = this.state.inventoryDetail
+      let update = false
+      let updateDetail = false
+      if(DEBUG_INVENTORY) console.log("account",this.state.account)
 
-    for(let f in fish){
-      let id = fish[f].returnValues.id
-      let species = fish[f].returnValues.species
-      let timestamp = fish[f].returnValues.timestamp
-      let image = fish[f].returnValues.image
-      if(!storedFish[id] || storedFish[id].timestamp < timestamp){
-        if(DEBUG_SYNCFISH) console.log(id)
-        let result = await contracts["Sea"].methods.fishLocation(id).call()
-        storedFish[id]={timestamp:timestamp,species:species,x:result[0],y:result[1],dead:false,image:web3.utils.hexToUtf8(image)};
+      if(inventory['Ships']>0){
+        let myShipArray = await contracts["Ships"].methods.shipsOfOwner(this.state.account).call()
+        if(myShipArray && !isEquivalentAndNotEmpty(myShipArray,inventoryDetail['Ships'])){
+          inventoryDetail['Ships']=myShipArray
+          updateDetail=true
+        }
+      }
+
+      for(let i in inventoryTokens){
+          if(DEBUG_INVENTORY) console.log(contracts[inventoryTokens[i]])
+          let balanceOf = await contracts[inventoryTokens[i]].methods.balanceOf(this.state.account).call()
+          if(DEBUG_INVENTORY) console.log("balanceOf",inventoryTokens[i],balanceOf)
+          if(inventory[inventoryTokens[i]]!=balanceOf){
+            inventory[inventoryTokens[i]] = balanceOf;
+            update=true
+          }
+      }
+
+      let balanceOfEther = Math.round(web3.utils.fromWei(await web3.eth.getBalance(this.state.account),"Ether")*ETHERPREC)/ETHERPREC;
+      if(DEBUG_INVENTORY) console.log("balanceOfEther",balanceOfEther)
+      if(inventory['Ether']!=balanceOfEther){
+        inventory['Ether']=balanceOfEther
+        update=true
+      }
+
+      if(update){
+        //console.log("INVENTORY UPDATE....")
+        this.setState({loading:0,inventory:inventory,waitingForInventoryUpdate:false})
+      }
+      if(updateDetail){
+        //.log("DETAIL INVENTORY UPDATE....")
+        this.setState({loading:0,inventoryDetail:inventoryDetail,waitingForInventoryUpdate:false})
       }
     }
+  }
+  async syncMyShip() {
+    const DEBUG_SYNCMYSHIP = false;
+    if(DEBUG_SYNCMYSHIP) console.log("SYNCING MY SHIP")
+    let myship = this.state.ship;
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+    if(DEBUG_SYNCMYSHIP) console.log("Getting ship for account "+accounts[0])
+    let getMyShip = await contracts["Sea"].methods.getShip(accounts[0]).call();
+    if(DEBUG_SYNCMYSHIP) console.log("COMPARE",this.state.ship,getMyShip)
+    let zoom = 150
+    //if(JSON.stringify(this.state.ship)!=JSON.stringify(getMyShip)) {
+    if(getMyShip && !isEquivalentAndNotEmpty(this.state.ship,getMyShip)){
+      let zoomPercent = 1/(parseInt(this.state.zoom)/100)
+      /////console.log("zoomPercent",zoomPercent)
+      if(DEBUG_SYNCMYSHIP) console.log("UPDATE MY SHIP",JSON.stringify(this.state.ship),JSON.stringify(getMyShip))
+      let myLocation = 2000;
+      if(getMyShip.floating){
+        //console.log("======MY myLocation",getMyShip.location)
+        myLocation = 4000 * getMyShip.location / 65535
+        if(DEBUG_SYNCMYSHIP) console.log("myLocation",myLocation)
+        //console.log("scrolling with zoom ",this.state.zoom)
+        let windowWidthWithZoom = (window.innerWidth) * zoomPercent
+        if(veryFirstLoad){
+          veryFirstLoad=false;
+          setTimeout(()=>{
+            this.setState({scrollLeft:myLocation-windowWidthWithZoom/2})
+          },3000)//delay so when it scrolls to the middle first it will scroll here next
+        }else{
+          this.setState({scrollLeft:myLocation-windowWidthWithZoom/2})
+        }
 
-    if(DEBUG_SYNCFISH) console.log("storedFish",storedFish)
-    this.setState({fish:storedFish})
-
+      }
+      this.setState({zoom:"100%",loading:0,ship:getMyShip,waitingForShipUpdate:false,myLocation:myLocation},()=>{
+        //if(DEBUG_SYNCMYSHIP)
+        //console.log("SET getMyShip",this.state.ship)
+      })
+    }
+  }
+  async syncLand() {
+    const DEBUG_SYNCLAND = false;
+    if(DEBUG_SYNCLAND) console.log("SYNCING LAND")
+    let land = this.state.land;
+    if(!land) land=[]
+    for(let l=0;l<18;l++){
+      let currentTileHere = await contracts["Land"].methods.tiles(l).call();
+      land[l]=currentTileHere
+    }
+    if(land!=this.state.land){
+      this.setState({land:land})
+    }
+    let harborLocation = await contracts["Land"].methods.getTileLocation(contracts["Harbor"]._address).call();
+    if(harborLocation!=this.state.harborLocation){
+      this.setState({harborLocation:parseInt(harborLocation),scrollLeft:parseInt(harborLocation)-(window.innerWidth/2)})
+    }
+  }
+  async syncBlockNumber(){
+    //console.log("checking block number....")
+    let blockNumber = await web3.eth.getBlockNumber();
+    if(this.state.blockNumber!=blockNumber){
+      console.log("BLOCKNUMBER:",blockNumber)
+      this.setState({blockNumber:blockNumber})
+    }
   }
 
   async buyShip() {
@@ -514,7 +484,7 @@ class App extends Component {
     console.log("REEL IN")
     this.bumpButton("reelin")
 
-    const DEBUG_REEL_IN = false;
+    const DEBUG_REEL_IN = true;
     window.web3.eth.getAccounts((err,_accounts)=>{
       //console.log(_accounts)
 
@@ -570,10 +540,6 @@ class App extends Component {
     })
   }
 
-  debugClick(){
-    console.log("CL:ICK")
-    this.syncFish()
-  }
   metamaskHint(){
     this.setState({metamaskDip:20},()=>{
       setTimeout(()=>{
@@ -661,11 +627,6 @@ class App extends Component {
     console.log("Finished loading contracts and block number, start syncing events...",this.state.blockNumber)
     clearInterval(waitInterval);
     this.setState({contractsLoaded:true})
-    setInterval(this.syncMyShip.bind(this),1381)
-    setInterval(this.syncFish.bind(this),3167)
-    setInterval(this.syncShips.bind(this),1427)
-    setInterval(this.syncInventory.bind(this),2437)
-    this.syncEverythingOnce()
     //dev loop only...
     //setInterval(this.syncContacts.bind(this),4001)
     //this.syncContacts()
@@ -674,16 +635,22 @@ class App extends Component {
         this.setState({scrollConfig: {stiffness: 2, damping: 20}})
       },3000
     )*/
-
+    setInterval(this.syncMyShip.bind(this),1381)
+    setInterval(this.syncInventory.bind(this),2273)
+    setInterval(this.syncLand.bind(this),30103)
+    this.sync("Fish",this.doSyncFish.bind(this),127,SHIPSEVENTSYNCLIVEINTERVAL);
+    this.sync("Ships",this.doSyncShips.bind(this),198,FISHEVENTSYNCLIVEINTERVAL);
+    this.sync("Clouds",this.doSyncClouds.bind(this),151,CLOUDEVENTSYNCLIVEINTERVAL);
+    this.syncEverythingOnce()
   }
   syncEverythingOnce() {
-    this.syncMyShip()
     this.syncBlockNumber()
-    this.syncFish()
-    this.syncShips()
+    this.syncMyShip()
     this.syncInventory()
-    this.syncClouds()
     this.syncLand()
+    this.doSyncFish(this.state.blockNumber-2,'latest')
+    this.doSyncShips(this.state.blockNumber-2,'latest')
+    this.doSyncClouds(this.state.blockNumber-2,'latest')
   }
   bumpableButton(name,buttonsTop,fn){
     let buttonBounce = parseInt(this.state.buttonBumps[name])
@@ -893,10 +860,6 @@ class App extends Component {
     let menuSize = 60;
     let menu = (
       <div style={{position:"fixed",left:0,top:0,width:"100%",height:menuSize,overflow:'hidden',borderBottom:"0px solid #a0aab5",color:"#DDDDDD",zIndex:99}} >
-        <div style={{float:'left',opacity:0.5}} onClick={this.debugClick.bind(this)}>
-
-        </div>
-
         <Motion
           defaultStyle={{
             marginRight:0
@@ -1062,7 +1025,29 @@ function waitForAllContracts(){
   }
 }
 
-function isEquivalent(a, b) {
+function mergeByTimestamp(a,b) {
+  for(let i in a) {
+    if(a[i]&&b[i]&& a[i].timestamp && b[i].timestamp){
+      if(a[i].timestamp>b[i].timestamp){
+        b[i] = a[i];
+      }else{
+        a[i] = b[i];
+      }
+    }else{
+      b[i] = a[i];
+    }
+  }
+  return b;
+}
+
+function hasElements(a){
+  for(let i in a) {
+    return true;
+  }
+  return false;
+}
+
+function isEquivalentAndNotEmpty(a, b) {
     if((!a||!b)&&(a||b)) return false;
     let aProps = Object.getOwnPropertyNames(a);
     let bProps = Object.getOwnPropertyNames(b);

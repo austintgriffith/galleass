@@ -43,7 +43,7 @@ class Fish extends Component {
       break
     }
     if(!thereAreFish){
-      console.log("NO FISH",fish)
+      //console.log("NO FISH",fish)
       fish=this.state.fillerFish
     }
 
