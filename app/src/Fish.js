@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-
+import { sha3_224 } from 'js-sha3';
 
 const horizonFishPad = 60
 
@@ -16,9 +16,12 @@ class Fish extends Component {
     super(props);
     let fillerFish = []
     //make some fake fish while it loads
+
     for(let f=0;f<60;f++){
-     fillerFish[this.props.web3.utils.keccak256(""+f+Math.random())]=this.createRandomFakeFishForLoading()
+      fillerFish["0x"+sha3_224(""+f+Math.random())]=this.createRandomFakeFishForLoading()
     }
+
+
     this.state = {
       fillerFish:fillerFish
     }

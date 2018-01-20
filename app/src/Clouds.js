@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { sha3_224 } from 'js-sha3';
 
 let cloudSizes = [
   [400,152],
@@ -15,9 +16,12 @@ class Clouds extends Component {
     super(props);
     let fillerClouds = []
     //make some fake fish while it loads
+
     for(let f=0;f<7;f++){
-      fillerClouds[this.props.web3.utils.keccak256(""+f+Math.random())]=this.createRandomFakeCloudForLoading()
+      fillerClouds["0x"+sha3_224(""+f+Math.random())]=this.createRandomFakeCloudForLoading()
     }
+
+
     this.state = {
       fillerClouds:fillerClouds
     }

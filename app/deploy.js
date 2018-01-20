@@ -27,6 +27,8 @@ var params = {
 //run the build for create react app
 const { exec } = require('child_process');
 
+console.log("BUILDING galleass.io -- run: 'ipfs daemon' to deploy to ipfs and 'node invalidate.js' to invalidate the cache.... ")
+
 exec('npm run build', (err, stdout, stderr) => {
   if (err) {
     // node couldn't execute the command

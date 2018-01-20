@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { sha3_224 } from 'js-sha3';
 
 const shipwidth = 62
 
@@ -8,9 +9,9 @@ class Ships extends Component {
     let fillerShips = []
     //make some fake fish while it loads
     for(let f=0;f<14;f++){
-      let randomId = ""+this.props.web3.utils.randomHex(40);
-      fillerShips[randomId]=this.createRandomFakeShipForLoading(f)
+      fillerShips["0x"+sha3_224(""+f+Math.random())]=this.createRandomFakeShipForLoading(f)
     }
+
     this.state = {
       fillerShips:fillerShips
     }
@@ -81,7 +82,13 @@ class Ships extends Component {
 
       //offset ships based on their ids so when they are in the same place
       //we can see both of them
-      let idHash = web3.utils.sha3(""+ships[b].id,b)
+      let idHash
+      if(web3&&web3.utils){
+        idHash = web3.utils.sha3(""+ships[b].id,b)
+      }else{
+        idHash = "0x"+sha3_224(""+ships[b].id+b)
+      }
+
       //console.log("idHash",idHash)
       let lastTwoBytes = idHash.substring(idHash.length-2);
       let idTopOffset = lastTwoBytes.substring(0,1);

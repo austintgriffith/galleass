@@ -695,7 +695,7 @@ class App extends Component {
 
     //console.log("ACCOUNT",this.state.account)
     //console.log("SHIPS:",this.state.ships)
-    let buttonsTop = horizon-250;
+    let buttonsTop = horizon-290;
     let buttonsLeft = this.state.harborLocation;
     let loadingBar = ""
 
@@ -955,7 +955,7 @@ class App extends Component {
     )
 
     let clickScreenWhenNotLoggedIn = (
-      <div style={{width:"100%",height:"100%",opacity:0.01,position:"absolute",left:0,top:0,zIndex:200}} onClick={this.metamaskHint.bind(this)}>
+      <div style={{width:4000,height:1050,opacity:0.1,backgroundColor:"#FFFFFF",position:"absolute",left:0,top:0,zIndex:200}} onClick={this.metamaskHint.bind(this)}>
       </div>
     )
 
