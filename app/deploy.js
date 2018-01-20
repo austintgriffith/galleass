@@ -8,7 +8,7 @@ var client = s3.createClient({
 });
 
 var params = {
-  localDir: "public",
+  localDir: "build",
 
   s3Params: {
     Bucket: "galleass.io",

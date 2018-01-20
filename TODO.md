@@ -1,5 +1,10 @@
 # TODO
 
+[ ] favicon - title
+[ ] https on galleass.io
+[ ] warning message when on any major network other than ropsten
+[ ] ipfs deployment
+[ ] galleass.eth points to ?
 [ ] button to cut line when getting revert or whatever on reelin
 [ ] figure out how to get the contract verified on etherscan (I think clevis will need to output the full source code before it's compiled)
 [x] fishing png doesn't have flag right, I think there needs to be a fishing east pic
