@@ -105,9 +105,9 @@ contract Land is Galleasset, Ownable {
   function translateTileToWidth(uint8 _tile) public constant returns (uint16) {
     if(_tile==0){
       return 95;
-    }else if (_tile==1||_tile==100||_tile==101||_tile==102){
+    }else if (_tile==1||_tile==2||_tile==3||_tile==100||_tile==101){
       return 120;
-    }else if (_tile==2||_tile==3||_tile==4||_tile==5||_tile==6){
+    }else if (_tile==50||_tile==51||_tile==52||_tile==53||_tile==54){
       return 87;
     }
   }
@@ -115,18 +115,22 @@ contract Land is Galleasset, Ownable {
   function translateToStartingTile(uint8 tilepart) internal constant returns (uint8) {
     if(tilepart<50){
       return 0; //WATER TILE
-    }else if(tilepart<85){
-      return 1; //POSSIBLE EXTRA MAIN TILES
-    }else if(tilepart<150){
-      return 2; //GRASS TILE
-    }else if(tilepart<230){
-      return 3; //FOREST TILE
+    }else if(tilepart<75){
+      return 1; //HILLS MAIN TILE
+    }else if(tilepart<95){
+      return 2; //GRASS MAIN TILE
+    }else if(tilepart<105){
+      return 3; //STREAM MAIN TILE
+    }else if(tilepart<158){
+      return 50; //GRASS TILE
+    }else if(tilepart<232){
+      return 51; //FOREST TILE
     }else if(tilepart<250){
-      return 4; //MOUNTAIN TILE
+      return 52; //MOUNTAIN TILE
     }else if(tilepart<254){
-      return 5; //COPPER MOUNTAIN TILE
+      return 53; //COPPER MOUNTAIN TILE
     }else{
-      return 6; //SILVER MOUNTAIN TILE
+      return 54; //SILVER MOUNTAIN TILE
     }
   }
 

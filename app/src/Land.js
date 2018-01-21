@@ -33,14 +33,14 @@ class Land extends Component {
       </div>
     )
   }
-  mainTile(location){
+  hillsMain(location){
     let mainWidth = 120
     let mainHeight = 125
     return (
       <div key={"Land"+location} style={{
         position:'absolute',
         left:location,
-        backgroundImage:'url("blank_base.png")',
+        backgroundImage:'url("blank_hills.png")',
         backgroundRepeat:'no-repeat',
         width:mainWidth,
         height:mainHeight
@@ -48,7 +48,7 @@ class Land extends Component {
       </div>
     )
   }
-  grassTile(location,owner){
+  grassMain(location,owner){
     let mainWidth = 120
     let mainHeight = 125
     return (
@@ -63,6 +63,21 @@ class Land extends Component {
       </div>
     )
   }
+  streamMain(location){
+    let mainWidth = 120
+    let mainHeight = 125
+    return (
+      <div key={"Land"+location} style={{
+        position:'absolute',
+        left:location,
+        backgroundImage:'url("blank_stream.png")',
+        backgroundRepeat:'no-repeat',
+        width:mainWidth,
+        height:mainHeight
+      }}>
+      </div>
+    )
+  }
   villageTile(location,owner){
     let mainWidth = 120
     let mainHeight = 125
@@ -70,7 +85,7 @@ class Land extends Component {
       <div key={"Land"+location} style={{
         position:'absolute',
         left:location,
-        backgroundImage:'url("blank_base.png")',
+        backgroundImage:'url("blank_hills.png")',
         backgroundRepeat:'no-repeat',
         width:mainWidth,
         height:mainHeight
@@ -130,7 +145,7 @@ class Land extends Component {
       <div key={"Land"+location} style={{
         position:'absolute',
         left:location,
-        backgroundImage:'url("blank_base.png")',
+        backgroundImage:'url("blank_hills.png")',
         backgroundRepeat:'no-repeat',
         width:mainWidth,
         height:mainHeight
@@ -154,7 +169,7 @@ class Land extends Component {
       <div key={"Land"+location} style={{
         position:'absolute',
         left:location-(mainWidth/2),
-        backgroundImage:'url("blank_base.png")',
+        backgroundImage:'url("blank_hills.png")',
         backgroundRepeat:'no-repeat',
         width:mainWidth,
         height:mainHeight
@@ -219,21 +234,27 @@ class Land extends Component {
           for(let t in islands[i]){
             if(DEBUGLANDRENDER) console.log("ADD TILE",islands[i][t])
             if(islands[i][t]==1){
-              tiles.push(this.mainTile(currentPixelLocation))
+              tiles.push(this.hillsMain(currentPixelLocation))
               currentPixelLocation+=120
             }else if(islands[i][t]==2){
+              tiles.push(this.grassMain(currentPixelLocation))
+              currentPixelLocation+=120
+            }else if(islands[i][t]==3){
+              tiles.push(this.streamMain(currentPixelLocation))
+              currentPixelLocation+=120
+            }else if(islands[i][t]==50){
               tiles.push(this.landTile(currentPixelLocation,"grass"))
               currentPixelLocation+=87
-            }else if(islands[i][t]==3){
+            }else if(islands[i][t]==51){
               tiles.push(this.landTile(currentPixelLocation,"forest"))
               currentPixelLocation+=87
-            }else if(islands[i][t]==4){
+            }else if(islands[i][t]==52){
               tiles.push(this.landTile(currentPixelLocation,"mountain"))
               currentPixelLocation+=87
-            }else if(islands[i][t]==5){
+            }else if(islands[i][t]==53){
               tiles.push(this.landTile(currentPixelLocation,"coppermountain"))
               currentPixelLocation+=87
-            }else if(islands[i][t]==6){
+            }else if(islands[i][t]==54){
               tiles.push(this.landTile(currentPixelLocation,"silvermountain"))
               currentPixelLocation+=87
             }else if(islands[i][t]==100){
