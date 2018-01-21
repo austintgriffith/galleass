@@ -48,6 +48,11 @@ class Inventory extends Component {
         if(i!="Ether" && i!="Copper" && i!="Ships" ) extra = sellForCopper(i);
         if(i=="Ships") maxHeight=58
 
+        let extraBottomMargin=0;
+        if(i=="Ether") extraBottomMargin=15
+        if(i=="Ships") extraBottomMargin=15
+        if(i=="Copper") extraBottomMargin=15
+
         display.push(
           <Motion
              key={"inventory"+i}
@@ -56,7 +61,7 @@ class Inventory extends Component {
           >
             {
               (value) => (
-                <div style={{padding:5}}>
+                <div style={{padding:5,marginBottom:extraBottomMargin}}>
                   <span style={{cursor:'pointer'}}>{extra}</span>
                   <span style={{cursor:'pointer'}} onClick={this.invClick.bind(this,i)}>
                     <span style={this.props.textStyle}>{inventory[i]}</span>

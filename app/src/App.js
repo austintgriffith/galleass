@@ -412,8 +412,8 @@ class App extends Component {
     this.bumpButton("approveandembark")
 
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
-    console.log(accounts)
-    console.log("methods.embark(",this.state.inventoryDetail['Ships'][0])
+    //console.log(accounts)
+    //console.log("methods.embark(",this.state.inventoryDetail['Ships'][0])
     contracts["Sea"].methods.embark(this.state.inventoryDetail['Ships'][0]).send({
       from: accounts[0],
       gas:200000,
@@ -664,7 +664,7 @@ class App extends Component {
   startEventSync() {
     console.log("Finished loading contracts and block number, start syncing events...",this.state.blockNumber)
     clearInterval(waitInterval);
-    this.setState({contractsLoaded:true})
+    this.setState({avgBlockTime:15000,contractsLoaded:true})
     //dev loop only...
     //setInterval(this.syncContacts.bind(this),4001)
     //this.syncContacts()

@@ -1,4 +1,6 @@
 # TODO
+[ ] when you don't use enough gas and you get the 50 blocks warning, the button loaders get weird
+[ ] reset avg block time to 15000 or whatever when the network is switched or switching from offline mode to online
 [ ] bug with centering the buy ship button over the harbor seems to happen when harbor is right next to small island with left edge
 [ ] bug where buy ship button appears when it shouldn't both at load and after you buyship and you are waiting for embark button
 [ ] clicking on an inventory item should probably bring up a send modal asking for an address and how many to send? does meta mask have that built in?
