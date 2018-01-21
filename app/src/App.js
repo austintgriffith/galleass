@@ -91,6 +91,7 @@ class App extends Component {
       ships:[],
       clouds:[],
       blockNumber:0,
+      avgBlockTime:15000,
       metamaskDip:0,
       readyToEmbark:false,
       buttonBumps:[],
@@ -328,8 +329,14 @@ class App extends Component {
     //console.log("checking block number....")
     let blockNumber = await web3.eth.getBlockNumber();
     if(this.state.blockNumber!=blockNumber){
-      console.log("BLOCKNUMBER:",blockNumber)
-      this.setState({blockNumber:blockNumber})
+
+      let thisBlockTime = Date.now()-this.state.lastBlockWasAt
+      if(!thisBlockTime) thisBlockTime=20000
+      let avgBlockTime = this.state.avgBlockTime*4/5+thisBlockTime/5
+
+      console.log("BLOCKNUMBER:",blockNumber,"blockTime",thisBlockTime,"avgBlockTime",avgBlockTime)
+
+      this.setState({avgBlockTime:avgBlockTime,lastBlockWasAt:Date.now(),blockNumber:blockNumber})
     }
   }
 
@@ -879,6 +886,8 @@ class App extends Component {
                   blockNumber={this.state.blockNumber}
                   etherscan={this.state.etherscan}
                   setEtherscan={this.setEtherscan.bind(this)}
+                  lastBlockWasAt={this.state.lastBlockWasAt}
+                  avgBlockTime={this.state.avgBlockTime}
                 />
               </div>
             )
@@ -955,7 +964,7 @@ class App extends Component {
     )
 
     let clickScreenWhenNotLoggedIn = (
-      <div style={{width:4000,height:1050,opacity:0.1,backgroundColor:"#FFFFFF",position:"absolute",left:0,top:0,zIndex:200}} onClick={this.metamaskHint.bind(this)}>
+      <div style={{width:4000,height:1050,opacity:0.1,backgroundColor:"#FFFFFF",position:"absolute",left:0,top:60,zIndex:200}} onClick={this.metamaskHint.bind(this)}>
       </div>
     )
 

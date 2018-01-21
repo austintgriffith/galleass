@@ -27,7 +27,7 @@ var params = {
 //run the build for create react app
 const { exec } = require('child_process');
 
-console.log("BUILDING galleass.io -- run: 'ipfs daemon' to deploy to ipfs and 'node invalidate.js' to invalidate the cache.... ")
+console.log("BUILDING AND DEPLOYING TO https://galleass.io  -- run: 'ipfs daemon' to deploy to ipfs and 'node invalidate.js' to invalidate the cache.... ")
 
 exec('npm run build', (err, stdout, stderr) => {
   if (err) {
@@ -79,6 +79,10 @@ exec('npm run build', (err, stdout, stderr) => {
           // the *entire* stdout and stderr (buffered)
           console.log(`stdout: ${stdout}`);
           console.log(`stderr: ${stderr}`);
+
+
+          console.log("Done. Visit ipfs location https://ipfs.io/ipfs/YOURHASH to get it cached.")
+            console.log("You might also want to run 'node invalidate.js' to clear the cloudfront cache.")
         })
       });
 

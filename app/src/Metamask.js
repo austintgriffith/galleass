@@ -9,6 +9,10 @@ class Metamask extends Component {
     }
   }
   componentDidMount(){
+    this.forceUpdate()
+    setInterval(()=>{
+      this.forceUpdate()
+    },647)
     setInterval(this.checkMetamask.bind(this),1001)
     this.checkMetamask()
   }
@@ -64,7 +68,7 @@ class Metamask extends Component {
     if(-1==this.state.metamask){
       //not installed
       metamask = (
-        <a target="_blank" href="https://metamask.io/">
+        <a target="_blank"  href="https://metamask.io/">
         <span style={this.props.textStyle}>
         Unable to connect to network
         </span>
@@ -152,6 +156,25 @@ class Metamask extends Component {
         )
       }else{
         //console.log("goodblock",this.state.accounts[0])
+        //
+
+
+
+        let timsSinceLastBlock = Date.now() - this.props.lastBlockWasAt
+        let opacityOfLoader = 1
+        if(timsSinceLastBlock>this.props.avgBlockTime) {
+          opacityOfLoader = this.props.avgBlockTime/timsSinceLastBlock
+          timsSinceLastBlock=this.props.avgBlockTime;
+        }
+
+        let loadedPercent = Math.floor(24*timsSinceLastBlock/this.props.avgBlockTime)+1
+
+        if(!loadedPercent) loadedPercent=1
+        if(loadedPercent>24) loadedPercent=24
+        let littleBlockLoaderBar = (
+          <img style={{maxHeight:20,opacity:opacityOfLoader,filter:"grayscale(65%)"}} src={"preloader_"+loadedPercent+".png"} />
+        )
+
         metamask = (
           <div style={{padding:4}}>
             <a target="_blank" href={this.props.etherscan+"/search?q="+this.state.accounts[0]}>
@@ -163,10 +186,11 @@ class Metamask extends Component {
                 fontWeight:'bold',
                 fontSize:21,
                 color:"#222",
-                textAlign:"right"
+                textAlign:"right",
+
               }}>
-                <div>{this.state.accounts.length > 0 ? this.state.accounts[0].substring(0,12) : "Loading..."}</div>
-                <div>{this.state.network} @ {this.props.blockNumber} </div>
+                <div>{this.state.accounts.length > 0 ? this.state.accounts[0].substring(0,20) : "Loading..."}</div>
+                <div>{this.state.network} {this.props.blockNumber} {littleBlockLoaderBar} </div>
               </span>
               <this.props.Blockies
               seed={this.state.accounts[0]}
