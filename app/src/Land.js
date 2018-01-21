@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 
 
+
 class Land extends Component {
   constructor(props) {
     super(props);
@@ -8,7 +9,7 @@ class Land extends Component {
   edgeTile(location,direction){
     //if(direction=="left") location-=114;
     return (
-      <div style={{
+      <div key={"Land"+location} style={{
         position:'absolute',
         left:location,
         backgroundImage:'url("'+direction+'edge.png")',
@@ -21,7 +22,7 @@ class Land extends Component {
   }
   landTile(location,type){
     return (
-      <div style={{
+      <div key={"Land"+location} style={{
         position:'absolute',
         left:location,
         backgroundImage:'url("'+type+'tile.png")',
@@ -36,10 +37,25 @@ class Land extends Component {
     let mainWidth = 120
     let mainHeight = 125
     return (
-      <div style={{
+      <div key={"Land"+location} style={{
         position:'absolute',
         left:location,
-        backgroundImage:'url("blank_grass_base.png")',
+        backgroundImage:'url("blank_base.png")',
+        backgroundRepeat:'no-repeat',
+        width:mainWidth,
+        height:mainHeight
+      }}>
+      </div>
+    )
+  }
+  grassTile(location,owner){
+    let mainWidth = 120
+    let mainHeight = 125
+    return (
+      <div key={"Land"+location} style={{
+        position:'absolute',
+        left:location,
+        backgroundImage:'url("blank_grass.png")',
         backgroundRepeat:'no-repeat',
         width:mainWidth,
         height:mainHeight
@@ -51,10 +67,10 @@ class Land extends Component {
     let mainWidth = 120
     let mainHeight = 125
     return (
-      <div style={{
+      <div key={"Land"+location} style={{
         position:'absolute',
         left:location,
-        backgroundImage:'url("blank_grass_base.png")',
+        backgroundImage:'url("blank_base.png")',
         backgroundRepeat:'no-repeat',
         width:mainWidth,
         height:mainHeight
@@ -75,10 +91,10 @@ class Land extends Component {
     let mainWidth = 120
     let mainHeight = 125
     return (
-      <div style={{
+      <div key={"Land"+location} style={{
         position:'absolute',
         left:location,
-        backgroundImage:'url("blank_grass_harbor.png")',
+        backgroundImage:'url("blank_harbor.png")',
         backgroundRepeat:'no-repeat',
         width:mainWidth,
         height:mainHeight
@@ -94,10 +110,10 @@ class Land extends Component {
     let mainWidth = 120
     let mainHeight = 125
     return (
-      <div style={{
+      <div key={"Land"+location} style={{
         position:'absolute',
         left:location,
-        backgroundImage:'url("blank_grass_base.png")',
+        backgroundImage:'url("blank_grass.png")',
         backgroundRepeat:'no-repeat',
         width:mainWidth,
         height:mainHeight
@@ -111,10 +127,10 @@ class Land extends Component {
     let mainWidth = 120
     let mainHeight = 125
     return (
-      <div style={{
+      <div key={"Land"+location} style={{
         position:'absolute',
         left:location,
-        backgroundImage:'url("blank_grass_base.png")',
+        backgroundImage:'url("blank_base.png")',
         backgroundRepeat:'no-repeat',
         width:mainWidth,
         height:mainHeight
@@ -135,10 +151,10 @@ class Land extends Component {
     let mainWidth = 120
     let mainHeight = 125
     return (
-      <div style={{
+      <div key={"Land"+location} style={{
         position:'absolute',
         left:location-(mainWidth/2),
-        backgroundImage:'url("blank_grass_base.png")',
+        backgroundImage:'url("blank_base.png")',
         backgroundRepeat:'no-repeat',
         width:mainWidth,
         height:mainHeight
@@ -154,13 +170,6 @@ class Land extends Component {
       </div>
     )
   }
-
-  translateTile(uint8){
-      if(uint8==1){
-        return "grass";
-      }
-  }
-
   render(){
     let DEBUGLANDRENDER = false;
     if(this.props.land){
@@ -233,6 +242,9 @@ class Land extends Component {
               currentPixelLocation+=120
             }else if(islands[i][t]==101){
               tiles.push(this.fishMongerTile(currentPixelLocation,"0x34aA3F359A9D614239015126635CE7732c18fDF3"))
+              currentPixelLocation+=120
+            }else if(islands[i][t]==102){
+              tiles.push(this.grassTile(currentPixelLocation,"0x34aA3F359A9D614239015126635CE7732c18fDF3"))
               currentPixelLocation+=120
             }
           }

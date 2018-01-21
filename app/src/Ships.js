@@ -99,7 +99,7 @@ class Ships extends Component {
       //console.log("RENDER SHIP",translatedX,idLeftOffset)
 
       renderedShips.push(
-        <div key={"ship"+b} onClick={this.openUrl.bind(this,this.props.etherscan+"/address/"+b)}
+        <div key={"ship"+b} onClick={this.openUrl.bind(this,this.props.etherscan+"address/"+b)}
           style={{
             zIndex:20+idTopOffset,
             position:'absolute',

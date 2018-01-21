@@ -551,8 +551,8 @@ module.exports = {
       });
     });
   },
-  buildTile:(accountindex,name,number)=>{
-    describe('#buildTile()', function() {
+  editTile:(accountindex,name,number)=>{
+    describe('#editTile()', function() {
       it('should build a tile at the center most open main tile', async function() {
         this.timeout(120000)
         let address = localContractAddress(name);

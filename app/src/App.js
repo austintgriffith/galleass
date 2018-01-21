@@ -24,7 +24,7 @@ var Web3 = require('web3');
 let width = 4000;
 let height = 1050;
 let horizon = 300;
-let shipSpeed = 1000;
+let shipSpeed = 256;
 let contracts = {};
 let blocksLoaded = {};
 let txWaitIntervals = [];
@@ -82,7 +82,7 @@ class App extends Component {
     super(props);
 
     this.state = {
-      etherscan:"https://etherscan.io",
+      etherscan:"https://etherscan.io/",
       scrollLeft:0,
       scrollConfig:{stiffness: 80, damping: 20},
       inventory:[],
@@ -91,6 +91,7 @@ class App extends Component {
       ships:[],
       clouds:[],
       blockNumber:0,
+      offlineCounter:0,
       avgBlockTime:15000,
       metamaskDip:0,
       readyToEmbark:false,
@@ -98,6 +99,7 @@ class App extends Component {
       zoom:"100%"
     }
 
+    setInterval(this.syncBlockNumber.bind(this),887)
     try{
       web3 = new Web3(window.web3.currentProvider)
       if(DEBUGCONTRACTLOAD) console.log("galleassAddress",galleassAddress)
@@ -106,7 +108,7 @@ class App extends Component {
         loadContract(loadContracts[c])
       }
       waitInterval = setInterval(waitForAllContracts.bind(this),229)
-      setInterval(this.syncBlockNumber.bind(this),887)
+
     } catch(e) {
       console.log(e)
     }
@@ -140,6 +142,7 @@ class App extends Component {
   async doSyncFish(from,to) {
     let DEBUG_SYNCFISH = false
     let storedFish = []
+    if(from<1) from=1
     if(DEBUG_SYNCFISH) console.log("Sync Fish Chunk: "+from+" to "+to)
     let catchEvent = await contracts["Sea"].getPastEvents('Catch', {
         fromBlock: from-1,
@@ -181,6 +184,7 @@ class App extends Component {
   async doSyncShips(from,to) {
     let DEBUG_SYNCSHIPS = false;
     if(DEBUG_SYNCSHIPS) console.log("Sync ships")
+    if(from<1) from=1
     let ships = await contracts["Sea"].getPastEvents('ShipUpdate', {
         fromBlock: from,
         toBlock: to
@@ -214,6 +218,7 @@ class App extends Component {
   async doSyncClouds(from,to) {
     const DEBUG_SYNCCLOUDS = false;
     let storedClouds = []
+    if(from<1) from=1
     let clouds = await contracts["Sea"].getPastEvents('Cloud', {fromBlock: from,toBlock: to})
     for(let c in clouds){
       if(!storedClouds[clouds[c].transactionHash]){
@@ -327,17 +332,43 @@ class App extends Component {
   }
   async syncBlockNumber(){
     //console.log("checking block number....")
-    let blockNumber = await web3.eth.getBlockNumber();
-    if(this.state.blockNumber!=blockNumber){
+    if( !web3 || !web3.eth || typeof web3.eth.getBlockNumber !="function" || !this.state.contractsLoaded){
+      let offlineCounter = this.state.offlineCounter;
+      offlineCounter+=1;
+      if(offlineCounter<3){
+        this.setState({offlineCounter:offlineCounter})
+      }else{
+        let blockNumber = this.state.blockNumber;
+        blockNumber+=1
 
-      let thisBlockTime = Date.now()-this.state.lastBlockWasAt
-      if(!thisBlockTime) thisBlockTime=20000
-      let avgBlockTime = this.state.avgBlockTime*4/5+thisBlockTime/5
+        let thisBlockTime = Date.now()-this.state.lastBlockWasAt
+        if(!thisBlockTime) thisBlockTime=1000
+        let avgBlockTime = this.state.avgBlockTime*4/5+thisBlockTime/5
 
-      console.log("BLOCKNUMBER:",blockNumber,"blockTime",thisBlockTime,"avgBlockTime",avgBlockTime)
+        console.log("BLOCKNUMBER:",blockNumber,"blockTime",thisBlockTime,"avgBlockTime",avgBlockTime)
 
-      this.setState({avgBlockTime:avgBlockTime,lastBlockWasAt:Date.now(),blockNumber:blockNumber})
+        this.setState({offlineCounter:0,avgBlockTime:avgBlockTime,lastBlockWasAt:Date.now(),blockNumber:blockNumber})
+      }
+
+    }else{
+      try{
+        let blockNumber = await web3.eth.getBlockNumber();
+        if(this.state.blockNumber!=blockNumber){
+
+          let thisBlockTime = Date.now()-this.state.lastBlockWasAt
+          if(!thisBlockTime) thisBlockTime=20000
+          let avgBlockTime = this.state.avgBlockTime*4/5+thisBlockTime/5
+
+          console.log("BLOCKNUMBER:",blockNumber,"blockTime",thisBlockTime,"avgBlockTime",avgBlockTime)
+
+          this.setState({avgBlockTime:avgBlockTime,lastBlockWasAt:Date.now(),blockNumber:blockNumber})
+        }
+      }catch(e){
+        console.log(e)
+      }
+
     }
+
   }
 
   async buyShip() {
@@ -664,7 +695,7 @@ class App extends Component {
     if(!buttonBounce) buttonBounce = 0
     //console.log("buttonBounce",buttonBounce)
     return (
-      <Motion
+      <Motion key={"Button"+name}
         defaultStyle={{
           top:buttonsTop
         }}
@@ -680,7 +711,7 @@ class App extends Component {
     let buttons = [];
     if(!this.state){
       return (
-        <div>Loading</div>
+        <div key={"LOADING"}>Loading</div>
       )
     }
 
@@ -745,9 +776,11 @@ class App extends Component {
         if(buttonDisabled){clickFn=()=>{}}
         buttons.push(
           this.bumpableButton("buyship",buttonsTop,(animated) => {
+            if(animated.top>50) animated.top=50
             let extraWidth = animated.top - buttonsTop
+
               return (
-                <div style={{cursor:"pointer",zIndex:200,position:'absolute',left:this.state.harborLocation-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
+                <div key={"buyship"} style={{cursor:"pointer",zIndex:200,position:'absolute',left:this.state.harborLocation-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
                   <img src="buyship.png" style={{maxWidth:150-(extraWidth)}}/>
                 </div>
               )
@@ -759,9 +792,10 @@ class App extends Component {
         if(buttonDisabled){clickFn=()=>{}}
         buttons.push(
           this.bumpableButton("approveandembark",buttonsTop,(animated) => {
+            if(animated.top>50) animated.top=50
             let extraWidth = animated.top - buttonsTop
               return (
-                <div style={{cursor:"pointer",zIndex:200,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
+                <div key={"approveAndEmbark"} style={{cursor:"pointer",zIndex:200,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
                   <img src="approveAndEmbark.png" style={{maxWidth:150-(extraWidth)}}/>
                 </div>
               )
@@ -789,9 +823,10 @@ class App extends Component {
       if(buttonDisabled){clickFn=()=>{}}
       buttons.push(
         this.bumpableButton("dropanchor",buttonsTop,(animated) => {
+          if(animated.top>50) animated.top=50
           let extraWidth = animated.top - buttonsTop
             return (
-              <div style={{cursor:"pointer",zIndex:200,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
+              <div key={"dropanchor"} style={{cursor:"pointer",zIndex:200,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
                 <img src="dropanchor.png" style={{maxWidth:150-(extraWidth)}}/>
               </div>
             )
@@ -806,9 +841,10 @@ class App extends Component {
       //console.log("buttonBounce",buttonBounce)
       buttons.push(
         this.bumpableButton("reelin",buttonsTop,(animated) => {
+          if(animated.top>50) animated.top=50
           let extraWidth = animated.top - buttonsTop
             return (
-              <div style={{cursor:"pointer",zIndex:200,position:'absolute',top:animated.top,left:buttonsLeft-75+((extraWidth)/2),opacity:buttonOpacity}} onClick={clickFn}>
+              <div key={"reelin"} style={{cursor:"pointer",zIndex:200,position:'absolute',top:animated.top,left:buttonsLeft-75+((extraWidth)/2),opacity:buttonOpacity}} onClick={clickFn}>
                   <img src="reelin.png" style={{maxWidth:150-(extraWidth)}}/>
               </div>
             )
@@ -820,9 +856,10 @@ class App extends Component {
       if(buttonDisabled){clickFn1=()=>{}}
       buttons.push(
         this.bumpableButton("saileast",buttonsTop,(animated) => {
+          if(animated.top>50) animated.top=50
           let extraWidth = animated.top - buttonsTop
             return (
-              <div style={{cursor:"pointer",zIndex:200,position:'absolute',left:buttonsLeft+180-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn1}>
+              <div key={"saileast"} style={{cursor:"pointer",zIndex:200,position:'absolute',left:buttonsLeft+180-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn1}>
                 <img src="saileast.png" style={{maxWidth:150-(extraWidth)}}/>
               </div>
             )
@@ -833,9 +870,10 @@ class App extends Component {
       if(buttonDisabled){clickFn2=()=>{}}
       buttons.push(
         this.bumpableButton("castline",buttonsTop,(animated) => {
+          if(animated.top>50) animated.top=50
           let extraWidth = animated.top - buttonsTop
             return (
-              <div style={{cursor:"pointer",zIndex:200,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn2}>
+              <div key={"castLine"} style={{cursor:"pointer",zIndex:200,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn2}>
                 <img src="castLine.png" style={{maxWidth:150-(extraWidth)}}/>
               </div>
             )
@@ -847,9 +885,10 @@ class App extends Component {
       if(buttonDisabled){clickFn3=()=>{}}
       buttons.push(
         this.bumpableButton("sailwest",buttonsTop,(animated) => {
+          if(animated.top>50) animated.top=50
           let extraWidth = animated.top - buttonsTop
             return (
-              <div style={{cursor:"pointer",zIndex:200,position:'absolute',left:buttonsLeft-180-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn3}>
+              <div key={"sailwest"} style={{cursor:"pointer",zIndex:200,position:'absolute',left:buttonsLeft-180-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn3}>
                 <img src="sailwest.png" style={{maxWidth:150-(extraWidth)}}/>
               </div>
             )
@@ -866,7 +905,7 @@ class App extends Component {
 
     let menuSize = 60;
     let menu = (
-      <div style={{position:"fixed",left:0,top:0,width:"100%",height:menuSize,overflow:'hidden',borderBottom:"0px solid #a0aab5",color:"#DDDDDD",zIndex:99}} >
+      <div key={"MENU"} style={{position:"fixed",left:0,top:0,width:"100%",height:menuSize,overflow:'hidden',borderBottom:"0px solid #a0aab5",color:"#DDDDDD",zIndex:99}} >
         <Motion
           defaultStyle={{
             marginRight:0

@@ -10,7 +10,7 @@ contract Sea is Galleasset, HasNoEther {
   uint16 public width = 65535; //pixels
   uint16 public depth = 65535; //pixels
 
-  uint256 public shipSpeed = 1000;///this will be replaced soon
+  uint256 public shipSpeed = 256;///this will be replaced soon
 
   mapping (address => Ship) public ships;
   mapping (bytes32 => address) public fish;

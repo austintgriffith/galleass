@@ -30,22 +30,22 @@
 
 a:link {
     text-decoration: none;
-    color: #dddddd;
+    color: #333333;
 }
 
 a:visited {
     text-decoration: none;
-    color: #dddddd;
+    color: #333333;
 }
 
 a:hover {
     text-decoration: underline;
-    color: #eeeeee;
+    color: #444444;
 }
 
 a:active {
     text-decoration: underline;
-    color: #aaaaaa;
+    color: #111111;
 }
 
 .flip {

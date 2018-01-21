@@ -105,7 +105,7 @@ contract Land is Galleasset, Ownable {
   function translateTileToWidth(uint8 _tile) public constant returns (uint16) {
     if(_tile==0){
       return 95;
-    }else if (_tile==1||_tile==100||_tile==101){
+    }else if (_tile==1||_tile==100||_tile==101||_tile==102){
       return 120;
     }else if (_tile==2||_tile==3||_tile==4||_tile==5||_tile==6){
       return 87;

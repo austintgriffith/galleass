@@ -40,9 +40,11 @@ class Metamask extends Component {
                 window.location.reload(true);
               }else{
                 if(this.state.metamask!=3) {
-                  let etherscan = "https://etherscan.io"
-                  if(network!="Mainnet"){
-                    etherscan = "https://"+network.toLowerCase()+".etherscan.io"
+                  let etherscan = "https://etherscan.io/"
+                  if(network=="Unknown"||network=="private"){
+                    etherscan = "http://localhost:8000/#/"
+                  }else if(network!="Mainnet"){
+                    etherscan = "https://"+network.toLowerCase()+".etherscan.io/"
                   }
                   this.props.setEtherscan(etherscan)
 
@@ -134,7 +136,7 @@ class Metamask extends Component {
         //console.log("goodblock",this.state.accounts[0])
         metamask = (
           <div style={{padding:4}}>
-            <a target="_blank" href={this.props.etherscan+"/search?q="+this.state.accounts[0]}>
+            <a target="_blank" href={this.props.etherscan+"address/"+this.state.accounts[0]}>
               <span style={{
                 float:'left',
                 marginTop:3,
@@ -177,7 +179,7 @@ class Metamask extends Component {
 
         metamask = (
           <div style={{padding:4}}>
-            <a target="_blank" href={this.props.etherscan+"/search?q="+this.state.accounts[0]}>
+
               <span style={{
                 float:'left',
                 marginTop:3,
@@ -189,14 +191,16 @@ class Metamask extends Component {
                 textAlign:"right",
 
               }}>
+              <a target="_blank" href={this.props.etherscan+"address/"+this.state.accounts[0]}>
                 <div>{this.state.accounts.length > 0 ? this.state.accounts[0].substring(0,20) : "Loading..."}</div>
-                <div>{this.state.network} {this.props.blockNumber} {littleBlockLoaderBar} </div>
+              </a>
+                <div>{this.state.network}   <a target="_blank" href={this.props.etherscan+"block/"+this.props.blockNumber}>{this.props.blockNumber}</a> {littleBlockLoaderBar} </div>
               </span>
               <this.props.Blockies
               seed={this.state.accounts[0]}
               scale={6}
               />
-            </a>
+
           </div>
         )
       }
