@@ -7,7 +7,7 @@ const galleass = require("./galleass.js")
 // galleass.setContract("Fishmonger",0)
 // galleass.setPermission("Fishmonger",0,"transferFish","true")
 // galleass.setPermission("Fishmonger",0,"mintFillet","true")
-//
+
 
 galleass.setFishPrice(0,"Pinner",1)
 galleass.setFishPrice(0,"Redbass",2)

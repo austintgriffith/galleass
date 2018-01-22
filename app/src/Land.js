@@ -301,8 +301,8 @@ class Land extends Component {
           {this.edgeTile(1200-60-87-114,"left")}
           {this.landTile(1200-60-87,"forest")}
           {this.castleTile(1200-60,"0x34aA3F359A9D614239015126635CE7732c18fDF3")}
-          {this.landTile(1200+60,"forest")}
-          {this.edgeTile(1200+60+87,"right")}
+          {this.streamMain(1200+60)}
+          {this.edgeTile(1200+60+120,"right")}
 
           {this.edgeTile(2000-60-87*2-114,"left")}
           {this.landTile(2000-60-87*2,"forest")}
