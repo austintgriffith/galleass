@@ -7,19 +7,23 @@ contract Land is Galleasset, Ownable {
 
   uint8[18] public tiles;//this is the 0-255 different available icons 0:water 1:grass 100:harbor etc
   address[18] public contracts;//any given tile could have a contract attached to it
+  address[18] public owner;
+  uint256[18] public price;
 
   function Land(address _galleass) public Galleasset(_galleass) {
+    //bytes memory tileparts = "0xf0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0";//use to test a bunch of islands
     bytes memory tileparts = toBytes(address(this));
     for(uint8 index = 0; index < 18; index++){
       tiles[index] = translateToStartingTile(uint8(tileparts[index]));
+      owner[index] = msg.sender;
     }
     //scan tiles and insert base spots
     uint8 landCount = 0;
     for(uint8 landex = 0; landex < 18; landex++){
       if(tiles[landex]==0){
         if(landCount>0){
-          //right edge,
-            tiles[landex-(landCount%2+landCount/2)]=1;//MAIN TILE
+          //right edge
+          tiles[landex-(landCount%2+landCount/2)]=1;//MAIN TILE
           landCount=0;
         }
       }else{
@@ -41,8 +45,22 @@ contract Land is Galleasset, Ownable {
     contracts[_tile] = _contract;
   }
 
+  function buyTile(uint8 _tile) public isGalleasset("Land") returns (bool) {
+    require(price[_tile]>0);//must be for sale
+    address copperContractAddress = getContract("Copper");
+    StandardToken copperContract = StandardToken(copperContractAddress);
+    require(copperContract.transferFrom(msg.sender,owner[_tile],price[_tile]));
 
+    owner[_tile]=msg.sender;
+    price[_tile]=0;
+    return true;
+  }
 
+  function setPrice(uint8 _tile,uint256 _price) public isGalleasset("Land") returns (bool) {
+    require(msg.sender==owner[_tile]);
+    price[_tile]=_price;
+    return true;
+  }
 
   function getTileLocation(address _address) public constant returns (uint16) {
     uint8 tileIndex = findTileByAddress(_address);
@@ -58,6 +76,9 @@ contract Land is Galleasset, Ownable {
         foundLand=false;
         widthOffset+=114;
       }
+    }
+    if(!foundLand){
+      widthOffset+=114;
     }
     widthOffset = widthOffset+(translateTileToWidth(tiles[tileIndex])/2);
 
@@ -100,8 +121,6 @@ contract Land is Galleasset, Ownable {
     return index;
   }
 
-
-
   function translateTileToWidth(uint8 _tile) public constant returns (uint16) {
     if(_tile==0){
       return 95;
@@ -143,4 +162,8 @@ contract Land is Galleasset, Ownable {
      }
   }
 
+}
+
+contract StandardToken {
+  function transferFrom(address _from, address _to, uint256 _value) public returns (bool) { }
 }
