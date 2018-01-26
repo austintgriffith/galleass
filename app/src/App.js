@@ -24,7 +24,7 @@ var Web3 = require('web3');
 let width = 4000;
 let height = 1050;
 let horizon = 300;
-let shipSpeed = 256;
+let shipSpeed = 512;
 let contracts = {};
 let blocksLoaded = {};
 let txWaitIntervals = [];
@@ -94,7 +94,6 @@ class App extends Component {
       offlineCounter:0,
       avgBlockTime:15000,
       metamaskDip:0,
-      readyToEmbark:false,
       buttonBumps:[],
       zoom:"100%"
     }
@@ -316,18 +315,27 @@ class App extends Component {
   async syncLand() {
     const DEBUG_SYNCLAND = false;
     if(DEBUG_SYNCLAND) console.log("SYNCING LAND")
-    let land = this.state.land;
-    if(!land) land=[]
-    for(let l=0;l<18;l++){
-      let currentTileHere = await contracts["Land"].methods.tiles(l).call();
-      land[l]=currentTileHere
-    }
-    if(land!=this.state.land){
-      this.setState({land:land})
-    }
-    let harborLocation = await contracts["Land"].methods.getTileLocation(contracts["Harbor"]._address).call();
-    if(harborLocation!=this.state.harborLocation){
-      this.setState({harborLocation:parseInt(harborLocation),scrollLeft:parseInt(harborLocation)-(window.innerWidth/2)})
+    if(!this.state.landX || !this.state.landY){
+      let mainX = await contracts["Land"].methods.mainX().call();
+      let mainY = await contracts["Land"].methods.mainY().call();
+      this.setState({landX:mainX,landY:mainY},()=>{
+        console.log("Reloading with Land x,y",mainX,mainY)
+        this.syncLand()
+      })
+    }else{
+      let land = this.state.land;
+      if(!land) land=[]
+      for(let l=0;l<18;l++){
+        let currentTileHere = await contracts["Land"].methods.tileTypeAt(this.state.landX,this.state.landY,l).call();
+        land[l]=currentTileHere
+      }
+      if(land!=this.state.land){
+        this.setState({land:land})
+      }
+      let harborLocation = await contracts["Land"].methods.getTileLocation(this.state.landX,this.state.landY,contracts["Harbor"]._address).call();
+      if(harborLocation!=this.state.harborLocation){
+        this.setState({harborLocation:parseInt(harborLocation),scrollLeft:parseInt(harborLocation)-(window.innerWidth/2)})
+      }
     }
   }
   async syncBlockNumber(){
@@ -734,9 +742,12 @@ class App extends Component {
     //console.log("ACCOUNT",this.state.account)
     //console.log("SHIPS:",this.state.ships)
     let buttonsTop = horizon-290;
-    let buttonsLeft = this.state.harborLocation;
+    let buttonsLeft = -1000;
     let loadingBar = ""
 
+    if(this.state.harborLocation>0){
+      buttonsLeft = this.state.harborLocation
+    }
 
     if(myShip&&myShip.floating&&myShip.location){
       buttonsLeft = this.state.myLocation
@@ -771,14 +782,13 @@ class App extends Component {
 
           </div>
         )
-      }else if(this.state.inventoryDetail && (!this.state.inventoryDetail['Ships']||this.state.inventoryDetail['Ships'].length<=0)){
+      }else if(this.state.inventoryDetail && (!this.state.inventoryDetail['Ships']||this.state.inventoryDetail['Ships'].length<=0) && this.state.inventory['Ships']<=0){
         let clickFn = this.buyShip.bind(this)
         if(buttonDisabled){clickFn=()=>{}}
         buttons.push(
           this.bumpableButton("buyship",buttonsTop,(animated) => {
             if(animated.top>50) animated.top=50
-            let extraWidth = animated.top - buttonsTop
-
+              let extraWidth = animated.top - buttonsTop
               return (
                 <div key={"buyship"} style={{cursor:"pointer",zIndex:200,position:'absolute',left:this.state.harborLocation-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
                   <img src="buyship.png" style={{maxWidth:150-(extraWidth)}}/>
@@ -787,7 +797,7 @@ class App extends Component {
             }
           )
         )
-      }else/* if(this.state.readyToEmbark)*/{
+      }else if(this.state.inventory['Ships']>0){
         let clickFn = this.embark.bind(this)
         if(buttonDisabled){clickFn=()=>{}}
         buttons.push(
@@ -802,15 +812,22 @@ class App extends Component {
             }
           )
         )
-      }/*else{
-        let clickFn = this.approve.bind(this)
+      }else{
+        let clickFn = this.metamaskHint.bind(this)
         if(buttonDisabled){clickFn=()=>{}}
         buttons.push(
-          <div style={{zIndex:200,position:'absolute',left:buttonsLeft-75,top:buttonsTop,opacity:buttonOpacity}} onClick={clickFn}>
-            <img src="approveShipForSea.png" style={{maxWidth:150}}/>
-          </div>
+          this.bumpableButton("buyshipHolder",buttonsTop,(animated) => {
+            if(animated.top>50) animated.top=50
+              let extraWidth = animated.top - buttonsTop
+              return (
+                <div key={"buyshipHolder"} style={{cursor:"pointer",zIndex:200,position:'absolute',left:this.state.harborLocation-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
+                  <img src="buyship.png" style={{maxWidth:150-(extraWidth)}}/>
+                </div>
+              )
+            }
+          )
         )
-      }*/
+      }
 
     /*}else if(!myShip.floating){
       buttons.push(
@@ -1052,7 +1069,7 @@ let loadContract = async (contract)=>{
     if(DEBUGCONTRACTLOAD) console.log("LOADING",contract,thisContractAddress,thisContractAbi)
     contracts[contract] = new web3.eth.Contract(thisContractAbi,thisContractAddress)
   } catch(e) {
-    console.log(e)
+    console.log("ERROR LOADING "+contract,e)
   }
 
 }

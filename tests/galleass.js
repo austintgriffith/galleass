@@ -551,25 +551,161 @@ module.exports = {
       });
     });
   },
+  generateLand:(accountindex)=>{
+    describe('#generateLand()', function() {
+      it('should generate an island', async function() {
+        this.timeout(120000)
+        const result = await clevis("contract","generateLand","Land",accountindex)
+        printTxResult(result)
+      });
+    });
+  },
+  setLastTileAsMain:(accountindex)=>{
+    describe('#setLastTileAsMain()', function() {
+      it('should setLastTileAsMain', async function() {
+        this.timeout(120000)
+
+        let eventResult = await clevis("contract","eventLandGenerated","Land")
+        let x=0;
+        let y=0;
+        for(let e in eventResult){
+          console.log(tab,"eventLandGenerated:",eventResult[e].returnValues)
+          x = eventResult[e].returnValues._x;
+          y = eventResult[e].returnValues._y;
+        }
+        assert(x!=0&&y!=0,"There are no land generate events!?")
+        console.log("Setting main x,y to",x,y)
+        const result = await clevis("contract","setMainLocation","Land",accountindex,x,y)
+        printTxResult(result)
+      });
+    });
+  },
   editTile:(accountindex,name,number)=>{
     describe('#editTile()', function() {
       it('should build a tile at the center most open main tile', async function() {
         this.timeout(120000)
+
+        let mainLand = await getMainLand();
+        console.log("mainLand",mainLand)
+
         let address = localContractAddress(name);
         console.log(tab,name+" address is ",address.blue)
 
-        let openMainTile = await searchLandFromCenterOut(9,1)
-        console.log(tab,"Building "+name+" at tile ",openMainTile)
+        let openMainTile = await searchLandFromCenterOut(mainLand,9,1)
+        console.log(tab,"Building "+name+" at tile ",openMainTile," on island ",mainLand)
 
         //clevis contract editTile Land 0 9 100 0x0
-        const result = await clevis("contract","editTile","Land",accountindex,openMainTile,number,address)
+        const result = await clevis("contract","editTile","Land",accountindex,mainLand[0],mainLand[1],openMainTile,number,address)
         printTxResult(result)
 
-        const atThisTileNow = await clevis("contract","tiles","Land",openMainTile)
+        const atThisTileNow = await clevis("contract","tileTypeAt","Land",mainLand[0],mainLand[1],openMainTile)
         assert(atThisTileNow==number,name.red+" didn't get built in middle of land?!?")
+
       });
     });
   },
+  transferTile:(accountindex,x,y,tileIndex,newAccountIndex)=>{
+    describe('#transferTile()', function() {
+      it('should transfer ownership of a tile from one account to another', async function() {
+        this.timeout(120000)
+
+        const accounts = await clevis("accounts")
+        const tileType = await clevis("contract","tileTypeAt","Land",x,y,tileIndex)
+        console.log(tab,"Transferring tile at "+x+","+y+" index "+tileIndex+" (type "+tileType+") from account "+accountindex+"("+accounts[accountindex].blue+") to account "+newAccountIndex+"("+accounts[newAccountIndex].blue+")")
+
+        assert(accountindex!=newAccountIndex,"Don't transfer to the same account.")
+        //clevis contract owners Land 0
+        const currentOwnerStart = await clevis("contract","ownerAt","Land",x,y,tileIndex)
+        assert(currentOwnerStart==accounts[accountindex],"Account index "+accountindex+" doesn't own tile "+tileIndex+" at "+x+","+y)
+        ////transferTile(uint16 _x,uint16 _y,uint8 _tile,address _newOwner)
+        const result = await clevis("contract","transferTile","Land",accountindex,x,y,tileIndex,accounts[newAccountIndex])
+        printTxResult(result)
+        const currentOwnerEnd = await clevis("contract","ownerAt","Land",x,y,tileIndex)
+        console.log(tab,"Owner of tile "+tileIndex+" is "+currentOwnerEnd)
+        assert(currentOwnerEnd==accounts[newAccountIndex],"transfer tile FAILED, accounts["+newAccountIndex+"] ("+accounts[newAccountIndex]+") doesn't own tile "+tileIndex+" at "+x+","+y)
+      });
+    });
+  },
+  setPriceOfTile:(accountindex,x,y,tileIndex,price)=>{
+    describe('#setPriceOfTile()', function() {
+      it('should set the price of a tile', async function() {
+        /*  mapping (uint16 => mapping (uint16 => uint8[18])) public tileTypeAt;
+          mapping (uint16 => mapping (uint16 => address[18])) public contractAt;
+          mapping (uint16 => mapping (uint16 => address[18])) public ownerAt;
+          mapping (uint16 => mapping (uint16 => uint256[18])) public priceAt;*/
+        this.timeout(120000)
+        const accounts = await clevis("accounts")
+
+        const tileType = await clevis("contract","tileTypeAt","Land",x,y,tileIndex)
+        console.log(tab,"Setting price of tile at index "+tileIndex+" at "+x+","+y+" (type "+tileType+") from account "+accountindex+"("+accounts[accountindex].blue+") to "+(""+price).cyan+"")
+
+        const currentOwnerStart = await clevis("contract","ownerAt","Land",x,y,tileIndex)
+        assert(currentOwnerStart==accounts[accountindex],"Account index "+accountindex+" doesn't own tile "+tileIndex+" at "+x+","+y)
+
+        //clevis contract setPrice Land 1 0 1
+        const result = await clevis("contract","setPrice","Land",accountindex,x,y,tileIndex,price)
+        printTxResult(result)
+
+        const currentPrice = await clevis("contract","priceAt","Land",x,y,tileIndex)
+        assert(currentPrice==price,"Failed to set price of tile "+tileIndex+" at "+x+","+y+" to "+price+" (current price is "+currentPrice+")")
+
+      });
+    });
+  },
+  buyTile:(accountindex,x,y,tileIndex)=>{
+    describe('#buyTile()', function() {
+      it('should buy a tile for copper', async function() {
+        this.timeout(120000)
+        const accounts = await clevis("accounts")
+
+        const currentPrice = await clevis("contract","priceAt","Land",x,y,tileIndex)
+        const currentOwnerStart = await clevis("contract","ownerAt","Land",x,y,tileIndex)
+        assert(currentOwnerStart!=accounts[accountindex],"Account index "+accountindex+" is already the owner of "+tileIndex+" at "+x+","+y)
+
+        const tileType = await clevis("contract","tileTypeAt","Land",x,y,tileIndex)
+        console.log(tab,"Buying tile at index "+tileIndex+" (type "+tileType+") from account "+currentOwnerStart+" for "+(""+currentPrice).cyan+" Copper")
+
+        //clevis contract buyTile Land 0 0
+        const result = await clevis("contract","buyTile","Land",accountindex,x,y,tileIndex)
+        printTxResult(result)
+
+        const currentOwnerEnd = await clevis("contract","ownerAt","Land",x,y,tileIndex)
+        assert(currentOwnerEnd==accounts[accountindex],"Failed to buy tile "+tileIndex+" at "+x+","+y+" at price "+currentPrice+" from "+currentOwnerStart+"")
+
+      });
+    });
+  },
+  transferFirstLandTile:(accountindex,newAccountIndex)=>{
+    describe('#transferFirstLandTile()', function() {
+      it('should transfer ownership of a tile from one account to another', async function() {
+        this.timeout(120000)
+        let mainLand = await getMainLand();
+        const firstLandTile = await findFirstLandTile(mainLand);
+        module.exports.transferTile(accountindex,mainLand[0],mainLand[1],firstLandTile,newAccountIndex)
+      });
+    });
+  },
+  setPriceOfFirstLandTile:(accountindex,price)=>{
+    describe('#transferFirstLandTile()', function() {
+      it('should transfer ownership of a tile from one account to another', async function() {
+        this.timeout(120000)
+        let mainLand = await getMainLand();
+        const firstLandTile = await findFirstLandTile(mainLand);
+        module.exports.setPriceOfTile(accountindex,mainLand[0],mainLand[1],firstLandTile,price)
+      });
+    });
+  },
+  buyFirstLandTile:(accountindex)=>{
+    describe('#buyFirstLandTile()', function() {
+      it('should by first land tile', async function() {
+        this.timeout(120000)
+        let mainLand = await getMainLand();
+        const firstLandTile = await findFirstLandTile(mainLand);
+        module.exports.buyTile(accountindex,mainLand[0],mainLand[1],firstLandTile)
+      });
+    });
+  },
+
 
   publish:()=>{
     describe('#publish() ', function() {
@@ -666,44 +802,6 @@ module.exports = {
         assert(result==0,"deploy ERRORS")
       });
     });
-    describe(bigHeader('TIMBER MINTING & BUILD SHIPS'), function() {
-      it('should mintTimberBuildShips', async function() {
-        this.timeout(6000000)
-        const result = await clevis("test","mintTimberBuildShips")
-        assert(result==0,"mintTimberBuildShips ERRORS")
-      });
-    });
-    describe(bigHeader('MINT FISH AND STOCK'), function() {
-      it('should mintCatfishAndStockSea', async function() {
-        this.timeout(6000000)
-        const result = await clevis("test","mintCatfishAndStockSea")
-        assert(result==0,"mintCatfishAndStockSea ERRORS")
-      });
-    });
-    describe(bigHeader('PUBLISH'), function() {
-      it('should publish conract address to app', async function() {
-        this.timeout(6000000)
-        const result = await clevis("test","publish")
-        assert(result==0,"publish ERRORS")
-      });
-    });
-  },
-  full:()=>{
-    describe(bigHeader('COMPILE'), function() {
-      it('should compile', async function() {
-        this.timeout(6000000)
-        const result = await clevis("test","compile")
-        assert(result==0,"compile ERRORS")
-      });
-    });
-
-    describe(bigHeader('DEPLOY'), function() {
-      it('should deploy', async function() {
-        this.timeout(6000000)
-        const result = await clevis("test","deploy")
-        assert(result==0,"deploy ERRORS")
-      });
-    });
 
     describe(bigHeader('BUILD HARBOR AND FISH MONGER'), function() {
       it('should buildHarborAndFishMonger', async function() {
@@ -712,7 +810,6 @@ module.exports = {
         assert(result==0,"buildHarborAndFishMonger ERRORS")
       });
     });
-
 
     describe(bigHeader('TIMBER MINTING & BUILD SHIPS'), function() {
       it('should mintTimberBuildShips', async function() {
@@ -737,8 +834,6 @@ module.exports = {
         assert(result==0,"mintCatfishAndStockSea ERRORS")
       });
     });
-
-
 
     describe(bigHeader('EMBARK AND GO FISHING'), function() {
       it('should embarkAndGoFishing', async function() {
@@ -771,6 +866,22 @@ module.exports = {
         assert(result==0,"publish ERRORS")
       });
     });
+  },
+  full:()=>{
+    describe(bigHeader('COMPILE'), function() {
+      it('should compile', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","compile")
+        assert(result==0,"compile ERRORS")
+      });
+    });
+
+    describe('#redeploy()', function() {
+      it('should redeploy', async function() {
+        this.timeout(240000)
+        module.exports.redeploy()
+      });
+    });
 
     describe(bigHeader('METAMASK'), function() {
       it('should give metamask users some fake ether', async function() {
@@ -779,26 +890,31 @@ module.exports = {
         assert(result==0,"metamask ERRORS")
       });
     });
-
-
   },
 }
 
+findFirstLandTile = async (mainLand)=>{
+  for(let i=0;i<18;i++){
+    const tileType = await clevis("contract","tileTypeAt","Land",mainLand[0],mainLand[1],i)
+    if(tileType!=0) return i;
+  }
+}
 
-searchLandFromCenterOut = async (startingPoint,tileType) =>{
+
+searchLandFromCenterOut = async (mainLand,startingPoint,tileType) =>{
   let bestTile = false;
   let foundTile = false;
   let upCounter = startingPoint
   let downCounter = startingPoint-1
   while(!foundTile){
-    const atThisTile = await clevis("contract","tiles","Land",upCounter)
+    const atThisTile = await clevis("contract","tileTypeAt","Land",mainLand[0],mainLand[1],upCounter)
     console.log(tab,"Tile at "+upCounter+" is "+atThisTile)
     if(atThisTile==tileType){
       foundTile=true;
       bestTile=upCounter;
     }else{
       upCounter++
-      const atThisTile = await clevis("contract","tiles","Land",downCounter)
+      const atThisTile = await clevis("contract","tileTypeAt","Land",mainLand[0],mainLand[1],downCounter)
       console.log(tab,"Tile at "+downCounter+" is "+atThisTile)
       if(atThisTile==tileType){
         foundTile=true;
@@ -809,6 +925,13 @@ searchLandFromCenterOut = async (startingPoint,tileType) =>{
     }
   }
   return bestTile;
+}
+
+getMainLand = async ()=>{
+  const mainX = await clevis("contract","mainX","Land")
+  const mainY = await clevis("contract","mainY","Land")
+  //console.log(tab,"Main Land: ",mainX,mainY)
+  return [mainX,mainY];
 }
 
 checkContractDeployment = async (contract)=>{

@@ -5,11 +5,11 @@ import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
 contract Harbor is Galleasset, Ownable {
 
-  uint256[20] public shipStorage;
+  uint256[99] public shipStorage;
   uint256[1] public currentPrice;
 
   function Harbor(address _galleass) public Galleasset(_galleass) {
-    currentPrice[uint256(Ships.Model.FISHING)] = (1 ether)/1000;
+    currentPrice[uint256(Ships.Model.FISHING)] = ((1 ether)/1000)*3;
   }
 
   function onTokenTransfer(address _sender, uint _value, bytes _data) {

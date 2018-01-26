@@ -10,7 +10,7 @@ contract Sea is Galleasset, HasNoEther {
   uint16 public width = 65535; //pixels
   uint16 public depth = 65535; //pixels
 
-  uint256 public shipSpeed = 256;///this will be replaced soon
+  uint256 public shipSpeed = 512;///this will be replaced soon, each ship should have a different speed based on how it was crafted
 
   mapping (address => Ship) public ships;
   mapping (bytes32 => address) public fish;
@@ -77,7 +77,7 @@ contract Sea is Galleasset, HasNoEther {
     require( shipsContract.ownerOf(shipId)==address(this) );
 
     Land landContract = Land(getContract("Land"));
-    uint16 harborLocation = landContract.getTileLocation(getContract("Harbor"));
+    uint16 harborLocation = landContract.getTileLocation(landContract.mainX(),landContract.mainY(),getContract("Harbor"));
     Debug(harborLocation);
     harborLocation = uint16((65535 * uint256(harborLocation)) / 4000);
     Debug(harborLocation);
@@ -296,7 +296,9 @@ contract Ships {
 }
 
 contract Land {
-  function getTileLocation(address _address) public constant returns (uint16) { }
+  uint16 public mainX;
+  uint16 public mainY;
+  function getTileLocation(uint16 _x,uint16 _y,address _address) public constant returns (uint16) { }
 }
 
 contract NFT {
