@@ -117,10 +117,11 @@ contract Sea is Galleasset, HasNoEther {
 
   function inRangeToDisembark(address _account) public constant returns (bool) {
     uint16 harborLocation = getHarborLocation();
+    if(ships[_account].location==0) return false;
     if(ships[_account].location >= harborLocation){
-      return (ships[_account].location-harborLocation < 3000);
+      return ((ships[_account].location-harborLocation) < 3000);
     }else{
-      return (harborLocation-ships[_account].location < 3000);
+      return ((harborLocation-ships[_account].location) < 3000);
     }
 
   }

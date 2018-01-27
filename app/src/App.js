@@ -287,6 +287,12 @@ class App extends Component {
     let zoom = 150
     //if(JSON.stringify(this.state.ship)!=JSON.stringify(getMyShip)) {
     if(getMyShip && !isEquivalentAndNotEmpty(this.state.ship,getMyShip)){
+
+      try{
+      //  getMyShip.inRangeToDisembark = await contracts["Sea"].methods.inRangeToDisembark(accounts[0]).call();
+      //    console.log("getMyShip.inRangeToDisembark",getMyShip.inRangeToDisembark)
+      }catch(e){console.log("ERROR checking inRangeToDisembark",e)}
+
       let zoomPercent = 1/(parseInt(this.state.zoom)/100)
       /////console.log("zoomPercent",zoomPercent)
       if(DEBUG_SYNCMYSHIP) console.log("UPDATE MY SHIP",JSON.stringify(this.state.ship),JSON.stringify(getMyShip))
@@ -334,6 +340,7 @@ class App extends Component {
         console.log("LAND UPDATE",land)
         this.setState({land:land})
       }
+      console.log("Loading Harbor Location",this.state.landX,this.state.landY,contracts["Harbor"]._address)
       let harborLocation = await contracts["Land"].methods.getTileLocation(this.state.landX,this.state.landY,contracts["Harbor"]._address).call();
       if(harborLocation!=this.state.harborLocation){
         this.setState({harborLocation:parseInt(harborLocation),scrollLeft:parseInt(harborLocation)-(window.innerWidth/2)})
