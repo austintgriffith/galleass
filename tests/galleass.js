@@ -494,7 +494,7 @@ module.exports = {
       it('should transfer '+amount+' '+contract+' tokens to '+toContract, async function() {
         this.timeout(120000)
         let toContractAddress = localContractAddress(toContract);
-        console.log("Transferring "+amount+" "+contract+" to "+toContract+" ("+toContractAddress+")")
+        console.log(tab,"Transferring "+amount+" "+contract+" to "+toContract+" ("+toContractAddress+")")
         const accounts = await clevis("accounts")
         const startingBalance = await clevis("contract","balanceOf",contract,accounts[accountindex])
         const startingBalanceTo = await clevis("contract","balanceOf",contract,toContractAddress)
@@ -545,7 +545,7 @@ module.exports = {
       it('should sell species to Fishmonger (and butcher and stock)', async function() {
         this.timeout(120000)
         let speciesAddress = localContractAddress(species);
-        console.log("Selling "+amount+" "+speciesAddress+" fish to Fishmonger to butcher from "+accountindex)
+        console.log(tab,"Selling "+amount+" "+speciesAddress+" fish to Fishmonger to butcher from "+accountindex)
         const result = await clevis("contract","sellFish","Fishmonger",accountindex,speciesAddress,amount)
         printTxResult(result)
       });
@@ -580,7 +580,7 @@ module.exports = {
       });
     });
   },
-  editTile:(accountindex,name,number)=>{
+  editMiddleTile:(accountindex,name,number,optionalAddress)=>{
     describe('#editTile()', function() {
       it('should build a tile at the center most open main tile', async function() {
         this.timeout(120000)
@@ -588,8 +588,14 @@ module.exports = {
         let mainLand = await getMainLand();
         console.log("mainLand",mainLand)
 
-        let address = localContractAddress(name);
-        console.log(tab,name+" address is ",address.blue)
+        console.log(tab,"optionalAddress:",optionalAddress)
+
+        let address = optionalAddress
+        if(typeof optionalAddress == "undefined"){
+          address = localContractAddress(name);
+          console.log(tab,name+" address is ",address.blue)
+        }
+
 
         let openMainTile = await searchLandFromCenterOut(mainLand,9,1)
         console.log(tab,"Building "+name+" at tile ",openMainTile," on island ",mainLand)
@@ -754,6 +760,12 @@ module.exports = {
         await clevis("sendTo","0.1","0","0x9319Bbb4e2652411bE15BB74f339b7F6218b2508")
         await clevis("sendTo","0.1","0","0xE68b423E49e13C704d2E403014a9C90d7961B98c")
         await clevis("sendTo","0.1","0","0x841b8C25Ce434B9Ca3ff12492a5468321e933A5b")
+
+        //these accounts are loose from ganache -- watch out on public networks!
+        await clevis("sendTo","0.1","0","0x627306090abab3a6e1400e9345bc60c78a8bef57")
+        await clevis("sendTo","0.1","0","0xf17f52151ebef6c7334fad080c5704d77216b732")
+
+
       });
     });
   },

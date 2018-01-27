@@ -78,9 +78,7 @@ contract Sea is Galleasset, HasNoEther {
 
     Land landContract = Land(getContract("Land"));
     uint16 harborLocation = landContract.getTileLocation(landContract.mainX(),landContract.mainY(),getContract("Harbor"));
-    Debug(harborLocation);
     harborLocation = uint16((65535 * uint256(harborLocation)) / 4000);
-    Debug(harborLocation);
     ships[msg.sender].id = shipId;
     ships[msg.sender].floating=true;
     ships[msg.sender].sailing=false;
@@ -92,7 +90,27 @@ contract Sea is Galleasset, HasNoEther {
 
     return true;
   }
-  event Debug(uint16 harborLocation);
+
+  //
+  // transfer your ship back to you from the sea
+  //
+  function disembark(uint256 shipId) public isGalleasset("Sea") returns (bool) {
+    require( ships[msg.sender].id==shipId );
+    require( ships[msg.sender].floating );
+    NFT shipsContract = NFT(getContract("Ships"));
+    require( shipsContract.ownerOf(shipId)==address(this) );
+    shipsContract.galleassetTransferFrom(address(this),msg.sender,shipId);
+    require( shipsContract.ownerOf(shipId)==msg.sender );
+
+    //eventually the ship should have to be near the harbor but for now you can disembark anywhere
+
+    uint256 deletedId = ships[msg.sender].id;
+
+    delete ships[msg.sender];
+
+    ShipUpdate(deletedId,msg.sender,now,ships[msg.sender].floating,ships[msg.sender].sailing,ships[msg.sender].direction,ships[msg.sender].fishing,ships[msg.sender].blockNumber,ships[msg.sender].location);
+    return true;
+  }
 
   //
   // sail east (true) or west (false)

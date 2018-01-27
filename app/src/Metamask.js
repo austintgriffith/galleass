@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Writing from './Writing.js'
 
 class Metamask extends Component {
   constructor(props) {
@@ -177,6 +178,8 @@ class Metamask extends Component {
           <img style={{maxHeight:20,opacity:opacityOfLoader,filter:"grayscale(65%)"}} src={"preloader_"+loadedPercent+".png"} />
         )
 
+        /*.substring(0,20)*/
+
         metamask = (
           <div style={{padding:4}}>
 
@@ -192,10 +195,19 @@ class Metamask extends Component {
 
               }}>
               <a target="_blank" href={this.props.etherscan+"address/"+this.state.accounts[0]}>
-                <div>{this.state.accounts.length > 0 ? this.state.accounts[0].substring(0,20) : "Loading..."}</div>
+                <div>
+                  <Writing string={this.state.accounts.length > 0 ? this.state.accounts[0] : "Loading..."} size={20} space={5}/>
+                </div>
               </a>
-                <div>{this.state.network}   <a target="_blank" href={this.props.etherscan+"block/"+this.props.blockNumber}>{this.props.blockNumber}</a> {littleBlockLoaderBar} </div>
+                <div>
+                  <Writing string={this.state.network} size={26} space={5}/>
+                  <a target="_blank" href={this.props.etherscan+"block/"+this.props.blockNumber}>
+                    <Writing string={this.props.blockNumber} size={26} space={10}/>
+                  </a>
+                  {littleBlockLoaderBar}
+                </div>
               </span>
+
               <this.props.Blockies
               seed={this.state.accounts[0]}
               scale={6}

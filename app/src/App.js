@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import './App.css';
 import galleassAddress from './Address.js'
 import galleassBlockNumber from './blockNumber.js'
+import Writing from './Writing.js'
 /*
 assuming that galleassBlockNumber is the oldest block for all contracts
 that means if you redeploy the galleass contract you have to redeploy ALL
@@ -330,6 +331,7 @@ class App extends Component {
         land[l]=currentTileHere
       }
       if(land!=this.state.land){
+        console.log("LAND UPDATE",land)
         this.setState({land:land})
       }
       let harborLocation = await contracts["Land"].methods.getTileLocation(this.state.landX,this.state.landY,contracts["Harbor"]._address).call();
@@ -414,6 +416,25 @@ class App extends Component {
         this.metamaskHint()
       }
     }
+  }
+  async disembark() {
+    console.log("disembark")
+    this.bumpButton("disembark")
+
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+
+    contracts["Sea"].methods.disembark(this.state.ships[this.state.account].id).send({
+      from: accounts[0],
+      gas:120000,
+      gasPrice:GWEI * 1000000000
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      if(!error) this.load()
+      this.resetButton("disembark")
+    }).on('error',this.handleError).then((receipt)=>{
+      console.log("RESULT:",receipt)
+      this.startWaiting(receipt.transactionHash)
+    })
   }
   async embark() {
     console.log("embark")
@@ -800,18 +821,26 @@ class App extends Component {
       }else if(this.state.inventory['Ships']>0){
         let clickFn = this.embark.bind(this)
         if(buttonDisabled){clickFn=()=>{}}
-        buttons.push(
-          this.bumpableButton("approveandembark",buttonsTop,(animated) => {
-            if(animated.top>50) animated.top=50
-            let extraWidth = animated.top - buttonsTop
-              return (
-                <div key={"approveAndEmbark"} style={{cursor:"pointer",zIndex:200,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
-                  <img src="approveAndEmbark.png" style={{maxWidth:150-(extraWidth)}}/>
-                </div>
-              )
-            }
+        if(this.state.inventoryDetail['Ships'] && this.state.inventoryDetail['Ships'].length>0){
+          buttons.push(
+            this.bumpableButton("approveandembark",buttonsTop,(animated) => {
+              if(animated.top>50) animated.top=50
+              let extraWidth = animated.top - buttonsTop
+                return (
+                  <div key={"approveAndEmbark"} style={{cursor:"pointer",zIndex:200,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
+                    <img src="approveAndEmbark.png" style={{maxWidth:150-(extraWidth)}}/>
+                  </div>
+                )
+              }
+            )
           )
-        )
+        }else{
+          console.log("WAITING FOR INV DETAIL....")
+          buttons.push(
+            <div>
+            </div>
+          )
+        }
       }else{
         let clickFn = this.metamaskHint.bind(this)
         if(buttonDisabled){clickFn=()=>{}}
@@ -907,6 +936,19 @@ class App extends Component {
             return (
               <div key={"sailwest"} style={{cursor:"pointer",zIndex:200,position:'absolute',left:buttonsLeft-180-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn3}>
                 <img src="sailwest.png" style={{maxWidth:150-(extraWidth)}}/>
+              </div>
+            )
+          }
+        )
+      )
+      let clickFn = this.disembark.bind(this)
+      buttons.push(
+        this.bumpableButton("disembark",buttonsTop,(animated) => {
+          if(animated.top>50) animated.top=50
+          let extraWidth = animated.top - buttonsTop
+            return (
+              <div key={"disembark"} style={{cursor:"pointer",zIndex:199,position:'absolute',left:this.state.harborLocation-(75/2)+((extraWidth)/2),top:animated.top+150,opacity:buttonOpacity}} onClick={clickFn}>
+                <img src="disembark.png" style={{maxWidth:75-(extraWidth)}}/>
               </div>
             )
           }
@@ -1026,14 +1068,20 @@ class App extends Component {
 
     if(this.state.contractsLoaded) clickScreenWhenNotLoggedIn=""
 
+    let titleString="Galleass.io"
+
     return (
       <div className="App" style={{zoom:this.state.zoom}}>
+
         {clickScreenWhenNotLoggedIn}
         {menu}
         {inventory}
         {sea}
         {land}
         {galley}
+        <div style={{position:'fixed',left:0,top:0,zIndex:10,opacity:0.5}}>
+          <Writing string={titleString} size={60} space={5} letterSpacing={29}/>
+        </div>
         <Motion
           defaultStyle={{
             scrollLeft:document.scrollingElement.scrollLeft
@@ -1049,6 +1097,7 @@ class App extends Component {
 
           }}
         </Motion>
+
       </div>
     );
   }

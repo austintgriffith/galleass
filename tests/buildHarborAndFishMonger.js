@@ -7,12 +7,11 @@ const galleass = require('./galleass.js')
 
 galleass.generateLand(0)
 
-galleass.editTile(0,"Harbor",100)
-
-galleass.editTile(0,"Fishmonger",101)
+galleass.editMiddleTile(0,"Harbor",100)
+galleass.editMiddleTile(0,"Fishmonger",101)
+galleass.editMiddleTile(0,"Village",2000,"0x627306090abab3a6e1400e9345bc60c78a8bef57")
 
 galleass.transferFirstLandTile(0,1)
-
 galleass.setPriceOfFirstLandTile(1,1)
 galleass.setPriceOfFirstLandTile(1,0)
 

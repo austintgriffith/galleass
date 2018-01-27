@@ -267,7 +267,13 @@ class Land extends Component {
             }else if(islands[i][t]==102){
               tiles.push(this.grassTile(currentPixelLocation,"0x34aA3F359A9D614239015126635CE7732c18fDF3"))
               currentPixelLocation+=120
+            }else if(islands[i][t]==2000){
+              tiles.push(this.villageTile(currentPixelLocation,"0x34aA3F359A9D614239015126635CE7732c18fDF3"))
+              currentPixelLocation+=120
             }
+
+
+
           }
           if(DEBUGLANDRENDER) console.log("RIGHT EDGE")
           tiles.push(this.edgeTile(currentPixelLocation,"right"))
