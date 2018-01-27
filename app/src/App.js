@@ -35,7 +35,7 @@ let veryFirstLoad = true;
 let loadContracts = [
   "Sea",
   "Harbor",
-  "Ships",
+  "Dogger",
   "Timber",
   "Catfish",
   "Pinner",
@@ -48,7 +48,7 @@ let loadContracts = [
 ]
 
 let inventoryTokens = [
-  "Ships",
+  "Dogger",
   "Copper",
   "Timber",
   "Catfish",
@@ -241,10 +241,10 @@ class App extends Component {
       let updateDetail = false
       if(DEBUG_INVENTORY) console.log("account",this.state.account)
 
-      if(inventory['Ships']>0){
-        let myShipArray = await contracts["Ships"].methods.shipsOfOwner(this.state.account).call()
-        if(myShipArray && !isEquivalentAndNotEmpty(myShipArray,inventoryDetail['Ships'])){
-          inventoryDetail['Ships']=myShipArray
+      if(inventory['Dogger']>0){
+        let myShipArray = await contracts["Dogger"].methods.tokensOfOwner(this.state.account).call()
+        if(myShipArray && !isEquivalentAndNotEmpty(myShipArray,inventoryDetail['Dogger'])){
+          inventoryDetail['Dogger']=myShipArray
           updateDetail=true
         }
       }
@@ -394,9 +394,9 @@ class App extends Component {
         if(!accounts[0]){
           this.metamaskHint()
         }else{
-          let currentPrice = await contracts["Harbor"].methods.currentPrice(FISHINGBOAT).call()
+          let currentPrice = await contracts["Harbor"].methods.currentPrice(web3.utils.fromAscii("Dogger")).call()
           console.log("current price for",FISHINGBOAT,"is",currentPrice)
-          contracts["Harbor"].methods.buyShip(FISHINGBOAT).send({
+          contracts["Harbor"].methods.buyShip(web3.utils.fromAscii("Dogger")).send({
             value: currentPrice,
             from: accounts[0],
             gas:90000,
@@ -425,7 +425,7 @@ class App extends Component {
 
     contracts["Sea"].methods.disembark(this.state.ships[this.state.account].id).send({
       from: accounts[0],
-      gas:120000,
+      gas:200000,
       gasPrice:GWEI * 1000000000
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
@@ -443,7 +443,7 @@ class App extends Component {
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
     //console.log(accounts)
     //console.log("methods.embark(",this.state.inventoryDetail['Ships'][0])
-    contracts["Sea"].methods.embark(this.state.inventoryDetail['Ships'][0]).send({
+    contracts["Sea"].methods.embark(this.state.inventoryDetail['Dogger'][0]).send({
       from: accounts[0],
       gas:200000,
       gasPrice:GWEI * 1000000000
@@ -705,8 +705,8 @@ class App extends Component {
     setInterval(this.syncMyShip.bind(this),1381)
     setInterval(this.syncInventory.bind(this),2273)
     setInterval(this.syncLand.bind(this),30103)
-    this.sync("Fish",this.doSyncFish.bind(this),127,SHIPSEVENTSYNCLIVEINTERVAL);
-    this.sync("Ships",this.doSyncShips.bind(this),198,FISHEVENTSYNCLIVEINTERVAL);
+    this.sync("Fish",this.doSyncFish.bind(this),127,FISHEVENTSYNCLIVEINTERVAL);
+    this.sync("Ships",this.doSyncShips.bind(this),198,SHIPSEVENTSYNCLIVEINTERVAL);
     this.sync("Clouds",this.doSyncClouds.bind(this),151,CLOUDEVENTSYNCLIVEINTERVAL);
     this.syncEverythingOnce()
   }
@@ -803,7 +803,7 @@ class App extends Component {
 
           </div>
         )
-      }else if(this.state.inventoryDetail && (!this.state.inventoryDetail['Ships']||this.state.inventoryDetail['Ships'].length<=0) && this.state.inventory['Ships']<=0){
+      }else if(this.state.inventoryDetail && (!this.state.inventoryDetail['Dogger']||this.state.inventoryDetail['Dogger'].length<=0) && this.state.inventory['Dogger']<=0){
         let clickFn = this.buyShip.bind(this)
         if(buttonDisabled){clickFn=()=>{}}
         buttons.push(
@@ -818,10 +818,10 @@ class App extends Component {
             }
           )
         )
-      }else if(this.state.inventory['Ships']>0){
+      }else if(this.state.inventory['Dogger']>0){
         let clickFn = this.embark.bind(this)
         if(buttonDisabled){clickFn=()=>{}}
-        if(this.state.inventoryDetail['Ships'] && this.state.inventoryDetail['Ships'].length>0){
+        if(this.state.inventoryDetail['Dogger'] && this.state.inventoryDetail['Dogger'].length>0){
           buttons.push(
             this.bumpableButton("approveandembark",buttonsTop,(animated) => {
               if(animated.top>50) animated.top=50

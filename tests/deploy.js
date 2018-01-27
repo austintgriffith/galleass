@@ -5,13 +5,13 @@ galleass.deploy("Galleass",0)
 
 galleass.deploy("Sea",0)
 galleass.setContract("Sea",0)
-galleass.setPermission("Sea",0,"transferShips","true")
+galleass.setPermission("Sea",0,"transferDogger","true")
 
 galleass.deploy("Land",0)
 galleass.setContract("Land",0)
 
-galleass.deploy("Ships",0)
-galleass.setContract("Ships",0)
+galleass.deploy("Dogger",0)
+galleass.setContract("Dogger",0)
 
 galleass.deploy("Timber",0)
 galleass.setContract("Timber",0)
@@ -40,7 +40,7 @@ galleass.setContract("Fillet",0)
 
 galleass.deploy("Harbor",0)
 galleass.setContract("Harbor",0)
-galleass.setPermission("Harbor",0,"buildShip","true")
+galleass.setPermission("Harbor",0,"buildDogger","true")
 
 galleass.deploy("Fishmonger",0)
 galleass.setContract("Fishmonger",0)

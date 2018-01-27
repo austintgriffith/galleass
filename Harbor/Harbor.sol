@@ -5,11 +5,11 @@ import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
 contract Harbor is Galleasset, Ownable {
 
-  uint256[99] public shipStorage;
-  uint256[1] public currentPrice;
+  mapping (bytes32 => uint256[99]) public shipStorage;
+  mapping (bytes32 => uint256) public currentPrice;
 
   function Harbor(address _galleass) public Galleasset(_galleass) {
-    currentPrice[uint256(Ships.Model.FISHING)] = ((1 ether)/1000)*3;
+    currentPrice["Dogger"] = ((1 ether)/1000)*3;
   }
 
   function onTokenTransfer(address _sender, uint _value, bytes _data) {
@@ -21,60 +21,64 @@ contract Harbor is Galleasset, Ownable {
   }
   event TokensIncoming(bytes32 _contract,address _sender,uint _value, bytes _data);
 
-  function buildShip(Ships.Model model) public isGalleasset("Harbor") returns (uint) {
-    if(model==Ships.Model.FISHING){
+  function buildShip(bytes32 model) public isGalleasset("Harbor") returns (uint) {
+    if(model=="Dogger"){
       require( getTokens(msg.sender,"Timber",2) );
       return _buildShip(model);
     }
     revert();
   }
 
-  function _buildShip(Ships.Model model) internal returns (uint) {
-    address shipsContractAddress = getContract("Ships");
+  function _buildShip(bytes32 model) internal returns (uint) {
+    address shipsContractAddress = getContract(model);
+    require( shipsContractAddress!=address(0) );
     require( approveTokens("Timber",shipsContractAddress,2) );
-    Ships shipsContract = Ships(shipsContractAddress);
-    uint256 shipId = shipsContract.buildShip(model);
-    require( storeShip(shipId) );
+    NFT shipContract = NFT(shipsContractAddress);
+    uint256 shipId = shipContract.build();
+    require( storeShip(shipId,model) );
     return shipId;
   }
 
-  function sellShip(uint256 shipId) public isGalleasset("Harbor") returns (bool) {
-    address shipsContractAddress = getContract("Ships");
-    Ships shipsContract = Ships(shipsContractAddress);
+  function sellShip(uint256 shipId,bytes32 model) public isGalleasset("Harbor") returns (bool) {
+    address shipsContractAddress = getContract(model);
+    require( shipsContractAddress!=address(0) );
+    require( currentPrice[model] > 0 );
+    NFT shipsContract = NFT(shipsContractAddress);
     require( shipsContract.ownerOf(shipId) == msg.sender);
     shipsContract.transferFrom(msg.sender,address(this),shipId);
     require( shipsContract.ownerOf(shipId) == address(this));
-    require( storeShip(shipId) );
-    uint256 buyBackAmount = currentPrice[uint256(shipsContract.getShipModel(shipId))] * 9;
+    require( storeShip(shipId,model) );
+    uint256 buyBackAmount = currentPrice[model] * 9;
     buyBackAmount = buyBackAmount / 10;
     return msg.sender.send(buyBackAmount);
   }
 
-  modifier enoughValue(Ships.Model model){
-    require( currentPrice[uint256(model)] > 0 );
-    require( msg.value >= currentPrice[uint256(model)] );
+  modifier enoughValue(bytes32 model){
+    require( currentPrice[model] > 0 );
+    require( msg.value >= currentPrice[model] );
     _;
   }
 
-  function buyShip(Ships.Model model) public payable isGalleasset("Harbor") enoughValue(model) returns (uint) {
-    address shipsContractAddress = getContract("Ships");
-    Ships shipsContract = Ships(shipsContractAddress);
+  function buyShip(bytes32 model) public payable isGalleasset("Harbor") enoughValue(model) returns (uint) {
+    address shipsContractAddress = getContract(model);
+    require( shipsContractAddress!=address(0) );
+    NFT shipsContract = NFT(shipsContractAddress);
     uint256 availableShip = getShipFromStorage(shipsContract,model);
     require( availableShip!=0 );
     shipsContract.transfer(msg.sender,availableShip);
     return availableShip;
   }
 
-  function setPrice(Ships.Model model,uint256 amount) public onlyOwner returns (bool) {
-    currentPrice[uint256(model)]=amount;
+  function setPrice(bytes32 model,uint256 amount) public onlyOwner isBuilding returns (bool) {
+    currentPrice[model]=amount;
   }
 
-  function getShipFromStorage(Ships shipsContract, Ships.Model model) internal returns (uint256) {
+  function getShipFromStorage(NFT shipsContract, bytes32 model) internal returns (uint256) {
     uint256 index = 0;
-    while(index<shipStorage.length){
-      if(shipStorage[index]!=0 && shipsContract.getShipModel(shipStorage[index])==model){
-        uint256 shipId = shipStorage[index];
-        shipStorage[index]=0;
+    while(index<shipStorage[model].length){
+      if(shipStorage[model][index]!=0){
+        uint256 shipId = shipStorage[model][index];
+        shipStorage[model][index]=0;
         return shipId;
       }
       index++;
@@ -82,11 +86,11 @@ contract Harbor is Galleasset, Ownable {
     return 0;
   }
 
-  function storeShip(uint256 _shipId) internal returns (bool) {
+  function storeShip(uint256 _shipId,bytes32 _model) internal returns (bool) {
     uint256 index = 0;
-    while(index<shipStorage.length){
-      if(shipStorage[index]==0){
-        shipStorage[index]=_shipId;
+    while(index<shipStorage[_model].length){
+      if(shipStorage[_model][index]==0){
+        shipStorage[_model][index]=_shipId;
         return true;
       }
       index++;
@@ -94,7 +98,11 @@ contract Harbor is Galleasset, Ownable {
     return false;
   }
 
-  function withdraw(uint256 _amount) public onlyOwner returns (bool) {
+  //assuming this is more like a tip jar while building, you can pull out ether
+  //in the long run the eth used to buy a ship is meant to pay
+  //the ship builder for their citizens' time and timber used to build
+  // -- instead of pulling out ether it should be used to support the internal economy
+  function withdraw(uint256 _amount) public onlyOwner isBuilding returns (bool) {
     require(this.balance >= _amount);
     assert(owner.send(_amount));
     return true;
@@ -107,13 +115,9 @@ contract Harbor is Galleasset, Ownable {
 }
 
 
-contract Ships {
-  enum Model{
-    FISHING
-  }
-  function buildShip(Model model) public returns (uint) { }
+contract NFT {
+  function build() public returns (uint) { }
   function transfer(address _to,uint256 _tokenId) external { }
   function transferFrom(address _from,address _to,uint256 _tokenId) external { }
   function ownerOf(uint256 _tokenId) external view returns (address owner) { }
-  function getShipModel(uint256 _id) public view returns (Model) { }
 }

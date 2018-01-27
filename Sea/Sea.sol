@@ -71,18 +71,15 @@ contract Sea is Galleasset, HasNoEther {
   //
   function embark(uint256 shipId) public isGalleasset("Sea") returns (bool) {
     require( !ships[msg.sender].floating );
-    NFT shipsContract = NFT(getContract("Ships"));
+    NFT shipsContract = NFT(getContract("Dogger"));
     require( shipsContract.ownerOf(shipId)==msg.sender );
     shipsContract.galleassetTransferFrom(msg.sender,address(this),shipId);
     require( shipsContract.ownerOf(shipId)==address(this) );
 
-    Land landContract = Land(getContract("Land"));
-    uint16 harborLocation = landContract.getTileLocation(landContract.mainX(),landContract.mainY(),getContract("Harbor"));
-    harborLocation = uint16((65535 * uint256(harborLocation)) / 4000);
     ships[msg.sender].id = shipId;
     ships[msg.sender].floating=true;
     ships[msg.sender].sailing=false;
-    ships[msg.sender].location=harborLocation;
+    ships[msg.sender].location=getHarborLocation();
     ships[msg.sender].blockNumber=uint32(block.number);
     ships[msg.sender].direction=false;
 
@@ -97,12 +94,12 @@ contract Sea is Galleasset, HasNoEther {
   function disembark(uint256 shipId) public isGalleasset("Sea") returns (bool) {
     require( ships[msg.sender].id==shipId );
     require( ships[msg.sender].floating );
-    NFT shipsContract = NFT(getContract("Ships"));
+    NFT shipsContract = NFT(getContract("Dogger"));
     require( shipsContract.ownerOf(shipId)==address(this) );
     shipsContract.galleassetTransferFrom(address(this),msg.sender,shipId);
     require( shipsContract.ownerOf(shipId)==msg.sender );
 
-    //eventually the ship should have to be near the harbor but for now you can disembark anywhere
+    require( inRangeToDisembark(msg.sender) );
 
     uint256 deletedId = ships[msg.sender].id;
 
@@ -110,6 +107,22 @@ contract Sea is Galleasset, HasNoEther {
 
     ShipUpdate(deletedId,msg.sender,now,ships[msg.sender].floating,ships[msg.sender].sailing,ships[msg.sender].direction,ships[msg.sender].fishing,ships[msg.sender].blockNumber,ships[msg.sender].location);
     return true;
+  }
+
+  function getHarborLocation() public constant returns (uint16) {
+    Land landContract = Land(getContract("Land"));
+    uint16 harborLocation = landContract.getTileLocation(landContract.mainX(),landContract.mainY(),getContract("Harbor"));
+    return uint16((65535 * uint256(harborLocation)) / 4000);
+  }
+
+  function inRangeToDisembark(address _account) public constant returns (bool) {
+    uint16 harborLocation = getHarborLocation();
+    if(ships[_account].location >= harborLocation){
+      return (ships[_account].location-harborLocation < 3000);
+    }else{
+      return (harborLocation-ships[_account].location < 3000);
+    }
+
   }
 
   //
@@ -304,13 +317,6 @@ contract Sea is Galleasset, HasNoEther {
   }
   event Attempt(address account,uint randomishWidthNumber,uint randomishDepthNumber,uint16 fishx,uint16 fishy,uint16 distanceToFish,bool result);
 
-}
-
-contract Ships {
-    enum Model{
-      FISHING
-    }
-    function getShipModel(uint256 _id) public view returns (Model) { }
 }
 
 contract Land {

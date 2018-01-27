@@ -29,15 +29,14 @@ contract Dogger is Galleasset, NFT {
     Item[] private items;
 
     function build() public isGalleasset("Dogger") returns (uint){
-      bool hasPermissionResult = hasPermission(msg.sender,"buildDogger");
-      require( hasPermissionResult );
-      require( getTokens(msg.sender,"Timber",5) );
+      require( hasPermission(msg.sender,"buildDogger") );
+      require( getTokens(msg.sender,"Timber",2) );
 
       //when citizens are introduced to the game,
-      //their level of craftsmenship will play a role
+      //their level of craftsmanship will play a role
       //in the attrubutes, but for now, default
       uint16 strength = 1;
-      uint16 speed = 1000;
+      uint16 speed = 512;
       uint8 luck = 1;
 
       Build(msg.sender,strength,speed,luck);

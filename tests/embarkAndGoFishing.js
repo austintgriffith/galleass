@@ -9,8 +9,8 @@ const galleass = require("./galleass.js")
 
 
 // galleass.buyShip(2,0)
-galleass.approveFirst("Ships",2,"Sea")
-galleass.embarkWithFirst(2)
+galleass.approveFirst("Dogger",2,"Sea")
+galleass.embarkWithFirst(2,"Dogger")
 
 galleass.findFish(2)
 galleass.setSailTowardFish(2)

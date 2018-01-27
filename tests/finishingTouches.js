@@ -10,8 +10,8 @@ galleass.cloud(0,7,60)
 
 galleass.approveContract("Timber",1,"Harbor",10)
 
-galleass.buildShip(1,0)
-galleass.buildShip(1,0)
-galleass.buildShip(1,0)
-galleass.buildShip(1,0)
-galleass.buildShip(1,0)
+galleass.buildShip(1,"Dogger")
+galleass.buildShip(1,"Dogger")
+galleass.buildShip(1,"Dogger")
+galleass.buildShip(1,"Dogger")
+galleass.buildShip(1,"Dogger")
