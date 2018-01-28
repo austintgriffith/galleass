@@ -1,3 +1,10 @@
+/*
+
+  https://galleass.io
+  by Austin Thomas Griffith
+
+*/
+
 import React, { Component } from 'react';
 import './App.css';
 import galleassAddress from './Address.js'
