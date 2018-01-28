@@ -1,7 +1,16 @@
 pragma solidity ^0.4.15;
 
-import 'NFT.sol';
+/*
+
+  https://galleass.io
+  by Austin Thomas Griffith
+
+  The Dogger is the main fishing boat in Galleass.
+
+*/
+
 import 'Galleasset.sol';
+import 'NFT.sol';
 
 contract Dogger is Galleasset, NFT {
 

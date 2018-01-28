@@ -148,7 +148,7 @@ class Metamask extends Component {
                 color:"#222",
                 textAlign:"right"
               }}>
-                <div>Please switch your network to Ropsten in metamask.</div>
+                <div><Writing string={"Please switch your network to Ropsten in MetaMask."} size={30} space={5}/></div>
               </span>
               <this.props.Blockies
               seed={this.state.accounts[0]}

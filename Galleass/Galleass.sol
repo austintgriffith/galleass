@@ -1,19 +1,46 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.18;
 
+/*
+
+  https://galleass.io
+  by Austin Thomas Griffith
+
+  The Galleass contract contains a reference to all contracts in the fleet and
+  provides a method of upgrading/replacing old contract versions.
+
+  Galleass follows a Predecessor system where previous deployments of this
+  contract will forward on to their decendants.
+
+  Galleass contains an authentication system where contracts are allowed to do
+  specific actions based on the permissions they are assigned.
+
+  Finally, there is the notion of building, staging, and production modes. Once
+  the contract is set to production, it is fully decentralized and not even the
+  owner account can make changes.
+
+*/
+
+import 'Predecessor.sol';
+import 'Staged.sol';
 import 'zeppelin-solidity/contracts/ownership/HasNoEther.sol';
 import 'zeppelin-solidity/contracts/ownership/Contactable.sol';
-import 'Staged.sol';
-import 'Predecessor.sol';
 
 contract Galleass is Staged, HasNoEther, Contactable, Predecessor{
 
-  event SetContract(bytes32 name,address contractAddress,address whoDid);
-  event SetPermission(address account,bytes32 permission,bool value);
+  event UpgradeContract(address _contractAddress,address _descendant,address _whoDid);
+  event SetContract(bytes32 _name,address _contractAddress,address _whoDid);
+  event SetPermission(address _account,bytes32 _permission,bool _value);
 
   mapping(bytes32 => address) contracts;
   mapping(address => mapping(bytes32 => bool)) permission;
 
   function Galleass(string _contact) public { setContactInformation(_contact); }
+
+  function upgradeContract(address _contract) onlyOwner isBuilding public returns (bool) {
+    Galleasset(_contract).upgradeGalleass(descendant);
+    UpgradeContract(_contract,descendant,msg.sender);
+    return true;
+  }
 
   function setContract(bytes32 _name,address _contract) onlyOwner isBuilding public returns (bool) {
     contracts[_name]=_contract;
@@ -43,12 +70,8 @@ contract Galleass is Staged, HasNoEther, Contactable, Predecessor{
     }
   }
 
-  /*
-  I think all testnet contracts were deployed with this... will need to redeploy to clear it
+}
 
-  function test() public returns (bool) {
-    //approve(address _spender, uint256 _value)
-    getContract("Timber").call(bytes4(sha3("approve(address,uint256)")),address(this),99);
-  */
-
+contract Galleasset {
+  function upgradeGalleass(address _galleass) public returns (bool) { }
 }

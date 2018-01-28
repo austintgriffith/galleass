@@ -58,7 +58,7 @@ let inventoryTokens = [
   "Dangler",
 ]
 
-const GWEI = 50;
+const GWEI = 0.1;
 const GAS = 100000;
 const FISHINGBOAT = 0;
 const LOADERSPEED = 1237 //this * 24 should be close to a long block time
@@ -68,7 +68,7 @@ const FISHEVENTSYNCLIVEINTERVAL = 2357
 const SHIPSEVENTSYNCLIVEINTERVAL = 2341
 const CLOUDEVENTSYNCLIVEINTERVAL = 7919
 let eventLoadIndexes = {};
-
+let bottomBarTimeout;
 let textStyle = {
   zIndex:210,
   fontWeight:'bold',
@@ -96,7 +96,10 @@ class App extends Component {
       avgBlockTime:15000,
       metamaskDip:0,
       buttonBumps:[],
-      zoom:"100%"
+      zoom:"100%",
+      bottomBar:-80,
+      bottomBarSize:20,
+      bottomBarMessage:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789."
     }
 
     setInterval(this.syncBlockNumber.bind(this),887)
@@ -286,12 +289,9 @@ class App extends Component {
     if(DEBUG_SYNCMYSHIP) console.log("COMPARE",this.state.ship,getMyShip)
     let zoom = 150
     //if(JSON.stringify(this.state.ship)!=JSON.stringify(getMyShip)) {
-    if(getMyShip && !isEquivalentAndNotEmpty(this.state.ship,getMyShip)){
-
-      try{
-      //  getMyShip.inRangeToDisembark = await contracts["Sea"].methods.inRangeToDisembark(accounts[0]).call();
-      //    console.log("getMyShip.inRangeToDisembark",getMyShip.inRangeToDisembark)
-      }catch(e){console.log("ERROR checking inRangeToDisembark",e)}
+    if(this.state.ship) getMyShip.inRangeToDisembark = this.state.ship.inRangeToDisembark
+    let shipHasNotUpdated = isEquivalentAndNotEmpty(this.state.ship,getMyShip)
+    if(getMyShip && !shipHasNotUpdated){
 
       let zoomPercent = 1/(parseInt(this.state.zoom)/100)
       /////console.log("zoomPercent",zoomPercent)
@@ -313,6 +313,11 @@ class App extends Component {
         }
 
       }
+      console.log("SHIP UPDATE ",getMyShip)
+      try{
+        getMyShip.inRangeToDisembark = await contracts["Sea"].methods.inRangeToDisembark(accounts[0]).call();
+        console.log("getMyShip.inRangeToDisembark",getMyShip.inRangeToDisembark)
+      }catch(e){console.log("ERROR checking inRangeToDisembark",e)}
       this.setState({zoom:"100%",loading:0,ship:getMyShip,waitingForShipUpdate:false,myLocation:myLocation},()=>{
         //if(DEBUG_SYNCMYSHIP)
         //console.log("SET getMyShip",this.state.ship)
@@ -410,9 +415,10 @@ class App extends Component {
             gasPrice:GWEI * 1000000000
           },(error,hash)=>{
             console.log("CALLBACK!",error,hash)
+            this.setState({currentTx:hash});
             if(!error) this.load()
             this.resetButton("buyship")
-          }).on('error',this.handleError).then((receipt)=>{
+          }).on('error',this.handleError.bind(this)).then((receipt)=>{
             console.log("RESULT:",receipt)
             this.startWaiting(receipt.transactionHash,"inventoryUpdate")
           })
@@ -436,9 +442,10 @@ class App extends Component {
       gasPrice:GWEI * 1000000000
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
+      this.setState({currentTx:hash});
       if(!error) this.load()
       this.resetButton("disembark")
-    }).on('error',this.handleError).then((receipt)=>{
+    }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       this.startWaiting(receipt.transactionHash)
     })
@@ -456,9 +463,10 @@ class App extends Component {
       gasPrice:GWEI * 1000000000
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
+      this.setState({currentTx:hash});
       if(!error) this.load()
       this.resetButton("approveandembark")
-    }).on('error',this.handleError).then((receipt)=>{
+    }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       this.startWaiting(receipt.transactionHash)
     })
@@ -476,8 +484,9 @@ class App extends Component {
       gasPrice:GWEI * 1000000000
     },/*(error,hash)=>{
       console.log("CALLBACK!",error,hash)
+      this.setState({currentTx:hash});
       if(!error) this.load()
-    }*/).on('error',this.handleError).then((receipt)=>{
+    }*/).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       this.startWaiting(receipt.transactionHash)
     })
@@ -494,10 +503,11 @@ class App extends Component {
         gasPrice:GWEI * 1000000000
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
+        this.setState({currentTx:hash});
         if(!error) this.load()
         if(direction) this.resetButton("saileast")
         else this.resetButton("sailwest")
-      }).on('error',this.handleError).then((receipt)=>{
+      }).on('error',this.handleError.bind(this)).then((receipt)=>{
         console.log("RESULT:",receipt)
         this.startWaiting(receipt.transactionHash,"shipUpdate")
       })
@@ -514,9 +524,10 @@ class App extends Component {
         gasPrice:GWEI * 1000000000
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
+        this.setState({currentTx:hash});
         if(!error) this.load()
         this.resetButton("dropanchor")
-      }).on('error',this.handleError).then((receipt)=>{
+      }).on('error',this.handleError.bind(this)).then((receipt)=>{
         console.log("RESULT:",receipt)
         this.startWaiting(receipt.transactionHash,"shipUpdate")
       })
@@ -536,9 +547,10 @@ class App extends Component {
         gasPrice:GWEI * 1000000000
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
+        this.setState({currentTx:hash});
         if(!error) this.load()
         this.resetButton("castline")
-      }).on('error',this.handleError)
+      }).on('error',this.handleError.bind(this))
       .on('transactionHash', function(transactionHash){
         console.log("transactionHash",transactionHash)
       })
@@ -595,7 +607,8 @@ class App extends Component {
       if(DEBUG_REEL_IN) console.log("BESTS",bestDist,bestId)
 
       let baitToUse = this.state.bait
-      if(!baitToUse) baitToUse="0x0000000000000000000000000000000000000000";
+      if(!baitToUse||baitToUse=="false") baitToUse="0x0000000000000000000000000000000000000000";
+      if(!bestId||bestId=="false") bestId="0x0000000000000000000000000000000000000000";
 
       if(DEBUG_REEL_IN) console.log("FINAL ID BAIT & ACCOUNT",bestId,baitToUse,_accounts[0])
 
@@ -605,9 +618,10 @@ class App extends Component {
         gasPrice:GWEI * 1000000000
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
+        this.setState({currentTx:hash});
         if(!error) this.load()
         this.resetButton("reelin")
-      }).on('error',this.handleError).then((receipt)=>{
+      }).on('error',this.handleError.bind(this)).then((receipt)=>{
         if(DEBUG_REEL_IN) console.log("RESULT:",receipt)
         this.startWaiting(receipt.transactionHash,"shipUpdate")
       })
@@ -624,7 +638,14 @@ class App extends Component {
   handleError(error){
     console.log("HANDLETHIS:",error)
     if(error.toString().indexOf("Error: Transaction was not mined")>=0){
-      console.log("FIRE MESSAGE ABOUT UPPING YOUR GAS PRICE BECAUSE TX WASNT MINED")
+      this.setState({loading:0,waitingForTransaction:false})
+      clearInterval(txWaitIntervals["loader"])
+      clearInterval(txWaitIntervals[this.state.currentTx])
+      this.setState({bottomBar:0,bottomBarMessage:"Warning: your transaction might not get mined, try increasing your gas price.",bottomBarSize:20})
+      clearTimeout(bottomBarTimeout)
+      bottomBarTimeout = setTimeout(()=>{
+        this.setState({bottomBar:-80})
+      },5000)
     }
   }
 
@@ -645,17 +666,33 @@ class App extends Component {
     console.log("WAITING FOR TRANSACTION ",hash,this.state.waitingForTransaction,this.state.waitingForTransactionTime)
     try {
         var receipt = await web3.eth.getTransactionReceipt(this.state.waitingForTransaction);
+        console.log("TIME SPENT:"+Date.now()-this.state.waitingForTransactionTime)
         if (receipt == null) {
           //keep waiting
-          console.log("TIME SPENT:"+Date.now()-this.state.waitingForTransactionTime)
+
         } else {
           //DONE
+          //DONE
           console.log("DONE WITH TX",receipt)
-          clearInterval(txWaitIntervals[hash]);
+          clearInterval(txWaitIntervals[hash])
+          txWaitIntervals[hash]=null
           clearInterval(txWaitIntervals["loader"])
-          this.setState({waitingForTransaction:false})
-          console.log("CALL A SYNC OF EVERYTHING!!")
-          this.syncEverythingOnce()
+          if(receipt.status=="0x0"){
+            //this.state.waitingForTransaction || this.state.waitingForShipUpdate || this.state.waitingForInventoryUpdate
+            this.setState({loading:0,waitingForTransaction:false,waitingForShipUpdate:false,waitingForInventoryUpdate:false})
+            this.setState({bottomBar:0,bottomBarMessage:"Warning: Transaction failed. Try again with a higher gas price.",bottomBarSize:24})
+            clearTimeout(bottomBarTimeout)
+            bottomBarTimeout = setTimeout(()=>{
+              this.setState({bottomBar:-80})
+            },5000)
+          }else{
+            this.setState({waitingForTransaction:false})
+            ////do this to skip green loader (don't)
+            //this.setState({loading:0,waitingForTransaction:false,waitingForShipUpdate:false,waitingForInventoryUpdate:false})
+            console.log("CALL A SYNC OF EVERYTHING!!")
+            this.syncEverythingOnce()
+          }
+
         }
     } catch(e) {
         console.log("ERROR WAITING FOR TX",e)
@@ -694,6 +731,20 @@ class App extends Component {
       this.setState(update,()=>{
         txWaitIntervals[hash] = setInterval(this.startWaitingForTransaction.bind(this,hash),1200)
         this.startWaitingForTransaction(hash)
+        setTimeout(()=>{
+          console.log("CHECKING BACK ON TX ",hash,txWaitIntervals[hash])
+          if(txWaitIntervals[hash]){
+            clearInterval(txWaitIntervals[hash]);
+            this.setState({loading:0,waitingForTransaction:false})
+            clearInterval(txWaitIntervals["loader"])
+            this.setState({bottomBar:0,bottomBarMessage:"Warning: Your transaction is taking a long time, try increasing your gas price.",bottomBarSize:20})
+            clearTimeout(bottomBarTimeout)
+            bottomBarTimeout = setTimeout(()=>{
+              this.setState({bottomBar:-80})
+            },5000)
+          }
+
+        },this.state.avgBlockTime*2)
       })
     }
   }
@@ -775,11 +826,14 @@ class App extends Component {
 
     if(this.state.harborLocation>0){
       buttonsLeft = this.state.harborLocation
+    }else{
+      buttonsLeft=-1000;
     }
 
     if(myShip&&myShip.floating&&myShip.location){
       buttonsLeft = this.state.myLocation
     }
+    if(!buttonsLeft) buttonsLeft=-2000
 
     let buttonOpacity = 0.9
     let buttonDisabled = false
@@ -787,7 +841,7 @@ class App extends Component {
       buttonOpacity = 0.5
       buttonDisabled = true
       loadingBar = (
-        <img src={"preloader_"+this.state.loading+".png"} />
+        <a href={this.state.etherscan+"tx/"+this.state.currentTx} target='_blank'><img src={"preloader_"+this.state.loading+".png"} /></a>
       )
     } else if( this.state.waitingForTransaction || this.state.waitingForShipUpdate || this.state.waitingForInventoryUpdate){
       buttonOpacity = 0.3
@@ -797,7 +851,7 @@ class App extends Component {
       //console.log("timeSpentWaiting",timeSpentWaiting)
       if(timeSpentWaiting>12) timeSpentWaiting=12
       loadingBar = (
-        <img src={"loader_"+timeSpentWaiting+".png"} />
+        <a href={this.state.etherscan+"tx/"+this.state.currentTx} target='_blank'><img src={"loader_"+timeSpentWaiting+".png"} /></a>
       )
     }
 
@@ -817,11 +871,16 @@ class App extends Component {
           this.bumpableButton("buyship",buttonsTop,(animated) => {
             if(animated.top>50) animated.top=50
               let extraWidth = animated.top - buttonsTop
-              return (
-                <div key={"buyship"} style={{cursor:"pointer",zIndex:200,position:'absolute',left:this.state.harborLocation-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
-                  <img src="buyship.png" style={{maxWidth:150-(extraWidth)}}/>
-                </div>
-              )
+              let theLeft = this.state.harborLocation-75+((extraWidth)/2)
+              if(!theLeft){
+                return (<div></div>)
+              }else{
+                return (
+                  <div key={"buyship"} style={{cursor:"pointer",zIndex:200,position:'absolute',left:theLeft,top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
+                    <img src="buyship.png" style={{maxWidth:150-(extraWidth)}}/>
+                  </div>
+                )
+              }
             }
           )
         )
@@ -855,11 +914,17 @@ class App extends Component {
           this.bumpableButton("buyshipHolder",buttonsTop,(animated) => {
             if(animated.top>50) animated.top=50
               let extraWidth = animated.top - buttonsTop
-              return (
-                <div key={"buyshipHolder"} style={{cursor:"pointer",zIndex:200,position:'absolute',left:this.state.harborLocation-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
-                  <img src="buyship.png" style={{maxWidth:150-(extraWidth)}}/>
-                </div>
-              )
+              let theLeft = this.state.harborLocation-75+((extraWidth)/2);
+              if(!theLeft){
+                return (<div></div>)
+              }else{
+                return (
+                  <div key={"buyshipHolder"} style={{cursor:"pointer",zIndex:200,position:'absolute',left:theLeft,top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
+                    <img src="buyship.png" style={{maxWidth:150-(extraWidth)}}/>
+                  </div>
+                )
+              }
+
             }
           )
         )
@@ -951,13 +1016,29 @@ class App extends Component {
       let clickFn = this.disembark.bind(this)
       buttons.push(
         this.bumpableButton("disembark",buttonsTop,(animated) => {
-          if(animated.top>50) animated.top=50
-          let extraWidth = animated.top - buttonsTop
-            return (
-              <div key={"disembark"} style={{cursor:"pointer",zIndex:199,position:'absolute',left:this.state.harborLocation-(75/2)+((extraWidth)/2),top:animated.top+150,opacity:buttonOpacity}} onClick={clickFn}>
-                <img src="disembark.png" style={{maxWidth:75-(extraWidth)}}/>
-              </div>
-            )
+            if(animated.top>50) animated.top=50
+            let extraWidth = animated.top - buttonsTop
+            let theLeft = this.state.harborLocation-(75/2)+((extraWidth)/2)
+            let theOpacity = buttonOpacity
+            if(!this.state.ship.inRangeToDisembark){
+              theOpacity=0.25
+              clickFn=()=>{
+                this.setState({bottomBar:0,bottomBarMessage:"You must be closer to the harbor to disembark.",bottomBarSize:28})
+                clearTimeout(bottomBarTimeout)
+                bottomBarTimeout = setTimeout(()=>{
+                  this.setState({bottomBar:-80})
+                },5000)
+              }
+            }
+            if(!theLeft){
+              return (<div></div>)
+            }else{
+              return (
+                <div key={"disembark"} style={{cursor:"pointer",zIndex:199,position:'absolute',left:theLeft,top:animated.top+150,opacity:theOpacity}} onClick={clickFn}>
+                  <img src="disembark.png" style={{maxWidth:75-(extraWidth)}}/>
+                </div>
+              )
+            }
           }
         )
       )
@@ -1105,6 +1186,26 @@ class App extends Component {
           }}
         </Motion>
 
+        <Motion
+          defaultStyle={{
+            bottom:-100
+          }}
+          style={{
+            bottom:spring(this.state.bottomBar,{ stiffness: 100, damping: 7 })
+          }}
+        >
+          {currentStyles => {
+            //console.log("currentStyles.scrollLeft",currentStyles.scrollLeft)
+            return (
+              <div style={{position:'fixed',left:window.innerWidth/2-400,paddingTop:30,textAlign:"center",bottom:currentStyles.bottom,opacity:1,backgroundImage:"url('bottomBar.png')",backgroundRepeat:'no-repeat',height:50,width:800}}>
+                <Writing style={{opacity:0.9}} string={this.state.bottomBarMessage} size={this.state.bottomBarSize}/>
+              </div>
+            )
+
+          }}
+        </Motion>
+
+
       </div>
     );
   }
@@ -1169,15 +1270,20 @@ function hasElements(a){
 }
 
 function isEquivalentAndNotEmpty(a, b) {
-    if((!a||!b)&&(a||b)) return false;
+    if((!a||!b)&&(a||b)) {
+      //console.log("something is blank")
+      return false;
+    }
     let aProps = Object.getOwnPropertyNames(a);
     let bProps = Object.getOwnPropertyNames(b);
     if (aProps.length != bProps.length) {
+      //console.log("prop length is a different ")
         return false;
     }
     for (var i = 0; i < aProps.length; i++) {
         var propName = aProps[i];
         if (a[propName] !== b[propName]) {
+          //  console.log("prop"+propName+" changed")
             return false;
         }
     }

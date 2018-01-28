@@ -1,5 +1,14 @@
 pragma solidity ^0.4.15;
 
+/*
+
+  https://galleass.io
+  by Austin Thomas Griffith
+
+  Dangler is a species of fish in Galleass.
+
+*/
+
 import 'Galleasset.sol';
 import 'zeppelin-solidity/contracts/ownership/HasNoEther.sol';
 import 'zeppelin-solidity/contracts/token/MintableToken.sol';

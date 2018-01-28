@@ -1,5 +1,16 @@
 pragma solidity ^0.4.15;
 
+/*
+
+  https://galleass.io
+  by Austin Thomas Griffith
+
+  The Sea contains fish and ships. Ships move east and west and cast their bait
+  in an attempt to catch a fish. The Sea requires a harbor for embarking and
+  disembarking.
+
+*/
+
 import 'Galleasset.sol';
 import 'zeppelin-solidity/contracts/ownership/HasNoEther.sol';
 

@@ -1,5 +1,16 @@
 pragma solidity ^0.4.15;
 
+/*
+
+  https://galleass.io
+  by Austin Thomas Griffith
+
+  The Land contract tracks all the procedurally generated islands in Galleass.
+
+  Tiles can be purchased and built upon.
+
+*/
+
 import 'Galleasset.sol';
 import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 

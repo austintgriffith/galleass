@@ -1,5 +1,16 @@
 pragma solidity ^0.4.15;
 
+/*
+
+  https://galleass.io
+  by Austin Thomas Griffith
+
+  The Fishmonger buys fish from players for Copper. It then butchers the fish
+  to produce Fillets. When a fish is butchered, it is actually restocked into
+  the Sea for other players to catch. 
+
+*/
+
 import 'Galleasset.sol';
 import 'zeppelin-solidity/contracts/ownership/HasNoEther.sol';
 

@@ -19,6 +19,6 @@ galleass.buildShip(1,"Dogger")
 galleass.approveContract("Timber",1,"Harbor",0)
 galleass.attemptToBuildShip(1,"Dogger")
 
-//make sure you can build ships in the harbor with timber again
+make sure you can build ships in the harbor with timber again
 galleass.approveContract("Timber",1,"Harbor",2)
 galleass.buildShip(1,"Dogger")

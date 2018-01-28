@@ -23,6 +23,7 @@ package-lock.json
 */*.address
 */*.run.xml
 */*.log.*
+*/*.compiled
 */*.blockNumber
 */node_modules
 /node_modules

@@ -1,9 +1,20 @@
 pragma solidity ^0.4.15;
 
+/*
+
+  https://galleass.io
+  by Austin Thomas Griffith
+
+  Copper is the main currency in Galleass.
+
+*/
+
+import 'Galleasset.sol';
+import 'ERC677Token.sol';
 import 'zeppelin-solidity/contracts/ownership/HasNoEther.sol';
 import 'zeppelin-solidity/contracts/token/MintableToken.sol';
-import 'ERC677Token.sol';
-import 'Galleasset.sol';
+
+
 
 contract Copper is Galleasset, HasNoEther, MintableToken, ERC677Token {
 

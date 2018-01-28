@@ -8,6 +8,12 @@ contract Galleasset {
     galleass=_galleass;
   }
 
+  function upgradeGalleass(address _galleass) public returns (bool) {
+    require(msg.sender == galleass);
+    galleass=_galleass;
+    return true;
+  }
+
   function getTokens(address _from,bytes32 _name,uint256 _amount) internal returns (bool) {
     return StandardTokenInterface(getContract(_name)).transferFrom(_from,address(this),_amount);
   }
