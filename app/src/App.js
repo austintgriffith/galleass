@@ -65,7 +65,7 @@ let inventoryTokens = [
   "Dangler",
 ]
 
-const GWEI = 0.1;
+const GWEI = 51;
 const GAS = 100000;
 const FISHINGBOAT = 0;
 const LOADERSPEED = 1237 //this * 24 should be close to a long block time
@@ -466,7 +466,7 @@ class App extends Component {
     //console.log("methods.embark(",this.state.inventoryDetail['Ships'][0])
     contracts["Sea"].methods.embark(this.state.inventoryDetail['Dogger'][0]).send({
       from: accounts[0],
-      gas:200000,
+      gas:250000,
       gasPrice:GWEI * 1000000000
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
@@ -652,7 +652,7 @@ class App extends Component {
       clearTimeout(bottomBarTimeout)
       bottomBarTimeout = setTimeout(()=>{
         this.setState({bottomBar:-80})
-      },5000)
+      },10000)
     }
   }
 
@@ -691,7 +691,7 @@ class App extends Component {
             clearTimeout(bottomBarTimeout)
             bottomBarTimeout = setTimeout(()=>{
               this.setState({bottomBar:-80})
-            },5000)
+            },10000)
           }else{
             this.setState({waitingForTransaction:false})
             ////do this to skip green loader (don't)
@@ -748,7 +748,7 @@ class App extends Component {
             clearTimeout(bottomBarTimeout)
             bottomBarTimeout = setTimeout(()=>{
               this.setState({bottomBar:-80})
-            },5000)
+            },10000)
           }
 
         },this.state.avgBlockTime*2)
@@ -1034,7 +1034,7 @@ class App extends Component {
                 clearTimeout(bottomBarTimeout)
                 bottomBarTimeout = setTimeout(()=>{
                   this.setState({bottomBar:-80})
-                },5000)
+                },10000)
               }
             }
             if(!theLeft){
