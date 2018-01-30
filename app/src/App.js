@@ -106,7 +106,7 @@ class App extends Component {
       zoom:"100%",
       bottomBar:-80,
       bottomBarSize:20,
-      bottomBarMessage:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789."
+      bottomBarMessage:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.:,"
     }
 
     setInterval(this.syncBlockNumber.bind(this),887)
@@ -801,6 +801,9 @@ class App extends Component {
       </Motion>
     )
   }
+  titleClick(){
+    console.log("Clicked Title")
+  }
   render() {
     let buttons = [];
     if(!this.state){
@@ -1174,7 +1177,7 @@ class App extends Component {
         {sea}
         {land}
         {galley}
-        <div style={{position:'fixed',left:0,top:0,zIndex:10,opacity:0.5}}>
+        <div style={{position:'fixed',left:0,top:0,zIndex:199,opacity:0.5}} onClick={this.titleClick.bind(this)}>
           <Writing string={titleString} size={60} space={5} letterSpacing={29}/>
         </div>
         <Motion
@@ -1211,6 +1214,28 @@ class App extends Component {
 
           }}
         </Motion>
+
+        <Motion
+          defaultStyle={{
+            top:-500
+          }}
+          style={{
+            top:spring(this.state.modal,{ stiffness: 100, damping: 7 })
+          }}
+        >
+          {currentStyles => {
+            //console.log("currentStyles.scrollLeft",currentStyles.scrollLeft)
+            return (
+              <div style={{zIndex:999,position:'fixed',left:window.innerWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
+                <Writing style={{opacity:0.9}} string={this.state.modalMessage} size={20}/>
+              </div>
+            )
+
+          }}
+        </Motion>
+
+
+
 
 
       </div>
