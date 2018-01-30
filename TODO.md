@@ -1,5 +1,5 @@
 # TODO
-
+[ ] left control bar until title that adjusts gas, links to main contract, links to ipfs, and links to github
 [ ] bug where buy ship button appears when it shouldn't both at load and after you buyship and you are waiting for embark button
 
 [ ] I'd like the offline demo to be less random... make sure that first page load shows big ships, little ships, clouds, village, etc

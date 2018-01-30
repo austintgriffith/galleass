@@ -20,10 +20,11 @@ pragma solidity ^0.4.18;
 
 */
 
-import 'Predecessor.sol';
-import 'Staged.sol';
-import 'zeppelin-solidity/contracts/ownership/HasNoEther.sol';
+
 import 'zeppelin-solidity/contracts/ownership/Contactable.sol';
+import 'zeppelin-solidity/contracts/ownership/HasNoEther.sol';
+import 'Staged.sol';
+import 'Predecessor.sol';
 
 contract Galleass is Staged, HasNoEther, Contactable, Predecessor{
 
