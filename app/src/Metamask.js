@@ -37,25 +37,23 @@ class Metamask extends Component {
                 if(this.state.metamask!=2) this.setState({metamask:2,network:network})
               } else{
 
-              if(this.props.account&&this.props.account!=accounts[0]){
-                window.location.reload(true);
-              }else{
-                if(this.state.metamask!=3) {
-                  let etherscan = "https://etherscan.io/"
-                  if(network=="Unknown"||network=="private"){
-                    etherscan = "http://localhost:8000/#/"
-                  }else if(network!="Mainnet"){
-                    etherscan = "https://"+network.toLowerCase()+".etherscan.io/"
+                if(this.props.account&&this.props.account!=accounts[0]){
+                  window.location.reload(true);
+                }else{
+                  if(this.state.metamask!=3) {
+                    let etherscan = "https://etherscan.io/"
+                    if(network=="Unknown"||network=="private"){
+                      etherscan = "http://localhost:8000/#/"
+                    }else if(network!="Mainnet"){
+                      etherscan = "https://"+network.toLowerCase()+".etherscan.io/"
+                    }
+                    this.props.setEtherscan(etherscan)
+
+                    this.setState({metamask:3,accounts:accounts,network:network},()=>{
+                      this.props.init(accounts[0])
+                    })
                   }
-                  this.props.setEtherscan(etherscan)
-
-                  this.setState({metamask:3,accounts:accounts,network:network},()=>{
-                    this.props.init(accounts[0])
-                  })
                 }
-              }
-
-
               }
             }
           })
@@ -73,7 +71,7 @@ class Metamask extends Component {
       metamask = (
         <a target="_blank"  href="https://metamask.io/">
         <span style={this.props.textStyle}>
-        Unable to connect to network
+          <Writing string={"Unable to connect to network"} size={20} space={5}/>
         </span>
         <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
         src="https://cdn.worldvectorlogo.com/logos/metamask.svg"
@@ -88,7 +86,7 @@ class Metamask extends Component {
       metamask = (
         <a target="_blank" href="https://metamask.io/">
         <span style={this.props.textStyle}>
-        Install MetaMask and reload to play
+          <Writing string={"Install MetaMask to play"} size={20} space={5}/>
         </span>
         <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
         src="https://cdn.worldvectorlogo.com/logos/metamask.svg"
@@ -100,7 +98,7 @@ class Metamask extends Component {
       metamask = (
         <div>
         <span style={this.props.textStyle}>
-        MetaMask is on the wrong network
+          <Writing string={"MetaMask is on the wrong network"} size={20} space={5}/>
         </span>
         <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
         src="https://cdn.worldvectorlogo.com/logos/metamask.svg"
@@ -112,7 +110,7 @@ class Metamask extends Component {
       metamask = (
         <div>
           <span style={this.props.textStyle}>
-            Unlock Metamask to play
+            <Writing string={"Unlock Metamask to play"} size={20} space={5}/>
           </span>
           <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
             src="https://cdn.worldvectorlogo.com/logos/metamask.svg"
@@ -124,7 +122,7 @@ class Metamask extends Component {
       metamask = (
         <div>
         <span style={this.props.textStyle}>
-        Error Connecting
+          <Writing string={"Error Connecting"} size={20} space={5}/>
         </span>
         <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
         src="https://cdn.worldvectorlogo.com/logos/metamask.svg"
