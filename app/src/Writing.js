@@ -51,6 +51,8 @@ let extraKern = (character,letterSpacing)=>{
     return letterSpacing*(0.5);
   }else if(character=="1"){
     return letterSpacing*(0.42);
+  }else if(character=="m"){
+    return letterSpacing*(-0.2);
   }else if(character=="."){
     return letterSpacing*(0.6);
   }else if(character=="i"){

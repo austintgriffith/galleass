@@ -106,8 +106,21 @@ class App extends Component {
       zoom:"100%",
       bottomBar:-80,
       bottomBarSize:20,
-      bottomBarMessage:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.:,"
+      bottomBarMessage:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.:,",
+      mapRightStart:(document.documentElement.clientWidth-300),
+      mapBottomStart:(document.documentElement.clientHeight-90),
+      mapUp:false,
+      mapScrollConfig:{stiffness: 96, damping: 14},
+      titleRightStart:20,
+      titleBottomStart:10,
+      titleScrollConfig:{stiffness: 30, damping: 8},
     }
+
+    this.state.titleRight = this.state.titleRightStart;
+    this.state.titleBottom = this.state.titleBottomStart;
+
+    this.state.mapRight = this.state.mapRightStart;
+    this.state.mapBottom = this.state.mapBottomStart;
 
     setInterval(this.syncBlockNumber.bind(this),887)
     try{
@@ -309,7 +322,7 @@ class App extends Component {
         myLocation = 4000 * getMyShip.location / 65535
         if(DEBUG_SYNCMYSHIP) console.log("myLocation",myLocation)
         //console.log("scrolling with zoom ",this.state.zoom)
-        let windowWidthWithZoom = (window.innerWidth) * zoomPercent
+        let windowWidthWithZoom = (document.documentElement.clientWidth) * zoomPercent
         if(veryFirstLoad){
           veryFirstLoad=false;
           setTimeout(()=>{
@@ -355,7 +368,7 @@ class App extends Component {
       console.log("Loading Harbor Location",this.state.landX,this.state.landY,contracts["Harbor"]._address)
       let harborLocation = await contracts["Land"].methods.getTileLocation(this.state.landX,this.state.landY,contracts["Harbor"]._address).call();
       if(harborLocation!=this.state.harborLocation){
-        this.setState({harborLocation:parseInt(harborLocation),scrollLeft:parseInt(harborLocation)-(window.innerWidth/2)})
+        this.setState({harborLocation:parseInt(harborLocation),scrollLeft:parseInt(harborLocation)-(document.documentElement.clientWidth/2)})
       }
     }
   }
@@ -803,6 +816,27 @@ class App extends Component {
   }
   titleClick(){
     console.log("Clicked Title")
+    if(this.state.mapUp){
+      this.setState({
+        mapUp:false,
+        mapRight:this.state.mapRightStart,
+        mapBottom:this.state.mapBottomStart,
+        titleRight:this.state.titleRightStart,
+        titleBottom:this.state.titleBottomStart,
+        bottomBar:-80,
+      })
+    }else{
+      this.setState({
+        mapUp:true,
+        mapRight:0,
+        mapBottom:0,
+        titleRight:document.documentElement.clientWidth/2-140,
+        titleBottom:document.documentElement.clientHeight-68,
+        bottomBar:0,
+        bottomBarMessage:"Here be monsters on the blockchain and scummy ICO thieves abound...",
+        bottomBarSize:24
+      })
+    }
   }
   render() {
     let buttons = [];
@@ -1166,8 +1200,9 @@ class App extends Component {
 
     if(this.state.contractsLoaded) clickScreenWhenNotLoggedIn=""
 
-    let titleString="Galleass.io"
-
+    //right:window.innerWidth,bottom:window.innerHeight
+    //width:window.innerWidth,height:window.innerHeight
+    console.log(this.state.titleRightStart)
     return (
       <div className="App" style={{zoom:this.state.zoom}}>
 
@@ -1177,9 +1212,49 @@ class App extends Component {
         {sea}
         {land}
         {galley}
-        <div style={{position:'fixed',left:0,top:0,zIndex:199,opacity:0.5}} onClick={this.titleClick.bind(this)}>
-          <Writing string={titleString} size={60} space={5} letterSpacing={29}/>
-        </div>
+        <Motion
+          defaultStyle={{
+            right:this.state.mapRightStart,
+            bottom:this.state.mapBottomStart,
+            titleRight:this.state.titleRightStart,
+            titleBottom:this.state.titleBottomStart
+          }}
+          style={{
+            right:spring(this.state.mapRight,this.state.mapScrollConfig),
+            bottom:spring(this.state.mapBottom,this.state.mapScrollConfig),
+            titleRight:spring(this.state.titleRight,this.state.titleScrollConfig),
+            titleBottom:spring(this.state.titleBottom,this.state.titleScrollConfig),
+          }}
+        >
+          {currentStyles => {
+            //currentStyles.titleStyle.right
+            //currentStyles.titleStyle.bottom
+            return (
+              <div style={{
+                position:'fixed',
+                right:currentStyles.right,
+                bottom:currentStyles.bottom,
+                width:document.documentElement.clientWidth,
+                height:document.documentElement.clientHeight,
+                backgroundColor:"#c5c3b9",
+                zIndex:300,
+                opacity:0.9
+              }}>
+                <div style={{position:'absolute',right:currentStyles.titleRight,bottom:currentStyles.titleBottom}} onClick={this.titleClick.bind(this)}>
+                  <Writing string={"Galleass.io"} size={60} space={5} letterSpacing={29}/>
+                </div>
+                <div style={{position:'absolute',left:0,top:0}}>
+                  <img style={{maxWidth:(document.documentElement.clientWidth/3)}} src={"topleftcorner.png"} />
+                </div>
+                <div style={{position:'absolute',right:0,top:0}}>
+                  <img style={{maxWidth:(document.documentElement.clientWidth/3)}} src={"toprightcorner.png"} />
+                </div>
+              </div>
+            )
+
+          }}
+        </Motion>
+
         <Motion
           defaultStyle={{
             scrollLeft:document.scrollingElement.scrollLeft
@@ -1207,7 +1282,7 @@ class App extends Component {
           {currentStyles => {
             //console.log("currentStyles.scrollLeft",currentStyles.scrollLeft)
             return (
-              <div style={{position:'fixed',left:window.innerWidth/2-400,paddingTop:30,textAlign:"center",bottom:currentStyles.bottom,opacity:1,backgroundImage:"url('bottomBar.png')",backgroundRepeat:'no-repeat',height:50,width:800}}>
+              <div style={{zIndex:400,position:'fixed',left:document.documentElement.clientWidth/2-400,paddingTop:30,textAlign:"center",bottom:currentStyles.bottom,opacity:1,backgroundImage:"url('bottomBar.png')",backgroundRepeat:'no-repeat',height:50,width:800}}>
                 <Writing style={{opacity:0.9}} string={this.state.bottomBarMessage} size={this.state.bottomBarSize}/>
               </div>
             )
@@ -1226,7 +1301,7 @@ class App extends Component {
           {currentStyles => {
             //console.log("currentStyles.scrollLeft",currentStyles.scrollLeft)
             return (
-              <div style={{zIndex:999,position:'fixed',left:window.innerWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
+              <div style={{zIndex:999,position:'fixed',left:document.documentElement.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
                 <Writing style={{opacity:0.9}} string={this.state.modalMessage} size={20}/>
               </div>
             )
