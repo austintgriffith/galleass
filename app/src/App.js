@@ -6,6 +6,8 @@
 */
 
 import React, { Component } from 'react';
+
+
 import './App.css';
 import galleassAddress from './Address.js'
 import galleassBlockNumber from './blockNumber.js'
@@ -28,6 +30,7 @@ import {Motion, spring, presets} from 'react-motion';
 //var smoothScroll = require('smoothscroll');
 //var Scroll  = require('react-scroll');
 //var scroll     = Scroll.animateScroll;
+//let DragScroll = require("DragScroll");
 var Web3 = require('web3');
 let width = 4000;
 let height = 1050;
@@ -108,16 +111,21 @@ class App extends Component {
       bottomBarSize:20,
       bottomBarMessage:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.:,",
       mapRightStart:(document.documentElement.clientWidth-300),
-      mapBottomStart:(document.documentElement.clientHeight-90),
+      mapBottomStart:(document.documentElement.clientHeight-80),
       mapUp:false,
+      mapOverflow:"hidden",
+      cornerOpacity:0,
       mapScrollConfig:{stiffness: 96, damping: 14},
       titleRightStart:20,
-      titleBottomStart:10,
-      titleScrollConfig:{stiffness: 30, damping: 8},
+      titleBottomStart:12,
+      titleScrollConfig:{stiffness: 60, damping: 14},
+      mapIconConfig:{stiffness: 60, damping: 10},
     }
 
     this.state.titleRight = this.state.titleRightStart;
     this.state.titleBottom = this.state.titleBottomStart;
+    this.state.titleBottomFaster = this.state.titleBottomStart;
+
 
     this.state.mapRight = this.state.mapRightStart;
     this.state.mapBottom = this.state.mapBottomStart;
@@ -137,6 +145,7 @@ class App extends Component {
     }
 
   }
+
   setEtherscan(url){
     this.setState({etherscan:url})
   }
@@ -819,21 +828,28 @@ class App extends Component {
     if(this.state.mapUp){
       this.setState({
         mapUp:false,
+        mapOverflow:"scroll",
+
+        cornerOpacity:0,
         mapRight:this.state.mapRightStart,
         mapBottom:this.state.mapBottomStart,
         titleRight:this.state.titleRightStart,
         titleBottom:this.state.titleBottomStart,
+        titleBottomFaster:this.state.titleBottomStart,
         bottomBar:-80,
       })
     }else{
       this.setState({
         mapUp:true,
+        mapOverflow:"hidden",
+        cornerOpacity:1,
         mapRight:0,
         mapBottom:0,
         titleRight:document.documentElement.clientWidth/2-140,
         titleBottom:document.documentElement.clientHeight-68,
+        titleBottomFaster:document.documentElement.clientHeight-68,
         bottomBar:0,
-        bottomBarMessage:"Here be monsters on the blockchain and scummy ICO thieves abound...",
+        bottomBarMessage:"Here be monsters on the blockchain...",
         bottomBarSize:24
       })
     }
@@ -1194,7 +1210,7 @@ class App extends Component {
     )
 
     let clickScreenWhenNotLoggedIn = (
-      <div style={{width:4000,height:1050,opacity:0.1,backgroundColor:"#FFFFFF",position:"absolute",left:0,top:60,zIndex:200}} onClick={this.metamaskHint.bind(this)}>
+      <div style={{width:4000,height:990,opacity:0.1,backgroundColor:"#FFFFFF",position:"absolute",left:0,top:60,zIndex:200}} onClick={this.metamaskHint.bind(this)}>
       </div>
     )
 
@@ -1217,38 +1233,96 @@ class App extends Component {
             right:this.state.mapRightStart,
             bottom:this.state.mapBottomStart,
             titleRight:this.state.titleRightStart,
-            titleBottom:this.state.titleBottomStart
+            titleBottom:this.state.titleBottomStart,
+            titleBottomFaster:this.state.titleBottomStart,
+            overflow:"hidden",
           }}
           style={{
             right:spring(this.state.mapRight,this.state.mapScrollConfig),
             bottom:spring(this.state.mapBottom,this.state.mapScrollConfig),
             titleRight:spring(this.state.titleRight,this.state.titleScrollConfig),
             titleBottom:spring(this.state.titleBottom,this.state.titleScrollConfig),
+            titleBottomFaster:spring(this.state.titleBottom,this.state.mapIconConfig),
+            overflow:this.state.mapOverflow,
           }}
         >
           {currentStyles => {
             //currentStyles.titleStyle.right
-            //currentStyles.titleStyle.bottom
+            //currentStyles.titleStyle.botto
+            ////<DragScroll height={65535} width={65535}>m
+            ////<D
+            ////<D
+            ////<D
+
+
+          //  console.log(this.state.land)
+            let currentTotal = 0
+            let islands = []
+            for(let i in this.state.land){
+              if(this.state.land[i]==0){
+                if(currentTotal>0){
+                  islands.push(currentTotal)
+                  currentTotal=0
+                }else{
+                  currentTotal=0
+                }
+              }else{
+                currentTotal++
+              }
+            }
+            if(currentTotal>0){
+              islands.push(currentTotal)
+            }
+            //console.log("islands",islands)
+            let offset = 0
+            let islandRender = islands.map((island)=>{
+              offset+=30
+              //console.log(island,"@",offset)
+              return (
+                <div style={{position:'absolute',left:100+offset,top:250}}>
+                  <img style={{maxWidth:70}} src={"island"+island+".png"} />
+                </div>
+              )
+            })
+
             return (
+
               <div style={{
                 position:'fixed',
                 right:currentStyles.right,
                 bottom:currentStyles.bottom,
                 width:document.documentElement.clientWidth,
                 height:document.documentElement.clientHeight,
-                backgroundColor:"#c5c3b9",
                 zIndex:300,
-                opacity:0.9
+                overflow:currentStyles.overflow,
               }}>
-                <div style={{position:'absolute',right:currentStyles.titleRight,bottom:currentStyles.titleBottom}} onClick={this.titleClick.bind(this)}>
-                  <Writing string={"Galleass.io"} size={60} space={5} letterSpacing={29}/>
-                </div>
-                <div style={{position:'absolute',left:0,top:0}}>
-                  <img style={{maxWidth:(document.documentElement.clientWidth/3)}} src={"topleftcorner.png"} />
-                </div>
-                <div style={{position:'absolute',right:0,top:0}}>
-                  <img style={{maxWidth:(document.documentElement.clientWidth/3)}} src={"toprightcorner.png"} />
-                </div>
+                  <div style={{
+                    width:65535,
+                    height:65535,
+                    backgroundImage:"url('maptexturelightfaded.jpg')",
+                  }}>
+
+                   {islandRender}
+
+                    <div style={{zIndex:2,marginBottom:-20,marginRight:-10,position:'absolute',right:currentStyles.titleRight,bottom:currentStyles.titleBottom}} onClick={this.titleClick.bind(this)}>
+                      <Writing string={"Galleass.io"} size={60} space={5} letterSpacing={29}/>
+                    </div>
+                    <div style={{position:'absolute',left:0,top:0}}>
+                      <img style={{maxWidth:(document.documentElement.clientWidth/5)}} src={"topleftcorner.png"} />
+                    </div>
+                    <div style={{position:'absolute',right:0,top:0}}>
+                      <img style={{maxWidth:(document.documentElement.clientWidth/5)}} src={"toprightcorner.png"} />
+                    </div>
+                    <div style={{position:'absolute',opacity:this.state.cornerOpacity,right:0,bottom:-4}} onClick={this.titleClick.bind(this)}>
+                      <img src={"corner.png"} />
+                    </div>
+                    <div style={{zIndex:1,position:'fixed',opacity:1-this.state.cornerOpacity,top:currentStyles.titleBottomFaster-20,left:-20}} onClick={this.titleClick.bind(this)}>
+                      <img src={"mapicon.png"} />
+                    </div>
+                    <div style={{position:'absolute',opacity:this.state.cornerOpacity,left:10,bottom:10}} onClick={this.titleClick.bind(this)}>
+                      <img src={"compass.png"} />
+                    </div>
+                  </div>
               </div>
             )
 

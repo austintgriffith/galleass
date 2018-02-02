@@ -24,6 +24,8 @@ class Writing extends Component {
         image = image+"comma.png"
       }else if(character == ":"){
         image = image+"colon.png"
+      }else if(character == "-"){
+        image = image+"dash.png"
       }else if (character == character.toUpperCase()) {
         image = image+character+".png"
       }else{
