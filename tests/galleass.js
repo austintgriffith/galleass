@@ -738,6 +738,10 @@ module.exports = {
         await clevis("sendTo","0.1","0","0x627306090abab3a6e1400e9345bc60c78a8bef57")
         await clevis("sendTo","0.1","0","0xf17f52151ebef6c7334fad080c5704d77216b732")
 
+        //firefox
+        await clevis("sendTo","0.1","0","0x368ac29da7cc48a202560ead1f3c9b6ea31e453e")
+        await clevis("sendTo","0.1","0","0xd4EfC0E10D1cAba22513Ff04DA254d68a3e78EEF")
+
 
       });
     });

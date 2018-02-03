@@ -33,6 +33,10 @@ contract Land is Galleasset, Ownable {
   mapping (uint16 => mapping (uint16 => address[18])) public ownerAt;
   mapping (uint16 => mapping (uint16 => uint256[18])) public priceAt;
 
+  mapping (uint16 => mapping (uint16 => uint16)) public totalWidth;
+
+
+
   function Land(address _galleass) public Galleasset(_galleass) {
     //this is mainly just for human reference and to make it easier to track tiles mentally
     //it's expensive and probably won't be included in production contracts
@@ -102,6 +106,8 @@ contract Land is Galleasset, Ownable {
       mainY=y;
     }
 
+    totalWidth[x][y] = getTotalWidth(x,y);
+
     LandGenerated(x,y);
   }
   event LandGenerated(uint16 _x,uint16 _y);
@@ -162,6 +168,10 @@ contract Land is Galleasset, Ownable {
     return true;
   }
 
+  function getTile(uint16 _x,uint16 _y,uint8 _index) public constant returns (uint16 _tile,address _contract,address _owner,uint256 _price) {
+    return (tileTypeAt[_x][_y][_index],contractAt[_x][_y][_index],ownerAt[_x][_y][_index],priceAt[_x][_y][_index]);
+  }
+
   function getTileLocation(uint16 _x,uint16 _y,address _address) public constant returns (uint16) {
     uint8 tileIndex = findTileByAddress(_x,_y,_address);
     if(tileIndex==255) return 0;
@@ -182,7 +192,7 @@ contract Land is Galleasset, Ownable {
     }
     widthOffset = widthOffset+(translateTileToWidth(tileTypeAt[_x][_y][tileIndex])/2);
 
-    uint16 halfTotalWidth = getTotalWidth(_x,_y)/2;
+    uint16 halfTotalWidth = totalWidth[_x][_y]/2;
     return 2000 - halfTotalWidth + widthOffset;
   }
 

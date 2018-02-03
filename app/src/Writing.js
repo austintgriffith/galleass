@@ -12,11 +12,25 @@ class Writing extends Component {
     //console.log("letterSpacing for size",size,letterSpacing)
     let word = [];
     let usedChars = [];
+    let extraSpace = 0;
     let string = ""+(this.props.string);
     for (var i = 0; i < string.length; i++) {
+      extraSpace=0
       let character = string.charAt(i);
       let image = "handwritten/";
-      if(character == " "){
+      if(character == "#"){
+        let thisImage = ""
+        i++;
+        character = string.charAt(i);
+        while( character!=" " && character!="." && i < string.length ){
+          thisImage+=character;
+          i++;
+          character = string.charAt(i);
+        }
+        //console.log("DISPLAY IMAGE",thisImage)
+        extraSpace=-20
+        image = "../"+thisImage.toLowerCase()+".png"
+      }else if(character == " "){
         image = image+"space.png"
       }else if(character == "."){
         image = image+"dot.png"
@@ -24,6 +38,8 @@ class Writing extends Component {
         image = image+"comma.png"
       }else if(character == ":"){
         image = image+"colon.png"
+      }else if(character == "-"){
+        image = image+"dash.png"
       }else if (character == character.toUpperCase()) {
         image = image+character+".png"
       }else{
@@ -34,7 +50,7 @@ class Writing extends Component {
         }
       }
       word.push(
-        <img style={{maxHeight:size,marginRight:letterSpacing+extraKern(character,letterSpacing)}} src={image} />
+        <img style={{maxHeight:size,marginRight:letterSpacing+extraKern(character,letterSpacing+extraSpace)}} src={image} />
       )
       usedChars.push(character);
     }
@@ -51,6 +67,8 @@ let extraKern = (character,letterSpacing)=>{
     return letterSpacing*(0.5);
   }else if(character=="1"){
     return letterSpacing*(0.42);
+  }else if(character=="m"){
+    return letterSpacing*(-0.2);
   }else if(character=="."){
     return letterSpacing*(0.6);
   }else if(character=="i"){
