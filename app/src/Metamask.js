@@ -110,7 +110,7 @@ class Metamask extends Component {
       metamask = (
         <div>
           <span style={this.props.textStyle}>
-            <Writing string={"Unlock Metamask to play"} size={20} space={5}/>
+            <Writing string={"Unlock MetaMask to play"} size={20} space={5}/>
           </span>
           <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
             src="https://cdn.worldvectorlogo.com/logos/metamask.svg"

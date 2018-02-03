@@ -127,8 +127,8 @@ contract Sea is Galleasset, HasNoEther {
   }
 
   function inRangeToDisembark(address _account) public constant returns (bool) {
+    if(ships[_account].location==0 || !ships[_account].floating) return false;
     uint16 harborLocation = getHarborLocation();
-    if(ships[_account].location==0) return false;
     if(ships[_account].location >= harborLocation){
       return ((ships[_account].location-harborLocation) < 3000);
     }else{
@@ -335,6 +335,7 @@ contract Land {
   uint16 public mainX;
   uint16 public mainY;
   function getTileLocation(uint16 _x,uint16 _y,address _address) public constant returns (uint16) { }
+  function findTileByAddress(uint16 _x,uint16 _y,address _address) public constant returns (uint8) { }
 }
 
 contract NFT {

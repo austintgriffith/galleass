@@ -185,6 +185,13 @@ class Land extends Component {
       </div>
     )
   }
+  wrapLandTileWithLink(name,index,location,tileCode){
+    return (
+      <div style={{cursor:"pointer"}} onClick={this.props.tileClick.bind(this,name,index,location)}>
+        {tileCode}
+      </div>
+    )
+  }
   render(){
     let DEBUGLANDRENDER = false;
     if(this.props.land){
@@ -207,7 +214,7 @@ class Land extends Component {
           }
           islands[islandCount++]=1
         }else{
-          tempIsland.push(thisTile)
+          tempIsland.push({tile:thisTile,index:l})
           if(!buildingIsland){
             buildingIsland=true;
           }
@@ -224,8 +231,11 @@ class Land extends Component {
       let tiles = [];
 
       for(let i in islands){
+      //  console.log("islands[i]",islands[i])
+
         if(typeof islands[i] == "number"){
           //ocean
+          if(DEBUGLANDRENDER) console.log("(WATER)")
           currentPixelLocation+=95
         }else{
           if(DEBUGLANDRENDER) console.log("LEFT EDGE")
@@ -233,42 +243,89 @@ class Land extends Component {
           currentPixelLocation+=114
           for(let t in islands[i]){
             if(DEBUGLANDRENDER) console.log("ADD TILE",islands[i][t])
-            if(islands[i][t]==1){
-              tiles.push(this.hillsMain(currentPixelLocation))
+            if(islands[i][t].tile==1){
+              tiles.push(
+                this.wrapLandTileWithLink("Grass",islands[i][t].index,currentPixelLocation,
+                  this.hillsMain(currentPixelLocation)
+                )
+              )
               currentPixelLocation+=120
-            }else if(islands[i][t]==2){
-              tiles.push(this.grassMain(currentPixelLocation))
+            }else if(islands[i][t].tile==2){
+              tiles.push(
+                this.wrapLandTileWithLink("Grass",islands[i][t].index,currentPixelLocation,
+                  this.grassMain(currentPixelLocation)
+                )
+              )
               currentPixelLocation+=120
-            }else if(islands[i][t]==3){
-              tiles.push(this.streamMain(currentPixelLocation))
+            }else if(islands[i][t].tile==3){
+              tiles.push(
+                this.wrapLandTileWithLink("Stream",islands[i][t].index,currentPixelLocation,
+                  this.streamMain(currentPixelLocation)
+                )
+              )
               currentPixelLocation+=120
-            }else if(islands[i][t]==50){
-              tiles.push(this.landTile(currentPixelLocation,"grass"))
+            }else if(islands[i][t].tile==50){
+              tiles.push(
+                this.wrapLandTileWithLink("Grass Resource",islands[i][t].index,currentPixelLocation,
+                  this.landTile(currentPixelLocation,"grass")
+                )
+              )
               currentPixelLocation+=87
-            }else if(islands[i][t]==51){
-              tiles.push(this.landTile(currentPixelLocation,"forest"))
+            }else if(islands[i][t].tile==51){
+              tiles.push(
+                this.wrapLandTileWithLink("Forest Resource",islands[i][t].index,currentPixelLocation,
+                  this.landTile(currentPixelLocation,"forest")
+                )
+              )
               currentPixelLocation+=87
-            }else if(islands[i][t]==52){
-              tiles.push(this.landTile(currentPixelLocation,"mountain"))
+            }else if(islands[i][t].tile==52){
+              tiles.push(
+                this.wrapLandTileWithLink("Mountain Resource",islands[i][t].index,currentPixelLocation,
+                  this.landTile(currentPixelLocation,"mountain")
+                )
+              )
               currentPixelLocation+=87
-            }else if(islands[i][t]==53){
-              tiles.push(this.landTile(currentPixelLocation,"coppermountain"))
+            }else if(islands[i][t].tile==53){
+              tiles.push(
+                this.wrapLandTileWithLink("Copper Mountain Resource",islands[i][t].index,currentPixelLocation,
+                  this.landTile(currentPixelLocation,"coppermountain")
+                )
+              )
               currentPixelLocation+=87
-            }else if(islands[i][t]==54){
-              tiles.push(this.landTile(currentPixelLocation,"silvermountain"))
+            }else if(islands[i][t].tile==54){
+              tiles.push(
+                this.wrapLandTileWithLink("Silver Mountain Resource",islands[i][t].index,currentPixelLocation,
+                  this.landTile(currentPixelLocation,"silvermountain")
+                )
+              )
               currentPixelLocation+=87
-            }else if(islands[i][t]==100){
-              //console.log("harbor is at "+currentPixelLocation)
-              tiles.push(this.harborTile(currentPixelLocation,"0x34aA3F359A9D614239015126635CE7732c18fDF3"))
+            }else if(islands[i][t].tile==100){
+              tiles.push(
+                this.wrapLandTileWithLink("Harbor",islands[i][t].index,currentPixelLocation,
+                  this.harborTile(currentPixelLocation,"0x34aA3F359A9D614239015126635CE7732c18fDF3")
+                )
+              )
               currentPixelLocation+=120
-            }else if(islands[i][t]==101){
-              tiles.push(this.fishMongerTile(currentPixelLocation,"0x34aA3F359A9D614239015126635CE7732c18fDF3"))
+            }else if(islands[i][t].tile==101){
+              tiles.push(
+                this.wrapLandTileWithLink("Fishmonger",islands[i][t].index,currentPixelLocation,
+                  this.fishMongerTile(currentPixelLocation,"0x34aA3F359A9D614239015126635CE7732c18fDF3")
+                )
+              )
               currentPixelLocation+=120
-            }else if(islands[i][t]==102){
-              tiles.push(this.grassTile(currentPixelLocation,"0x34aA3F359A9D614239015126635CE7732c18fDF3"))
+            }else if(islands[i][t].tile==102){
+              tiles.push(
+                this.wrapLandTileWithLink("Castle",islands[i][t].index,currentPixelLocation,
+                  this.castleTile(currentPixelLocation,"0x34aA3F359A9D614239015126635CE7732c18fDF3")
+                )
+              )
               currentPixelLocation+=120
-            }else if(islands[i][t]==2000){
-              tiles.push(this.villageTile(currentPixelLocation,"0x34aA3F359A9D614239015126635CE7732c18fDF3"))
+            }else if(islands[i][t].tile==2000){
+              tiles.push(
+                this.wrapLandTileWithLink("Village",islands[i][t].index,currentPixelLocation,
+                  this.villageTile(currentPixelLocation,"0x34aA3F359A9D614239015126635CE7732c18fDF3")
+                )
+              )
               currentPixelLocation+=120
             }
 

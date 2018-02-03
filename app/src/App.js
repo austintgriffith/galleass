@@ -6,7 +6,7 @@
 */
 
 import React, { Component } from 'react';
-
+import Draggable from 'react-draggable';
 
 import './App.css';
 import galleassAddress from './Address.js'
@@ -67,8 +67,9 @@ let inventoryTokens = [
   "Snark",
   "Dangler",
 ]
-
-const GWEI = 51;
+const MINGWEI = 0.1
+const MAXGWEI = 151
+const STARTINGGWEI = 51;
 const GAS = 100000;
 const FISHINGBOAT = 0;
 const LOADERSPEED = 1237 //this * 24 should be close to a long block time
@@ -93,6 +94,9 @@ class App extends Component {
     super(props);
 
     this.state = {
+      mapScale:1,
+      GWEI:STARTINGGWEI,
+      gweiOpacity:0.3,
       etherscan:"https://etherscan.io/",
       scrollLeft:0,
       scrollConfig:{stiffness: 80, damping: 20},
@@ -110,6 +114,8 @@ class App extends Component {
       bottomBar:-80,
       bottomBarSize:20,
       bottomBarMessage:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.:,",
+      modalHeight:-600,
+      modalObject:{name:"Loading..."},
       mapRightStart:(document.documentElement.clientWidth-300),
       mapBottomStart:(document.documentElement.clientHeight-80),
       mapUp:false,
@@ -120,6 +126,9 @@ class App extends Component {
       titleBottomStart:12,
       titleScrollConfig:{stiffness: 60, damping: 14},
       mapIconConfig:{stiffness: 60, damping: 10},
+      clickScreenWidth:document.documentElement.clientWidth,
+      clickScreenHeight:document.documentElement.clientHeight,
+      clickScreenTop:0,
     }
 
     this.state.titleRight = this.state.titleRightStart;
@@ -152,6 +161,11 @@ class App extends Component {
   init(account) {
     console.log("Init "+account+"...")
     this.setState({account:account})
+    this.setState({bottomBar:0,bottomBarMessage:"Stage 1: Use a #Dogger  Dogger to catch #Fish  Fish then sell them for #Copper  Copper.",bottomBarSize:23})
+    clearTimeout(bottomBarTimeout)
+    bottomBarTimeout = setTimeout(()=>{
+      this.setState({bottomBar:-80})
+    },30000)
   }
 
   async sync(name,doSyncFn,CRAWLBACKDELAY,SYNCINVERVAL) {
@@ -342,10 +356,10 @@ class App extends Component {
         }
 
       }
-      console.log("SHIP UPDATE ",getMyShip)
+      //console.log("SHIP UPDATE ",getMyShip)
       try{
         getMyShip.inRangeToDisembark = await contracts["Sea"].methods.inRangeToDisembark(accounts[0]).call();
-        console.log("getMyShip.inRangeToDisembark",getMyShip.inRangeToDisembark)
+        //console.log("getMyShip.inRangeToDisembark",getMyShip.inRangeToDisembark)
       }catch(e){console.log("ERROR checking inRangeToDisembark",e)}
       this.setState({zoom:"100%",loading:0,ship:getMyShip,waitingForShipUpdate:false,myLocation:myLocation},()=>{
         //if(DEBUG_SYNCMYSHIP)
@@ -441,7 +455,7 @@ class App extends Component {
             value: currentPrice,
             from: accounts[0],
             gas:90000,
-            gasPrice:GWEI * 1000000000
+            gasPrice:this.state.GWEI * 1000000000
           },(error,hash)=>{
             console.log("CALLBACK!",error,hash)
             this.setState({currentTx:hash});
@@ -468,7 +482,7 @@ class App extends Component {
     contracts["Sea"].methods.disembark(this.state.ships[this.state.account].id).send({
       from: accounts[0],
       gas:200000,
-      gasPrice:GWEI * 1000000000
+      gasPrice:this.state.GWEI * 1000000000
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
       this.setState({currentTx:hash});
@@ -489,7 +503,7 @@ class App extends Component {
     contracts["Sea"].methods.embark(this.state.inventoryDetail['Dogger'][0]).send({
       from: accounts[0],
       gas:250000,
-      gasPrice:GWEI * 1000000000
+      gasPrice:this.state.GWEI * 1000000000
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
       this.setState({currentTx:hash});
@@ -510,7 +524,7 @@ class App extends Component {
     contracts["Fishmonger"].methods.sellFish(fishContract._address,1).send({
       from: accounts[0],
       gas:210000,
-      gasPrice:GWEI * 1000000000
+      gasPrice:this.state.GWEI * 1000000000
     },/*(error,hash)=>{
       console.log("CALLBACK!",error,hash)
       this.setState({currentTx:hash});
@@ -529,7 +543,7 @@ class App extends Component {
       contracts["Sea"].methods.setSail(direction).send({
         from: _accounts[0],
         gas:40000,
-        gasPrice:GWEI * 1000000000
+        gasPrice:this.state.GWEI * 1000000000
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
         this.setState({currentTx:hash});
@@ -550,7 +564,7 @@ class App extends Component {
       contracts["Sea"].methods.dropAnchor().send({
         from: _accounts[0],
         gas:40000,
-        gasPrice:GWEI * 1000000000
+        gasPrice:this.state.GWEI * 1000000000
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
         this.setState({currentTx:hash});
@@ -573,7 +587,7 @@ class App extends Component {
       contracts["Sea"].methods.castLine(baitHash).send({
         from: _accounts[0],
         gas:60000,
-        gasPrice:GWEI * 1000000000
+        gasPrice:this.state.GWEI * 1000000000
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
         this.setState({currentTx:hash});
@@ -644,7 +658,7 @@ class App extends Component {
       contracts["Sea"].methods.reelIn(bestId,baitToUse).send({
         from: _accounts[0],
         gas:100000,
-        gasPrice:GWEI * 1000000000
+        gasPrice:this.state.GWEI * 1000000000
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
         this.setState({currentTx:hash});
@@ -670,7 +684,7 @@ class App extends Component {
       this.setState({loading:0,waitingForTransaction:false})
       clearInterval(txWaitIntervals["loader"])
       clearInterval(txWaitIntervals[this.state.currentTx])
-      this.setState({bottomBar:0,bottomBarMessage:"Warning: your transaction might not get mined, try increasing your gas price.",bottomBarSize:20})
+      this.setState({bottomBar:0,bottomBarMessage:"Warning: your transaction might not get mined, try increasing your #gas  gas price.",bottomBarSize:20})
       clearTimeout(bottomBarTimeout)
       bottomBarTimeout = setTimeout(()=>{
         this.setState({bottomBar:-80})
@@ -709,7 +723,7 @@ class App extends Component {
           if(receipt.status=="0x0"){
             //this.state.waitingForTransaction || this.state.waitingForShipUpdate || this.state.waitingForInventoryUpdate
             this.setState({loading:0,waitingForTransaction:false,waitingForShipUpdate:false,waitingForInventoryUpdate:false})
-            this.setState({bottomBar:0,bottomBarMessage:"Warning: Transaction failed. Try again with a higher gas price.",bottomBarSize:24})
+            this.setState({bottomBar:0,bottomBarMessage:"Warning: Transaction failed. Try again with a higher #gas  gas price.",bottomBarSize:24})
             clearTimeout(bottomBarTimeout)
             bottomBarTimeout = setTimeout(()=>{
               this.setState({bottomBar:-80})
@@ -766,7 +780,7 @@ class App extends Component {
             clearInterval(txWaitIntervals[hash]);
             this.setState({loading:0,waitingForTransaction:false})
             clearInterval(txWaitIntervals["loader"])
-            this.setState({bottomBar:0,bottomBarMessage:"Warning: Your transaction is taking a long time, try increasing your gas price.",bottomBarSize:20})
+            this.setState({bottomBar:0,bottomBarMessage:"Warning: Your transaction is taking a long time, try increasing your #gas  gas price.",bottomBarSize:20})
             clearTimeout(bottomBarTimeout)
             bottomBarTimeout = setTimeout(()=>{
               this.setState({bottomBar:-80})
@@ -780,7 +794,7 @@ class App extends Component {
   startEventSync() {
     console.log("Finished loading contracts and block number, start syncing events...",this.state.blockNumber)
     clearInterval(waitInterval);
-    this.setState({avgBlockTime:15000,contractsLoaded:true})
+    this.setState({avgBlockTime:15000,contractsLoaded:true,clickScreenTop:-90000})
     //dev loop only...
     //setInterval(this.syncContacts.bind(this),4001)
     //this.syncContacts()
@@ -852,6 +866,59 @@ class App extends Component {
         bottomBarMessage:"Here be monsters on the blockchain...",
         bottomBarSize:24
       })
+    }
+  }
+  async tileClick(name,index,px) {
+    console.log("TILE CLICK",name,index,px)
+    let tile = await contracts['Land'].methods.getTile(this.state.landX,this.state.landY,index).call();
+    let modalObject = {
+      name:name,
+      contract:tile._contract,
+      owner:tile._owner,
+      price:tile._price,
+      index:index,
+      px:px
+    }
+    console.log("modalObject",modalObject)
+    this.setState({
+      modalObject:modalObject,
+      modalHeight:180,
+      clickScreenTop:0
+    })
+  }
+  clickScreenClick(){
+    if(this.state.modalHeight>=0){
+      //click screen is up for modal
+      this.setState({modalHeight:-600,clickScreenTop:-5000})
+    }else{
+      this.metamaskHint()
+    }
+  }
+  handleWhiskeyStart(){
+    this.setState({gweiOpacity:0.8})
+  }
+  handleWhiskeyStop(){
+    this.setState({gweiOpacity:0.3})
+  }
+  handleWhiskeyDrag(mouse,obj){
+    let currentPercent = obj.x + (STARTINGGWEI/MAXGWEI*100);
+    let actualGWEI = Math.round(currentPercent/100 * MAXGWEI,1);
+    if(actualGWEI<MINGWEI) actualGWEI=MINGWEI;
+    if(actualGWEI>MAXGWEI) actualGWEI=MAXGWEI;
+    this.setState({GWEI:actualGWEI})
+  }
+  mapWheel(obj,b,c){
+    if(this.state.mapUp){
+      let scaleTo=1.0;
+      if(obj.deltaY>0){
+        scaleTo = Math.round((this.state.mapScale+0.05)*100)/100
+      }else{
+        scaleTo = Math.round((this.state.mapScale-0.05)*100)/100
+      }
+      console.log("SCALE TO",scaleTo)
+      this.setState({mapScale:scaleTo})
+      obj.stopPropagation()
+      obj.preventDefault()
     }
   }
   render() {
@@ -1179,7 +1246,7 @@ class App extends Component {
 
     let land = (
       <div style={{position:"absolute",left:0,top:horizon-60,width:width}} >
-        <Land land={this.state.land} Blockies={Blockies} />
+        <Land land={this.state.land} Blockies={Blockies} tileClick={this.tileClick.bind(this)}/>
       </div>
     )
 
@@ -1209,20 +1276,20 @@ class App extends Component {
       </div>
     )
 
-    let clickScreenWhenNotLoggedIn = (
-      <div style={{width:4000,height:990,opacity:0.1,backgroundColor:"#FFFFFF",position:"absolute",left:0,top:60,zIndex:200}} onClick={this.metamaskHint.bind(this)}>
+    let clickScreen = (
+      <div style={{width:this.state.clickScreenWidth,height:this.state.clickScreenHeight,opacity:0.5,backgroundColor:"#000000",position:"fixed",left:0,top:this.state.clickScreenTop,zIndex:899}} onClick={this.clickScreenClick.bind(this)}>
       </div>
     )
 
-    if(this.state.contractsLoaded) clickScreenWhenNotLoggedIn=""
+    ///if(this.state.contractsLoaded) clickScreenWhenNotLoggedIn=""
 
     //right:window.innerWidth,bottom:window.innerHeight
     //width:window.innerWidth,height:window.innerHeight
-    console.log(this.state.titleRightStart)
+    //console.log(this.state.titleRightStart)
     return (
       <div className="App" style={{zoom:this.state.zoom}}>
 
-        {clickScreenWhenNotLoggedIn}
+        {clickScreen}
         {menu}
         {inventory}
         {sea}
@@ -1247,14 +1314,6 @@ class App extends Component {
           }}
         >
           {currentStyles => {
-            //currentStyles.titleStyle.right
-            //currentStyles.titleStyle.botto
-            ////<DragScroll height={65535} width={65535}>m
-            ////<D
-            ////<D
-            ////<D
-
-
           //  console.log(this.state.land)
             let currentTotal = 0
             let islands = []
@@ -1279,11 +1338,193 @@ class App extends Component {
               offset+=30
               //console.log(island,"@",offset)
               return (
-                <div style={{position:'absolute',left:100+offset,top:250}}>
+                <div style={{position:'absolute',left:700+offset,top:500}}>
                   <img style={{maxWidth:70}} src={"island"+island+".png"} />
                 </div>
               )
             })
+
+            //add in some filler islands for now
+            /// the land is generated, it's just hard to display so far
+            let fakelocationx
+            let fakelocationy
+            offset = 0
+            fakelocationx = 800
+            fakelocationy = 600
+            let island2 = []
+            offset+=30
+            island2.push(
+              <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+                <img style={{maxWidth:70}} src={"island3.png"} />
+              </div>
+            )
+            offset+=30
+            island2.push(
+              <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+                <img style={{maxWidth:70}} src={"island7.png"} />
+              </div>
+            )
+            offset+=30
+            island2.push(
+              <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+                <img style={{maxWidth:70}} src={"island2.png"} />
+              </div>
+            )
+
+            offset = 0
+            fakelocationx = 180
+            fakelocationy = 450
+            let island3 = []
+            offset+=30
+            island3.push(
+              <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+                <img style={{maxWidth:70}} src={"island3.png"} />
+              </div>
+            )
+            offset+=30
+            island3.push(
+              <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+                <img style={{maxWidth:70}} src={"island11.png"} />
+              </div>
+            )
+            offset+=30
+            island3.push(
+              <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+                <img style={{maxWidth:70}} src={"island6.png"} />
+              </div>
+            )
+
+            offset = 0
+            fakelocationx = 754
+            fakelocationy = 234
+            let island4 = []
+            offset+=30
+            island4.push(
+              <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+                <img style={{maxWidth:70}} src={"island14.png"} />
+              </div>
+            )
+            offset+=30
+            island4.push(
+              <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+                <img style={{maxWidth:70}} src={"island2.png"} />
+              </div>
+            )
+            offset+=30
+            island4.push(
+              <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+                <img style={{maxWidth:70}} src={"island1.png"} />
+              </div>
+            )
+            offset+=30
+            island4.push(
+              <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+                <img style={{maxWidth:70}} src={"island8.png"} />
+              </div>
+            )
+
+            offset = 0
+            fakelocationx = 312
+            fakelocationy = 321
+            let island5 = []
+            offset+=30
+            island5.push(
+              <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+                <img style={{maxWidth:70}} src={"island16.png"} />
+              </div>
+            )
+            offset+=30
+            island5.push(
+              <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+                <img style={{maxWidth:70}} src={"island2.png"} />
+              </div>
+            )
+            offset+=30
+            island5.push(
+              <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+                <img style={{maxWidth:70}} src={"island13.png"} />
+              </div>
+            )
+            offset+=30
+            island5.push(
+              <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+                <img style={{maxWidth:70}} src={"island8.png"} />
+              </div>
+            )
+            offset+=30
+            island5.push(
+              <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+                <img style={{maxWidth:70}} src={"island8.png"} />
+              </div>
+            )
+
+            offset = 0
+            fakelocationx = 140
+            fakelocationy = 280
+            let island6 = []
+            offset+=30
+            island6.push(
+              <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+                <img style={{maxWidth:70}} src={"island1.png"} />
+              </div>
+            )
+            offset+=30
+            island6.push(
+              <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+                <img style={{maxWidth:70}} src={"island4.png"} />
+              </div>
+            )
+            offset+=30
+            island6.push(
+              <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+                <img style={{maxWidth:70}} src={"island2.png"} />
+              </div>
+            )
+            offset+=30
+            island6.push(
+              <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+                <img style={{maxWidth:70}} src={"island3.png"} />
+              </div>
+            )
+
+
+
+            let startingPercent = STARTINGGWEI / MAXGWEI
+            let startingPixels = startingPercent*100
+            let rightSideRoom = 100-startingPixels
+            let gasOffset = 16;
+            let gasDragger = (
+              <div>
+
+                <div style={{position:'absolute',left:182+gasOffset,top:105,opacity:this.state.gweiOpacity*2/3}}>
+                  <Writing string={"cheap"} size={12}/>
+                </div>
+                <div style={{position:'absolute',left:212+gasOffset,top:110,opacity:this.state.gweiOpacity}}>
+                  <Writing string={this.state.GWEI+" gwei"} size={16}/>
+                </div>
+                <div style={{position:'absolute',left:270+gasOffset,top:105,opacity:this.state.gweiOpacity*2/3}}>
+                  <Writing string={"fast"} size={12}/>
+                </div>
+                <div style={{
+                  width:100,
+                  height:9,
+                  backgroundImage:"url('gasbar.png')",
+                  position:"absolute",left:190+gasOffset,top:92,opacity:this.state.gweiOpacity*1.6
+                }}></div>
+                <Draggable axis="x" bounds={{left:startingPixels*-1,right:rightSideRoom}}
+                  onDrag={this.handleWhiskeyDrag.bind(this)}
+                  onStart={this.handleWhiskeyStart.bind(this)}
+                  onStop={this.handleWhiskeyStop.bind(this)}
+                >
+                  <div style={{
+                    width:25,
+                    height:35,
+                    backgroundImage:"url('whiskeystrength.png')",
+                    position:"absolute",left:177+startingPixels+gasOffset,top:77
+                  }}></div>
+                </Draggable>
+              </div>
+            )
 
             return (
 
@@ -1296,34 +1537,64 @@ class App extends Component {
                 zIndex:300,
                 overflow:currentStyles.overflow,
               }}>
-                  <div style={{
-                    width:65535,
-                    height:65535,
-                    backgroundImage:"url('maptexturelightfaded.jpg')",
-                  }}>
 
-                   {islandRender}
+                    <div style={{
+                      width:6500,
+                      height:6500,
+                    }} onWheel = {this.mapWheel.bind(this)}>
+                    <div style={{
+                      width:6500,
+                      height:6500,
+                      /*transform:"scale("+this.state.mapScale+")",*/
+                    }}>
+                      <Draggable bounds={{right:300,left:-6200,bottom:100,top:-6400}}>
 
-                    <div style={{zIndex:2,marginBottom:-20,marginRight:-10,position:'absolute',right:currentStyles.titleRight,bottom:currentStyles.titleBottom}} onClick={this.titleClick.bind(this)}>
-                      <Writing string={"Galleass.io"} size={60} space={5} letterSpacing={29}/>
+                        <div style={{
+                          width:6500,
+                          height:6500,
+                          position:'relative',
+                          left:-300,
+                          top:-100,
+                          backgroundImage:"url('maptexturelightfaded.jpg')",
+                        }}>
+                          //real island
+                          {islandRender}
+                          //fake, filler island for now to get the look right
+                          {island2}
+                          {island3}
+                          {island4}
+                          {island5}
+                          {island6}
+                        </div>
+
+                      </Draggable>
+                      </div>
+                      <div style={{cursor:"pointer",zIndex:2,marginBottom:-20,marginRight:-10,position:'absolute',right:currentStyles.titleRight,bottom:currentStyles.titleBottom}} onClick={this.titleClick.bind(this)}>
+                        <Writing string={"Galleass.io"} size={60} space={5} letterSpacing={29}/>
+                      </div>
+                      <div style={{position:'absolute',left:0,top:0}}>
+                        <img style={{maxWidth:(document.documentElement.clientWidth/5)}} src={"topleftcorner.png"} />
+                      </div>
+                      <div style={{position:'absolute',right:0,top:0}}>
+                        <img style={{maxWidth:(document.documentElement.clientWidth/5)}} src={"toprightcorner.png"} />
+                      </div>
+                      <div style={{position:'absolute',opacity:this.state.cornerOpacity,right:0,bottom:-4}} onClick={this.titleClick.bind(this)}>
+                        <img src={"corner.png"} />
+                      </div>
+                      <div style={{cursor:"pointer",zIndex:1,position:'fixed',opacity:1-this.state.cornerOpacity,top:currentStyles.titleBottomFaster-20,left:-20}} >
+                        <a href="https://github.com/austintgriffith/galleass" target="_blank"><img style={{maxHeight:36,position:"absolute",left:25,top:83,opacity:0.8}} src="github.png" /></a>
+                        <a href="http://austingriffith.com/portfolio/galleass/" target="_blank"><img style={{maxHeight:36,position:"absolute",left:70,top:83,opacity:0.8}} src="moreinfo.png" /></a>
+                        <a href="http://ipfs.io/ipfs/QmW2WQi7j6c7UgJTarActp7tDNikE4B2qXtFCfLPdsgaTQ/cat.jpg" target="_blank"><img style={{maxHeight:36,position:"absolute",left:115,top:83,opacity:0.8}} src="ipfs.png" /></a>
+                        {gasDragger}
+                        <img src={"mapicon.png"} onClick={this.titleClick.bind(this)}/>
+                      </div>
+                      <div style={{position:'absolute',opacity:this.state.cornerOpacity,left:10,bottom:10}} onClick={this.titleClick.bind(this)}>
+                        <img src={"compass.png"} style={{maxWidth:60}} />
+                      </div>
                     </div>
-                    <div style={{position:'absolute',left:0,top:0}}>
-                      <img style={{maxWidth:(document.documentElement.clientWidth/5)}} src={"topleftcorner.png"} />
-                    </div>
-                    <div style={{position:'absolute',right:0,top:0}}>
-                      <img style={{maxWidth:(document.documentElement.clientWidth/5)}} src={"toprightcorner.png"} />
-                    </div>
-                    <div style={{position:'absolute',opacity:this.state.cornerOpacity,right:0,bottom:-4}} onClick={this.titleClick.bind(this)}>
-                      <img src={"corner.png"} />
-                    </div>
-                    <div style={{zIndex:1,position:'fixed',opacity:1-this.state.cornerOpacity,top:currentStyles.titleBottomFaster-20,left:-20}} onClick={this.titleClick.bind(this)}>
-                      <img src={"mapicon.png"} />
-                    </div>
-                    <div style={{position:'absolute',opacity:this.state.cornerOpacity,left:10,bottom:10}} onClick={this.titleClick.bind(this)}>
-                      <img src={"compass.png"} />
-                    </div>
-                  </div>
+
               </div>
+
             )
 
           }}
@@ -1369,14 +1640,37 @@ class App extends Component {
             top:-500
           }}
           style={{
-            top:spring(this.state.modal,{ stiffness: 100, damping: 7 })
+            top:spring(this.state.modalHeight,{ stiffness: 100, damping: 10 })
           }}
         >
           {currentStyles => {
-            //console.log("currentStyles.scrollLeft",currentStyles.scrollLeft)
+            let image = this.state.modalObject.name.toLowerCase()+".png"
+            if(this.state.modalObject.name.indexOf("Resource")>=0){
+              image = this.state.modalObject.name.split("Resource").join("");
+              image = image.split(" ").join("");
+              image = image+"tile.png"
+            }else if(this.state.modalObject.name.indexOf("Stream")>=0){
+              image = "blank_stream.png"
+            }else if(this.state.modalObject.name.indexOf("Grass")>=0){
+              image = "blank_hills.png"
+            }else if(this.state.modalObject.name.indexOf("Hills")>=0){
+              image = "blank_grass.png"
+            }
+
             return (
               <div style={{zIndex:999,position:'fixed',left:document.documentElement.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
-                <Writing style={{opacity:0.9}} string={this.state.modalMessage} size={20}/>
+                <div style={{position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
+                  <img src="exit.png" />
+                </div>
+                <div style={{position:'absolute',left:24,top:24,border:"3px solid #777777"}}>
+                  <img style={{maxWidth:83}} src={image}/>
+                </div>
+                <div style={{position:'absolute',left:118,top:24,textAlign:"left"}}>
+                  <div><Writing style={{opacity:0.9}} string={this.state.modalObject.name} size={28}/>  -  {this.state.modalObject.index} @ ({this.state.landX},{this.state.landY})</div>
+                  <div>Contract: {this.state.modalObject.contract}</div>
+                  <div>Owner: {this.state.modalObject.owner}</div>
+                  <div>Price: {this.state.modalObject.price}</div>
+                </div>
               </div>
             )
 
