@@ -99,7 +99,7 @@ class Ships extends Component {
 
       let extraZ = 0
 
-      if(ships[b]&&ships[b].owner&&ships[b].owner.toLowerCase()==this.props.account.toLowerCase()){
+      if(this.props && this.props.account && ships[b]&&ships[b].owner&&ships[b].owner.toLowerCase()==this.props.account.toLowerCase()){
         //pull the current account's ship forward so it is easier to see
         //// this will cause some inconsistancies when looking at multiple different screens at once though
         extraZ+=25

@@ -29,7 +29,7 @@ import Metamask from './Metamask.js'
 import {Motion, spring, presets} from 'react-motion';
 
 
-const IPFSADDRESS = "QmWKpjtJh9KmdXocSEYUPJFTaGcQHJN5Q2dm4fWSRnBScP";
+const IPFSADDRESS = "QmSaqa3SHbtPYfETS5hyr3vFdFQ11UmPf9fh1p5mthjVyx";
 
 
 
