@@ -27,6 +27,12 @@ import Clouds from './Clouds.js'
 import Inventory from './Inventory.js'
 import Metamask from './Metamask.js'
 import {Motion, spring, presets} from 'react-motion';
+
+
+const IPFSADDRESS = "QmSBrKYfp8kn9mJyi8E4EtteM1FNLgCr2BM5h6Q5C3aWUS";
+
+
+
 //var smoothScroll = require('smoothscroll');
 //var Scroll  = require('react-scroll');
 //var scroll     = Scroll.animateScroll;
@@ -1633,7 +1639,7 @@ class App extends Component {
                         <a href="https://github.com/austintgriffith/galleass" target="_blank"><img style={{maxHeight:36,position:"absolute",left:25+iconOffset,top:83,opacity:0.8}} src="github.png" /></a>
                         <a href="http://austingriffith.com/portfolio/galleass/" target="_blank"><img style={{maxHeight:36,position:"absolute",left:70+iconOffset,top:83,opacity:0.8}} src="moreinfo.png" /></a>
                         <a href="https://ropsten.etherscan.io/address/0xc15fa062d898f89e943429d056200d08614ddf89#code" target="_blank"><img style={{maxHeight:36,position:"absolute",left:115+iconOffset,top:83,opacity:0.8}} src="smartcontract.png" /></a>
-                        <a href="http://ipfs.io/ipfs/QmUBZj3DY6u4qNjxXa7dYoQjMSNvMAMM4vVCWYSupsLLHE" target="_blank"><img style={{maxHeight:36,position:"absolute",left:160+iconOffset,top:83,opacity:0.8}} src="ipfs.png" /></a>
+                        <a href={"http://ipfs.io/ipfs/"+IPFSADDRESS} target="_blank"><img style={{maxHeight:36,position:"absolute",left:160+iconOffset,top:83,opacity:0.8}} src="ipfs.png" /></a>
                         {gasDragger}
                         <img src={"mapicon.png"} onClick={this.titleClick.bind(this)}/>
                       </div>
