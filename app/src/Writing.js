@@ -29,7 +29,7 @@ class Writing extends Component {
         }
         //console.log("DISPLAY IMAGE",thisImage)
         extraSpace=-20
-        image = "../"+thisImage.toLowerCase()+".png"
+        image = ""+thisImage.toLowerCase()+".png"
       }else if(character == " "){
         image = image+"space.png"
       }else if(character == "."){
