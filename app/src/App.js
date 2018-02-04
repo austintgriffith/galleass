@@ -29,7 +29,7 @@ import Metamask from './Metamask.js'
 import {Motion, spring, presets} from 'react-motion';
 
 
-const IPFSADDRESS = "QmfHnKq2F8oaNMAsz6xrRrAvAygNEwoxjhtEAJcAtKcBqT";
+const IPFSADDRESS = "Qmf1XhBDmXgq6H3HankyxhxnZc4rxYikbgvRJTMtHCdzyE";
 
 
 
@@ -1672,7 +1672,7 @@ return (
     }
 
     let decentralizedLink = "http://ipfs.io/ipfs/"+IPFSADDRESS;
-    if(window.location.href!="https://galleass.io"){
+    if(window.location.href.indexOf("ipfs")>=0){
       decentralizedLink = "https://galleass.io";
     }
 
