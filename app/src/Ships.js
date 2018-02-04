@@ -33,6 +33,7 @@ class Ships extends Component {
     let renderedShips = []
 
 
+
     var thereAreShips = false
     for(var f in ships) {
       thereAreShips=true
@@ -96,12 +97,20 @@ class Ships extends Component {
       idTopOffset = 1+parseInt(idTopOffset, 16)*3
       idLeftOffset = (7-parseInt(idLeftOffset, 16))
 
-      //console.log("RENDER SHIP",translatedX,idLeftOffset)
+      let extraZ = 0
+
+      if(ships[b]&&ships[b].owner&&ships[b].owner.toLowerCase()==this.props.account.toLowerCase()){
+        //pull the current account's ship forward so it is easier to see
+        //// this will cause some inconsistancies when looking at multiple different screens at once though
+        extraZ+=25
+        idTopOffset+=40
+      }
+
 
       renderedShips.push(
         <div key={"ship"+b} onClick={this.openUrl.bind(this,this.props.etherscan+"address/"+b)}
           style={{
-            zIndex:20+idTopOffset,
+            zIndex:20+idTopOffset+extraZ,
             position:'absolute',
             left:translatedX+idLeftOffset-(shipwidth/2),
             top:horizon-28+idTopOffset,

@@ -304,6 +304,7 @@ class App extends Component {
         storedShips[id]={
           timestamp:timestamp,
           id:ships[b].returnValues.id,
+          owner:ships[b].returnValues.owner,
           floating:ships[b].returnValues.floating,
           sailing:ships[b].returnValues.sailing,
           direction:ships[b].returnValues.direction,
