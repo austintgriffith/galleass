@@ -70,6 +70,7 @@ let inventoryTokens = [
 const MINGWEI = 0.1
 const MAXGWEI = 151
 const STARTINGGWEI = 51;
+
 const GAS = 100000;
 const FISHINGBOAT = 0;
 const LOADERSPEED = 1237 //this * 24 should be close to a long block time
@@ -171,7 +172,7 @@ class App extends Component {
     clearTimeout(bottomBarTimeout)
     bottomBarTimeout = setTimeout(()=>{
       this.setState({bottomBar:-80})
-    },30000)
+    },130000)
   }
 
   async sync(name,doSyncFn,CRAWLBACKDELAY,SYNCINVERVAL) {
@@ -1223,7 +1224,7 @@ class App extends Component {
           inventory={this.state.inventory}
           Ships={this.state.Ships}
           textStyle={textStyle}
-          sellFish={this.sellFish}
+          sellFish={this.sellFish.bind(this)}
           contracts={contracts}
           etherscan={this.state.etherscan}
         />
@@ -1283,6 +1284,30 @@ class App extends Component {
       </div>
     )
 
+    let galleass= (
+      <div key={"galleass"} style={{
+        zIndex:20,
+        position:'absolute',
+        left:160,
+        top:500,
+        opacity:0.9,
+        height:131,
+        width:170
+      }}>
+      <img src={"galleass.png"} />
+      <div style={{
+        position:'absolute',
+        top:5,
+        left:-6
+      }}>
+      <Blockies
+        seed={galleassAddress}
+        scale={3.1}
+      />
+      </div>
+      </div>
+    )
+
     let clickScreen = (
       <Motion
         defaultStyle={{
@@ -1315,6 +1340,7 @@ class App extends Component {
         {sea}
         {land}
         {galley}
+        {galleass}
         <Motion
           defaultStyle={{
             right:this.state.mapRightStart,
@@ -1512,7 +1538,7 @@ class App extends Component {
             let startingPercent = STARTINGGWEI / MAXGWEI
             let startingPixels = startingPercent*100
             let rightSideRoom = 100-startingPixels
-            let gasOffset = 16;
+            let gasOffset = 25;
             let gasDragger = (
               <div>
 
@@ -1545,6 +1571,8 @@ class App extends Component {
                 </Draggable>
               </div>
             )
+
+            let iconOffset = 2;
 
             return (
 
@@ -1602,10 +1630,10 @@ class App extends Component {
                         <img src={"corner.png"} />
                       </div>
                       <div style={{cursor:"pointer",zIndex:1,position:'fixed',opacity:1-this.state.cornerOpacity,top:currentStyles.titleBottomFaster-20,left:-20}} >
-                        <a href="https://github.com/austintgriffith/galleass" target="_blank"><img style={{maxHeight:36,position:"absolute",left:25,top:83,opacity:0.8}} src="github.png" /></a>
-                        <a href="http://austingriffith.com/portfolio/galleass/" target="_blank"><img style={{maxHeight:36,position:"absolute",left:70,top:83,opacity:0.8}} src="moreinfo.png" /></a>
-                        <a href="https://ropsten.etherscan.io/address/0xc15fa062d898f89e943429d056200d08614ddf89#code" target="_blank"><img style={{maxHeight:36,position:"absolute",left:115,top:83,opacity:0.8}} src="smartcontract.png" /></a>
-                        <a href="http://ipfs.io/ipfs/QmTQpnLhJva3JjoiXfUKGpvyXXFNcNrGXxSKHRNR5FS6Sd" target="_blank"><img style={{maxHeight:36,position:"absolute",left:160,top:83,opacity:0.8}} src="ipfs.png" /></a>
+                        <a href="https://github.com/austintgriffith/galleass" target="_blank"><img style={{maxHeight:36,position:"absolute",left:25+iconOffset,top:83,opacity:0.8}} src="github.png" /></a>
+                        <a href="http://austingriffith.com/portfolio/galleass/" target="_blank"><img style={{maxHeight:36,position:"absolute",left:70+iconOffset,top:83,opacity:0.8}} src="moreinfo.png" /></a>
+                        <a href="https://ropsten.etherscan.io/address/0xc15fa062d898f89e943429d056200d08614ddf89#code" target="_blank"><img style={{maxHeight:36,position:"absolute",left:115+iconOffset,top:83,opacity:0.8}} src="smartcontract.png" /></a>
+                        <a href="http://ipfs.io/ipfs/QmUBZj3DY6u4qNjxXa7dYoQjMSNvMAMM4vVCWYSupsLLHE" target="_blank"><img style={{maxHeight:36,position:"absolute",left:160+iconOffset,top:83,opacity:0.8}} src="ipfs.png" /></a>
                         {gasDragger}
                         <img src={"mapicon.png"} onClick={this.titleClick.bind(this)}/>
                       </div>
@@ -1689,7 +1717,7 @@ class App extends Component {
                 <div style={{position:'absolute',left:118,top:24,textAlign:"left"}}>
                   <div><Writing style={{opacity:0.9}} string={this.state.modalObject.name} size={28}/>  -  {this.state.modalObject.index} @ ({this.state.landX},{this.state.landY})</div>
                   <div>Contract: {this.state.modalObject.contract}</div>
-                  <div>Owner: {this.state.modalObject.owner}</div>
+                  <div>Owner: <a href={this.state.etherscan+"/address/"+this.state.modalObject.owner}>{this.state.modalObject.owner}</a></div>
                   <div>Price: {this.state.modalObject.price}</div>
                 </div>
               </div>
