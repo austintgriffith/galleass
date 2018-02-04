@@ -1293,6 +1293,7 @@ let sea = (
   <div style={{position:'absolute',left:0,top:horizon,opacity:1,backgroundImage:"url('oceanblackblur.jpg')",backgroundRepeat:'no-repeat',height:height+horizon,width:width}}></div>
   {buttons}
   <Ships
+  account={this.state.account}
   ships={this.state.ships}
   width={width}
   height={height}
