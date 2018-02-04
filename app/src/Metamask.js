@@ -74,7 +74,7 @@ class Metamask extends Component {
           <Writing string={"Unable to connect to network"} size={20} space={5}/>
         </span>
         <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
-        src="https://cdn.worldvectorlogo.com/logos/metamask.svg"
+        src="metamaskhah.png"
         />
         </a>
       )
@@ -89,7 +89,7 @@ class Metamask extends Component {
           <Writing string={"Install MetaMask to play"} size={20} space={5}/>
         </span>
         <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
-        src="https://cdn.worldvectorlogo.com/logos/metamask.svg"
+        src="metamaskhah.png"
         />
         </a>
       )
@@ -101,7 +101,7 @@ class Metamask extends Component {
           <Writing string={"MetaMask is on the wrong network"} size={20} space={5}/>
         </span>
         <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
-        src="https://cdn.worldvectorlogo.com/logos/metamask.svg"
+         src="metamaskhah.png"
         />
         </div>
       )
@@ -113,7 +113,7 @@ class Metamask extends Component {
             <Writing string={"Unlock MetaMask to play"} size={20} space={5}/>
           </span>
           <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
-            src="https://cdn.worldvectorlogo.com/logos/metamask.svg"
+            src="metamaskhah.png"
           />
         </div>
       )
@@ -125,7 +125,7 @@ class Metamask extends Component {
           <Writing string={"Error Connecting"} size={20} space={5}/>
         </span>
         <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
-        src="https://cdn.worldvectorlogo.com/logos/metamask.svg"
+         src="metamaskhah.png"
         />
         </div>
       )
