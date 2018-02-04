@@ -1604,7 +1604,8 @@ class App extends Component {
                       <div style={{cursor:"pointer",zIndex:1,position:'fixed',opacity:1-this.state.cornerOpacity,top:currentStyles.titleBottomFaster-20,left:-20}} >
                         <a href="https://github.com/austintgriffith/galleass" target="_blank"><img style={{maxHeight:36,position:"absolute",left:25,top:83,opacity:0.8}} src="github.png" /></a>
                         <a href="http://austingriffith.com/portfolio/galleass/" target="_blank"><img style={{maxHeight:36,position:"absolute",left:70,top:83,opacity:0.8}} src="moreinfo.png" /></a>
-                        <a href="http://ipfs.io/ipfs/QmUBZj3DY6u4qNjxXa7dYoQjMSNvMAMM4vVCWYSupsLLHE" target="_blank"><img style={{maxHeight:36,position:"absolute",left:115,top:83,opacity:0.8}} src="ipfs.png" /></a>
+                        <a href="https://ropsten.etherscan.io/address/0xc15fa062d898f89e943429d056200d08614ddf89#code" target="_blank"><img style={{maxHeight:36,position:"absolute",left:115,top:83,opacity:0.8}} src="smartcontract.png" /></a>
+                        <a href="http://ipfs.io/ipfs/QmUBZj3DY6u4qNjxXa7dYoQjMSNvMAMM4vVCWYSupsLLHE" target="_blank"><img style={{maxHeight:36,position:"absolute",left:160,top:83,opacity:0.8}} src="ipfs.png" /></a>
                         {gasDragger}
                         <img src={"mapicon.png"} onClick={this.titleClick.bind(this)}/>
                       </div>
