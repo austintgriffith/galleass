@@ -20,7 +20,9 @@ class Metamask extends Component {
   checkMetamask() {
     if (typeof window.web3 == 'undefined') {
       if(this.state.metamask!=0) this.setState({metamask:0})
+      this.props.setHintMode(1);
     } else {
+      this.props.setHintMode(0);
       window.web3.version.getNetwork((err,network)=>{
         //console.log("PEERS",window.web3.net)
         network = translateNetwork(network);

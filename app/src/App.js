@@ -81,6 +81,8 @@ const SHIPSEVENTSYNCLIVEINTERVAL = 2341
 const CLOUDEVENTSYNCLIVEINTERVAL = 7919
 let eventLoadIndexes = {};
 let bottomBarTimeout;
+
+/*
 let textStyle = {
   zIndex:210,
   fontWeight:'bold',
@@ -88,13 +90,15 @@ let textStyle = {
   paddingRight:10,
   color:"#dddddd",
   textShadow: "-1px 0 #777777, 0 1px #777777, 1px 0 #777777, 0 -1px #777777"
-}
+}*/
 
 class App extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
+      hintMode:0,
+      hintClicks:0,
       clientWidth: document.documentElement.clientWidth,
       clientHeight: document.documentElement.clientHeight,
       mapScale:1,
@@ -133,11 +137,11 @@ class App extends Component {
       clickScreenHeight:document.documentElement.clientHeight,
       clickScreenTop:0,
       clickScreenOpacity:1,
-      clickScreenConfig:{stiffness:8, damping: 20},
+      clickScreenConfig:{stiffness:28, damping: 20},
     }
 
     setTimeout(()=>{
-      this.setState({clickScreenOpacity:0.1})
+      this.setState({clickScreenOpacity:0})
     },1000)
 
     this.state.titleRight = this.state.titleRightStart;
@@ -935,12 +939,24 @@ async tileClick(name,index,px) {
     clickScreenOpacity:0.5
   })
 }
+setHintMode(num){
+  //1 means take them to metamask install
+  //0 means just keep shaking the metamask hint
+  this.setState({hintMode:num})
+}
 clickScreenClick(){
+  console.log("CLICK SCREEN CLICKED")
   if(this.state.modalHeight>=0){
     //click screen is up for modal
     this.setState({modalHeight:-600,clickScreenTop:-5000,clickScreenOpacity:0})
   }else{
-    this.metamaskHint()
+    if(this.state.hintClicks>0 && this.state.hintClicks%2==1 && this.state.hintMode==1){
+      window.open('https://metamask.io', '_blank');
+    }
+    else{
+      this.metamaskHint()
+    }
+    this.setState({hintClicks:this.state.hintClicks+1})
   }
 }
 handleWhiskeyStart(){
@@ -1033,13 +1049,7 @@ render() {
 
   if(!myShip||!myShip.floating){
     if(!this.state||!this.state.contractsLoaded){
-      //wait for contracts to load but for now let's preload some stuff off screen
-      buttons.push(
-        <div style={{position:'absolute',left:10,top:10}}>
-
-
-        </div>
-      )
+      //wait for contracts to load but for now let's preload some stuff off screen???
     }else if(this.state.inventoryDetail && (!this.state.inventoryDetail['Dogger']||this.state.inventoryDetail['Dogger'].length<=0) && this.state.inventory['Dogger']<=0){
       let clickFn = this.buyShip.bind(this)
       if(buttonDisabled){clickFn=()=>{}}
@@ -1079,7 +1089,7 @@ render() {
   }else{
     console.log("WAITING FOR INV DETAIL....")
     buttons.push(
-      <div>
+      <div key={"waiting"}>
       </div>
     )
   }
@@ -1228,7 +1238,7 @@ buttons.push(
 
 let menuSize = 60;
 let menu = (
-  <div key={"MENU"} style={{position:"fixed",left:0,top:0,width:"100%",height:menuSize,overflow:'hidden',borderBottom:"0px solid #a0aab5",color:"#DDDDDD",zIndex:99}} >
+  <div key={"MENU"} onClick={()=>{console.log("MENUCLICK")}} style={{position:"fixed",left:0,top:0,width:"100%",height:menuSize,overflow:'hidden',borderBottom:"0px solid #a0aab5",color:"#DDDDDD",zIndex:99}} >
   <Motion
   defaultStyle={{
     marginRight:0
@@ -1241,7 +1251,7 @@ let menu = (
     return (
       <div style={currentStyles}>
       <Metamask
-      textStyle={textStyle}
+      setHintMode={this.setHintMode.bind(this)}
       account={this.state.account}
       init={this.init.bind(this)}
       Blockies={Blockies}
@@ -1264,7 +1274,6 @@ let inventory = (
   <Inventory
   inventory={this.state.inventory}
   Ships={this.state.Ships}
-  textStyle={textStyle}
   sellFish={this.sellFish.bind(this)}
   contracts={contracts}
   etherscan={this.state.etherscan}
@@ -1374,9 +1383,9 @@ let clickScreen = (
 //console.log(this.state.titleRightStart)
 return (
   <div className="App" style={{zoom:this.state.zoom}}>
-
-  {clickScreen}
   {menu}
+  {clickScreen}
+
   {inventory}
   {sea}
   {land}
@@ -1441,19 +1450,19 @@ return (
     let island2 = []
     offset+=30
     island2.push(
-      <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+      <div key={"island2art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
       <img style={{maxWidth:70}} src={"island3.png"} />
       </div>
     )
     offset+=30
     island2.push(
-      <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+      <div key={"island2art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
       <img style={{maxWidth:70}} src={"island7.png"} />
       </div>
     )
     offset+=30
     island2.push(
-      <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+      <div key={"island2art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
       <img style={{maxWidth:70}} src={"island2.png"} />
       </div>
     )
@@ -1464,19 +1473,19 @@ return (
     let island3 = []
     offset+=30
     island3.push(
-      <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+      <div key={"island3art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
       <img style={{maxWidth:70}} src={"island3.png"} />
       </div>
     )
     offset+=30
     island3.push(
-      <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+      <div key={"island3art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
       <img style={{maxWidth:70}} src={"island11.png"} />
       </div>
     )
     offset+=30
     island3.push(
-      <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+      <div key={"island3art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
       <img style={{maxWidth:70}} src={"island6.png"} />
       </div>
     )
@@ -1487,25 +1496,25 @@ return (
     let island4 = []
     offset+=30
     island4.push(
-      <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+      <div key={"island4art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
       <img style={{maxWidth:70}} src={"island14.png"} />
       </div>
     )
     offset+=30
     island4.push(
-      <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+      <div key={"island4art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
       <img style={{maxWidth:70}} src={"island2.png"} />
       </div>
     )
     offset+=30
     island4.push(
-      <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+      <div key={"island4art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
       <img style={{maxWidth:70}} src={"island1.png"} />
       </div>
     )
     offset+=30
     island4.push(
-      <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+      <div key={"island4art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
       <img style={{maxWidth:70}} src={"island8.png"} />
       </div>
     )
@@ -1516,31 +1525,31 @@ return (
     let island5 = []
     offset+=30
     island5.push(
-      <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+      <div key={"island5art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
       <img style={{maxWidth:70}} src={"island16.png"} />
       </div>
     )
     offset+=30
     island5.push(
-      <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+      <div key={"island5art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
       <img style={{maxWidth:70}} src={"island2.png"} />
       </div>
     )
     offset+=30
     island5.push(
-      <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+      <div key={"island5art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
       <img style={{maxWidth:70}} src={"island13.png"} />
       </div>
     )
     offset+=30
     island5.push(
-      <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+      <div key={"island5art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
       <img style={{maxWidth:70}} src={"island8.png"} />
       </div>
     )
     offset+=30
     island5.push(
-      <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+      <div key={"island5art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
       <img style={{maxWidth:70}} src={"island8.png"} />
       </div>
     )
@@ -1551,25 +1560,25 @@ return (
     let island6 = []
     offset+=30
     island6.push(
-      <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+      <div key={"island6art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
       <img style={{maxWidth:70}} src={"island1.png"} />
       </div>
     )
     offset+=30
     island6.push(
-      <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+      <div key={"island6art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
       <img style={{maxWidth:70}} src={"island4.png"} />
       </div>
     )
     offset+=30
     island6.push(
-      <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+      <div key={"island6art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
       <img style={{maxWidth:70}} src={"island2.png"} />
       </div>
     )
     offset+=30
     island6.push(
-      <div style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+      <div key={"island6art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
       <img style={{maxWidth:70}} src={"island3.png"} />
       </div>
     )
@@ -1615,6 +1624,45 @@ return (
 
     let iconOffset = 2;
 
+    //        overflow:currentStyles.overflow,
+    //
+    let fullMap
+    let fullViewerSize = 6500
+    if(!this.state.mapUp){
+      fullMap=""
+      fullViewerSize=1
+    }else{
+      fullMap = (
+        <div style={{
+          width:6500,
+          height:6500,
+          /*transform:"scale("+this.state.mapScale+")",*/
+        }}>
+        <Draggable bounds={{right:300,left:-6200,bottom:100,top:-6400}}>
+
+        <div style={{
+          width:6500,
+          height:6500,
+          position:'relative',
+          left:-300,
+          top:-100,
+          backgroundImage:"url('maptexturelightfaded.jpg')",
+        }}>
+        //real island
+        {islandRender}
+        //fake, filler island for now to get the look right
+        {island2}
+        {island3}
+        {island4}
+        {island5}
+        {island6}
+        </div>
+
+        </Draggable>
+        </div>
+      )
+    }
+
     return (
 
       <div style={{
@@ -1623,41 +1671,16 @@ return (
         bottom:currentStyles.bottom,
         width:this.state.clientWidth,
         height:this.state.clientHeight,
-        zIndex:300,
-        overflow:currentStyles.overflow,
+        zIndex:300
       }}>
 
       <div style={{
-        width:6500,
-        height:6500,
+        width:fullViewerSize,
+        height:fullViewerSize,
       }} onWheel = {this.mapWheel.bind(this)}>
-      <div style={{
-        width:6500,
-        height:6500,
-        /*transform:"scale("+this.state.mapScale+")",*/
-      }}>
-      <Draggable bounds={{right:300,left:-6200,bottom:100,top:-6400}}>
 
-      <div style={{
-        width:6500,
-        height:6500,
-        position:'relative',
-        left:-300,
-        top:-100,
-        backgroundImage:"url('maptexturelightfaded.jpg')",
-      }}>
-      //real island
-      {islandRender}
-      //fake, filler island for now to get the look right
-      {island2}
-      {island3}
-      {island4}
-      {island5}
-      {island6}
-      </div>
+      {fullMap}
 
-      </Draggable>
-      </div>
       <div style={{cursor:"pointer",zIndex:2,marginBottom:-20,marginRight:-10,position:'absolute',right:currentStyles.titleRight,bottom:currentStyles.titleBottom}} onClick={this.titleClick.bind(this)}>
       <Writing string={"Galleass.io"} size={60} space={5} letterSpacing={29}/>
       </div>
@@ -1676,7 +1699,7 @@ return (
       <a href="https://ropsten.etherscan.io/address/0xc15fa062d898f89e943429d056200d08614ddf89#code" target="_blank"><img style={{maxHeight:36,position:"absolute",left:115+iconOffset,top:83,opacity:0.8}} src="smartcontract.png" /></a>
       <a href="http://ipfs.io/ipfs/QmUBZj3DY6u4qNjxXa7dYoQjMSNvMAMM4vVCWYSupsLLHE" target="_blank"><img style={{maxHeight:36,position:"absolute",left:160+iconOffset,top:83,opacity:0.8}} src="ipfs.png" /></a>
       {gasDragger}
-      <img src={"mapicon.png"} onClick={this.titleClick.bind(this)}/>
+      <img style={{zIndex:2}} src={"mapicon.png"} onClick={this.titleClick.bind(this)}/>
       </div>
       <div style={{position:'absolute',opacity:this.state.cornerOpacity,left:10,bottom:10}} onClick={this.titleClick.bind(this)}>
       <img src={"compass.png"} style={{maxWidth:60}} />

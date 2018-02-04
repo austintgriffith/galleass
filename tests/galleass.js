@@ -739,8 +739,8 @@ module.exports = {
         await clevis("sendTo","0.1","0","0xf17f52151ebef6c7334fad080c5704d77216b732")
 
         //firefox
-        await clevis("sendTo","0.1","0","0x368ac29da7cc48a202560ead1f3c9b6ea31e453e")
-        await clevis("sendTo","0.1","0","0xd4EfC0E10D1cAba22513Ff04DA254d68a3e78EEF")
+        await clevis("sendTo","0.1","0","0x5f19cEfc9C9D1BC63f9e4d4780493ff5577D238B")
+        await clevis("sendTo","0.1","0","0xF11b9dCa0972e95b292891b027F5d8102e2cB8a5")
 
 
       });
