@@ -187,7 +187,7 @@ class Land extends Component {
   }
   wrapLandTileWithLink(name,index,location,tileCode){
     return (
-      <div style={{cursor:"pointer"}} onClick={this.props.tileClick.bind(this,name,index,location)}>
+      <div key={"landtile"+index+"at"+location} style={{cursor:"pointer"}} onClick={this.props.tileClick.bind(this,name,index,location)}>
         {tileCode}
       </div>
     )
