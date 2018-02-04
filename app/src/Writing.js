@@ -50,7 +50,7 @@ class Writing extends Component {
         }
       }
       word.push(
-        <img style={{maxHeight:size,marginRight:letterSpacing+extraKern(character,letterSpacing+extraSpace)}} src={image} />
+        <img key={"w"+i} style={{maxHeight:size,marginRight:letterSpacing+extraKern(character,letterSpacing+extraSpace)}} src={image} />
       )
       usedChars.push(character);
     }

@@ -4,8 +4,8 @@ const galleass = require('./galleass.js')
 //
 // galleass.deploy("Land",0)
 // galleass.setContract("Land",0)
-
-
+//
+//
 
 galleass.generateLand(0)
 

@@ -1,4 +1,6 @@
 # TODO
+[ ] get design looking better in non-metamask browsers like Safari just so it looks better at a glance
+[ ] refactor code to clean up App.js, it's huge
 [ ] oh man resizing the window breaks things bad
 [ ] left control bar until title that adjusts gas, links to main contract, links to ipfs, and links to github
 [ ] bug where buy ship button appears when it shouldn't both at load and after you buyship and you are waiting for embark button

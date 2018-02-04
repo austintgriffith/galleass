@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import {Motion, spring} from 'react-motion';
 
+import Writing from './Writing.js'
+
 const config = { stiffness: 100, damping: 7 };
 
 class Inventory extends Component {
@@ -34,7 +36,7 @@ class Inventory extends Component {
 
     let sellForCopper = (item)=>{
       return (
-        <img onClick={this.sellForCopper.bind(this,item)} style={{maxHeight:25,paddingRight:20,verticalAlign:'bottom'}} src={"copper_small.png"} />
+        <img onClick={this.sellForCopper.bind(this,item)} style={{maxHeight:25,paddingRight:20}} src={"copper_small.png"} />
       )
     }
 
@@ -64,8 +66,8 @@ class Inventory extends Component {
                 <div style={{padding:5,marginBottom:extraBottomMargin}}>
                   <span style={{cursor:'pointer'}}>{extra}</span>
                   <span style={{cursor:'pointer'}} onClick={this.invClick.bind(this,i)}>
-                    <span style={this.props.textStyle}>{inventory[i]}</span>
-                    <img style={{maxWidth:maxWidth,maxHeight:maxHeight,marginRight:value.right,verticalAlign:'bottom'}} src={i.toLowerCase()+".png"}/>
+                    <Writing string={inventory[i]} size={36}/>
+                    <img style={{maxWidth:maxWidth,maxHeight:maxHeight,marginLeft:10,marginRight:value.right}} src={i.toLowerCase()+".png"}/>
                   </span>
                 </div>
               )
