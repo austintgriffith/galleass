@@ -129,7 +129,13 @@ class App extends Component {
       clickScreenWidth:document.documentElement.clientWidth,
       clickScreenHeight:document.documentElement.clientHeight,
       clickScreenTop:0,
+      clickScreenOpacity:1,
+      clickScreenConfig:{stiffness:8, damping: 20},
     }
+
+    setTimeout(()=>{
+      this.setState({clickScreenOpacity:0.1})
+    },1000)
 
     this.state.titleRight = this.state.titleRightStart;
     this.state.titleBottom = this.state.titleBottomStart;
@@ -1277,8 +1283,21 @@ class App extends Component {
     )
 
     let clickScreen = (
-      <div style={{width:this.state.clickScreenWidth,height:this.state.clickScreenHeight,opacity:0.5,backgroundColor:"#000000",position:"fixed",left:0,top:this.state.clickScreenTop,zIndex:899}} onClick={this.clickScreenClick.bind(this)}>
-      </div>
+      <Motion
+        defaultStyle={{
+          opacity:1
+        }}
+        style={{
+          opacity:spring(this.state.clickScreenOpacity,this.state.clickScreenConfig)
+        }}
+      >
+        {currentStyles => {
+          return (
+            <div style={{width:this.state.clickScreenWidth,height:this.state.clickScreenHeight,opacity:currentStyles.opacity,backgroundColor:"#000000",position:"fixed",left:0,top:this.state.clickScreenTop,zIndex:899}} onClick={this.clickScreenClick.bind(this)}>
+            </div>
+          )
+        }}
+      </Motion>
     )
 
     ///if(this.state.contractsLoaded) clickScreenWhenNotLoggedIn=""
@@ -1338,7 +1357,7 @@ class App extends Component {
               offset+=30
               //console.log(island,"@",offset)
               return (
-                <div style={{position:'absolute',left:700+offset,top:500}}>
+                <div key={"island0part"+offset} style={{position:'absolute',left:700+offset,top:500}}>
                   <img style={{maxWidth:70}} src={"island"+island+".png"} />
                 </div>
               )
