@@ -29,7 +29,7 @@ import Metamask from './Metamask.js'
 import {Motion, spring, presets} from 'react-motion';
 
 
-const IPFSADDRESS = "QmWinD1h85RJp5rrSovN5nxnJ6mtAi2Fph43ZCkGoQXQTV";
+const IPFSADDRESS = "QmTLKe94SEYGCCzE7ysxti9BskHeo2qLRSMS7CVM1e7rm3";
 
 
 
@@ -1776,7 +1776,7 @@ return (
     if(this.state.modalObject.name.indexOf("Resource")>=0){
       image = this.state.modalObject.name.split("Resource").join("");
       image = image.split(" ").join("");
-      image = image+"tile.png"
+      if(image) image = image.toLowerCase()+"tile.png"
     }else if(this.state.modalObject.name.indexOf("Stream")>=0){
       image = "blank_stream.png"
     }else if(this.state.modalObject.name.indexOf("Grass")>=0){
@@ -1785,6 +1785,7 @@ return (
       image = "blank_grass.png"
     }
 
+    //  <div>Price: {this.state.modalObject.price}</div>
     return (
       <div style={{zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
       <div style={{position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
@@ -1797,7 +1798,7 @@ return (
       <div><Writing style={{opacity:0.9}} string={this.state.modalObject.name} size={28}/>  -  {this.state.modalObject.index} @ ({this.state.landX},{this.state.landY})</div>
       <div>Contract: <a href={this.state.etherscan+"address/"+this.state.modalObject.contract}>{this.state.modalObject.contract}</a></div>
       <div>Owner: <a href={this.state.etherscan+"address/"+this.state.modalObject.owner}>{this.state.modalObject.owner}</a></div>
-      <div>Price: {this.state.modalObject.price}</div>
+
       </div>
       </div>
     )
