@@ -106,35 +106,43 @@ class Ships extends Component {
         idTopOffset+=40
       }
 
-
-      renderedShips.push(
-        <div key={"ship"+b} onClick={this.openUrl.bind(this,this.props.etherscan+"address/"+b)}
-          style={{
-            zIndex:20+idTopOffset+extraZ,
-            position:'absolute',
-            left:translatedX+idLeftOffset-(shipwidth/2),
-            top:horizon-28+idTopOffset,
-            opacity:0.9,
-            height:75,
-            width:shipwidth,
-            cursor:"pointer"
-          }
-        }>
-          <a style={{zIndex:99}}>
-            <img src={image} />
-          </a>
-          <div style={{
-            position:'absolute',
-            top:8,
-            left:flagleft
-          }}>
-            <this.props.Blockies
-              seed={b.toLowerCase()}
-              scale={2}
-            />
+      const INGORESHIP = "0xe7ae776ffdcdcf769fdc85d94a6d1c98ddb73c01";
+      if(ships[b] && ships[b].owner && ships[b].owner.toLowerCase()=="0xe7ae776ffdcdcf769fdc85d94a6d1c98ddb73c01"){
+        //ignore this ship, just a test to see how this would work
+        //as the sea gets full there may have to be some scheme for displaying
+        //only new ships or something
+      }else{
+        renderedShips.push(
+          <div key={"ship"+b} onClick={this.openUrl.bind(this,this.props.etherscan+"address/"+b)}
+            style={{
+              zIndex:20+idTopOffset+extraZ,
+              position:'absolute',
+              left:translatedX+idLeftOffset-(shipwidth/2),
+              top:horizon-28+idTopOffset,
+              opacity:0.9,
+              height:75,
+              width:shipwidth,
+              cursor:"pointer"
+            }
+          }>
+            <a style={{zIndex:99}}>
+              <img src={image} />
+            </a>
+            <div style={{
+              position:'absolute',
+              top:8,
+              left:flagleft
+            }}>
+              <this.props.Blockies
+                seed={b.toLowerCase()}
+                scale={2}
+              />
+            </div>
           </div>
-        </div>
-      )
+        )
+      }
+
+
     }
     return (
       <div>
