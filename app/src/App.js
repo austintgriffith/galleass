@@ -1698,10 +1698,10 @@ return (
       <div style={{cursor:"pointer",zIndex:2,marginBottom:-20,marginRight:-10,position:'absolute',right:currentStyles.titleRight,bottom:currentStyles.titleBottom}} onClick={this.titleClick.bind(this)}>
       <Writing string={"Galleass.io"} size={60} space={5} letterSpacing={29}/>
       </div>
-      <div style={{position:'absolute',left:0,top:0}}>
+      <div style={{position:'absolute',opacity:this.state.cornerOpacity,left:0,top:0}}>
       <img style={{maxWidth:(this.state.clientWidth/5)}} src={"topleftcorner.png"} />
       </div>
-      <div style={{position:'absolute',right:0,top:0}}>
+      <div style={{position:'absolute',opacity:this.state.cornerOpacity,right:0,top:0}}>
       <img style={{maxWidth:(this.state.clientWidth/5)}} src={"toprightcorner.png"} />
       </div>
       <div style={{position:'absolute',opacity:this.state.cornerOpacity,right:0,bottom:-4}} onClick={this.titleClick.bind(this)}>

@@ -126,8 +126,11 @@ contract Land is Galleasset, Ownable {
     uint16 tileType = tileTypeAt[_x][_y][_tile];
 
     if(tileType==tileTypes["MainHills"]||tileType==tileTypes["MainGrass"]){
-      //they want to build on a main, blank spot wither hills or grass
+      //they want to build on a main, blank spot whether hills or grass
       if(_newTileType==tileTypes["Village"]){
+
+        require( getTokens(msg.sender,"Timber",6) );
+        
 
         return true;
       }else{

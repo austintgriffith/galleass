@@ -108,17 +108,41 @@ class Metamask extends Component {
         </div>
       )
     }else if(this.state.metamask==2){
-      //not installed
-      metamask = (
-        <div>
-          <span style={this.props.textStyle}>
-            <Writing string={"Unlock MetaMask to play"} size={20} space={5}/>
-          </span>
-          <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
-            src="metamaskhah.png"
-          />
-        </div>
-      )
+      if(this.state.network=="Mainnet" || this.state.network=="Morden" || this.state.network=="Rinkeby" || this.state.network=="Kovan"){
+        //console.log("goodblock",this.state.accounts[0])
+        metamask = (
+          <div style={{padding:4}}>
+
+              <span style={{
+                float:'left',
+                marginTop:3,
+                paddingRight:10,
+                zIndex:210,
+                fontWeight:'bold',
+                fontSize:21,
+                color:"#222",
+                textAlign:"right"
+              }}>
+                <div><Writing string={"Please switch your network to Ropsten in MetaMask."} size={24} space={5}/></div>
+              </span>
+              <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
+                src="metamaskhah.png"
+              />
+
+          </div>
+        )
+      }else{
+        metamask = (
+          <div>
+            <span style={this.props.textStyle}>
+              <Writing string={"Unlock MetaMask to play"} size={24} space={5}/>
+            </span>
+            <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
+              src="metamaskhah.png"
+            />
+          </div>
+        )
+      }
     }else if(!this.state.accounts){
 
       metamask = (
@@ -133,31 +157,7 @@ class Metamask extends Component {
       )
 
     }else{
-      if(this.state.network=="Mainnet" || this.state.network=="Morden" || this.state.network=="Rinkeby" || this.state.network=="Kovan"){
-        //console.log("goodblock",this.state.accounts[0])
-        metamask = (
-          <div style={{padding:4}}>
-            <a target="_blank" href={this.props.etherscan+"address/"+this.state.accounts[0]}>
-              <span style={{
-                float:'left',
-                marginTop:3,
-                paddingRight:10,
-                zIndex:210,
-                fontWeight:'bold',
-                fontSize:21,
-                color:"#222",
-                textAlign:"right"
-              }}>
-                <div><Writing string={"Please switch your network to Ropsten in MetaMask."} size={30} space={5}/></div>
-              </span>
-              <this.props.Blockies
-              seed={this.state.accounts[0]}
-              scale={6}
-              />
-            </a>
-          </div>
-        )
-      }else{
+
         //console.log("goodblock",this.state.accounts[0])
         //
 
@@ -215,7 +215,7 @@ class Metamask extends Component {
 
           </div>
         )
-      }
+
 
     }
     return (

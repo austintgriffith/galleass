@@ -47,13 +47,13 @@ class Inventory extends Component {
         let extra = "";
         let maxWidth = 64
         let maxHeight = 32
-        if(i!="Ether" && i!="Copper" && i!="Dogger" ) extra = sellForCopper(i);
+        if(i!="Ether" && i!="Copper" && i!="Dogger" && i!="Timber") extra = sellForCopper(i);
         if(i=="Dogger") maxHeight=58
 
         let extraBottomMargin=0;
-        if(i=="Ether") extraBottomMargin=15
-        if(i=="Dogger") extraBottomMargin=15
-        if(i=="Copper") extraBottomMargin=15
+        //if(i=="Ether") extraBottomMargin=15
+        //if(i=="Dogger") extraBottomMargin=15
+        //if(i=="Copper") extraBottomMargin=15
 
         display.push(
           <Motion
