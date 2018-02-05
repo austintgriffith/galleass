@@ -123,7 +123,7 @@ class Metamask extends Component {
                 color:"#222",
                 textAlign:"right"
               }}>
-                <div><Writing string={"Please switch your network to Ropsten in MetaMask."} size={24} space={5}/></div>
+                <div><Writing string={"Please switch your network to Ropsten"} size={24} space={5}/></div>
               </span>
               <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
                 src="metamaskhah.png"
