@@ -33,6 +33,16 @@ class Metamask extends Component {
               if(this.state.metamask!=-1) this.setState({metamask:-1,network:network})
             }else{
               accounts = _accounts;
+              if(network){
+                let etherscan = "https://etherscan.io/"
+                if(network=="Unknown"||network=="private"){
+                  etherscan = "http://localhost:8000/#/"
+                }else if(network!="Mainnet"){
+                  etherscan = "https://"+network.toLowerCase()+".etherscan.io/"
+                }
+                this.props.setEtherscan(etherscan)
+              }
+
               if(!accounts){
                 if(this.state.metamask!=-1) this.setState({metamask:-1,network:network})
               } else if(accounts.length<=0){
@@ -43,14 +53,6 @@ class Metamask extends Component {
                   window.location.reload(true);
                 }else{
                   if(this.state.metamask!=3) {
-                    let etherscan = "https://etherscan.io/"
-                    if(network=="Unknown"||network=="private"){
-                      etherscan = "http://localhost:8000/#/"
-                    }else if(network!="Mainnet"){
-                      etherscan = "https://"+network.toLowerCase()+".etherscan.io/"
-                    }
-                    this.props.setEtherscan(etherscan)
-
                     this.setState({metamask:3,accounts:accounts,network:network},()=>{
                       this.props.init(accounts[0])
                     })
@@ -123,7 +125,7 @@ class Metamask extends Component {
                 color:"#222",
                 textAlign:"right"
               }}>
-                <div><Writing string={"Please switch your network to Ropsten in MetaMask."} size={24} space={5}/></div>
+                <div><Writing string={"Please switch your network to Ropsten"} size={24} space={5}/></div>
               </span>
               <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
                 src="metamaskhah.png"
