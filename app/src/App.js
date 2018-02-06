@@ -189,6 +189,8 @@ class App extends Component {
       console.log(e)
     }
 
+    this.handleKeyPress = this.handleKeyPress.bind(this);
+
   }
 
   updateDimensions() {
@@ -220,14 +222,20 @@ class App extends Component {
     this.setState(update)
     console.log(update)
   }
-
+  handleKeyPress(e) {
+    if(e.keyCode === 27) {
+      this.setState({modalHeight:-600,clickScreenTop:-5000,clickScreenOpacity:0})
+    }
+  }
   componentDidMount() {
     this.updateDimensions();
     window.addEventListener("resize", this.updateDimensions.bind(this));
+    document.addEventListener('keydown', this.handleKeyPress);
   }
 
   componentWillUnmount() {
     window.removeEventListener("resize", this.updateDimensions.bind(this));
+    document.removeEventListener('keydown', this.handleKeyPress);
   }
 
   setEtherscan(url){
@@ -974,12 +982,13 @@ setHintMode(num){
   this.setState({hintMode:num})
 }
 clickScreenClick(){
-  console.log("CLICK SCREEN CLICKED")
+  var userAgent = window.navigator.userAgent;
+  console.log("CLICK SCREEN CLICKED",userAgent)
   if(this.state.modalHeight>=0){
     //click screen is up for modal
     this.setState({modalHeight:-600,clickScreenTop:-5000,clickScreenOpacity:0})
   }else{
-    if(this.state.hintClicks>0 && this.state.hintClicks%2==1 && this.state.hintMode==1){
+    if(this.state.hintClicks>0 && this.state.hintClicks%2==1 && this.state.hintMode==1 && userAgent.indexOf("iPhone")<0){
       window.open('https://metamask.io', '_blank');
     }
     else{
