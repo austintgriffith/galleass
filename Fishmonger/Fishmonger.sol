@@ -7,7 +7,7 @@ pragma solidity ^0.4.15;
 
   The Fishmonger buys fish from players for Copper. It then butchers the fish
   to produce Fillets. When a fish is butchered, it is actually restocked into
-  the Sea for other players to catch. 
+  the Sea for other players to catch.
 
 */
 
@@ -48,8 +48,18 @@ contract Fishmonger is Galleasset, HasNoEther {
     StandardToken copperContract = StandardToken(copperContractAddress);
     require( copperContract.transfer(msg.sender,fishPrice*_amount) );
 
+    updateExperience(msg.sender);
+
     return true;
   }
+
+  function updateExperience(address _player) internal returns (bool){
+    address experienceContractAddress = getContract("Experience");
+    require( experienceContractAddress!=address(0) );
+    Experience experienceContract = Experience(experienceContractAddress);
+    experienceContract.update(_player,3,true);//milestone 3: Sell Fish for Copper
+  }
+
   //event sellFish(address _sender,address _species,uint256 _amount,bool _permission);
 }
 
@@ -65,4 +75,8 @@ contract StandardToken {
   function galleassTransferFrom(address _from, address _to, uint256 _value) public returns (bool) { }
   function transferFrom(address _from, address _to, uint256 _value) public returns (bool) { }
   function transfer(address _to, uint256 _value) public returns (bool) { }
+}
+
+contract Experience{
+  function update(address _player,uint16 _milestone,bool _value) public returns (bool) { }
 }

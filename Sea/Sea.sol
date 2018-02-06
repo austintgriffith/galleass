@@ -216,6 +216,12 @@ contract Sea is Galleasset, HasNoEther {
       require( thisFishContract.transfer(msg.sender,1) );
       Catch(msg.sender,_fish,now,fishContractAddress);
       Fish(_fish, now, fish[_fish],thisFishContract.image());
+
+      address experienceContractAddress = getContract("Experience");
+      require( experienceContractAddress!=address(0) );
+      Experience experienceContract = Experience(experienceContractAddress);
+      experienceContract.update(msg.sender,2,true);//milestone 2: Catch a fish
+
       return true;
     }else{
       return false;
@@ -348,4 +354,8 @@ contract StandardToken {
   bytes32 public image;
   function transferFrom(address _from, address _to, uint256 _value) public returns (bool) { }
   function transfer(address _to, uint256 _value) public returns (bool) { }
+}
+
+contract Experience{
+  function update(address _player,uint16 _milestone,bool _value) public returns (bool) { }
 }

@@ -77,6 +77,12 @@ contract Harbor is Galleasset, Ownable {
     uint256 availableShip = getShipFromStorage(shipsContract,model);
     require( availableShip!=0 );
     shipsContract.transfer(msg.sender,availableShip);
+
+    address experienceContractAddress = getContract("Experience");
+    require( experienceContractAddress!=address(0) );
+    Experience experienceContract = Experience(experienceContractAddress);
+    experienceContract.update(msg.sender,1,true);//milestone 1: buy ship
+
     return availableShip;
   }
 
@@ -131,4 +137,8 @@ contract NFT {
   function transfer(address _to,uint256 _tokenId) external { }
   function transferFrom(address _from,address _to,uint256 _tokenId) external { }
   function ownerOf(uint256 _tokenId) external view returns (address owner) { }
+}
+
+contract Experience{
+  function update(address _player,uint16 _milestone,bool _value) public returns (bool) { }
 }

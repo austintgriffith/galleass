@@ -538,7 +538,7 @@ class App extends Component {
           contracts["Harbor"].methods.buyShip(web3.utils.fromAscii("Dogger")).send({
             value: currentPrice,
             from: accounts[0],
-            gas:90000,
+            gas:110000,
             gasPrice:this.state.GWEI * 1000000000
           },(error,hash)=>{
             console.log("CALLBACK!",error,hash)

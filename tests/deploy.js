@@ -3,9 +3,13 @@ const galleass = require("./galleass.js")
 
 galleass.deploy("Galleass",0)
 
+galleass.deploy("Experience",0)
+galleass.setContract("Experience",0)
+
 galleass.deploy("Sea",0)
 galleass.setContract("Sea",0)
 galleass.setPermission("Sea",0,"transferDogger","true")
+galleass.setPermission("Sea",0,"updateExperience","true")
 
 galleass.deploy("Land",0)
 galleass.setContract("Land",0)
@@ -41,11 +45,13 @@ galleass.setContract("Fillet",0)
 galleass.deploy("Harbor",0)
 galleass.setContract("Harbor",0)
 galleass.setPermission("Harbor",0,"buildDogger","true")
+galleass.setPermission("Harbor",0,"updateExperience","true")
 
 galleass.deploy("Fishmonger",0)
 galleass.setContract("Fishmonger",0)
 galleass.setPermission("Fishmonger",0,"transferFish","true")
 galleass.setPermission("Fishmonger",0,"mintFillet","true")
+galleass.setPermission("Fishmonger",0,"updateExperience","true")
 
 galleass.testMint("Copper",0,1,100)
 galleass.approveContract("Copper",1,"Fishmonger",100)
