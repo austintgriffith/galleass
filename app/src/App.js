@@ -105,6 +105,7 @@ class App extends Component {
     this.state = {
       hintMode:0,
       hintClicks:0,
+      loaderOpacity:1,
       clientWidth: document.documentElement.clientWidth,
       clientHeight: document.documentElement.clientHeight,
       mapScale:1,
@@ -146,9 +147,25 @@ class App extends Component {
       clickScreenConfig:{stiffness:28, damping: 20},
     }
 
-    setTimeout(()=>{
-      this.setState({clickScreenOpacity:0})
-    },1000)
+    let timeoutLoader = 8000
+    let timeoutLoaderInterval = 250
+    let timeoutCount = 0
+    let loadWatcher = setInterval(()=>{
+      if(document.readyState=="complete" || ((timeoutCount++)*timeoutLoaderInterval) > timeoutLoader){
+        if(this.state.clickScreenReadyToGetOut){
+          this.setState({clickScreenOpacity:0})
+          setTimeout(()=>{
+            this.setState({clickScreenTop:-90000})
+          },2000)
+        }else{
+          this.setState({clickScreenOpacity:0})
+        }
+        setTimeout(()=>{
+          this.setState({loaderOpacity:0})
+        },3000)
+        clearInterval(loadWatcher)
+      }
+    },timeoutLoaderInterval)
 
     this.state.titleRight = this.state.titleRightStart;
     this.state.titleBottom = this.state.titleBottomStart;
@@ -853,7 +870,12 @@ startWaiting(hash,nextPhase){
 startEventSync() {
   console.log("Finished loading contracts and block number, start syncing events...",this.state.blockNumber)
   clearInterval(waitInterval);
-  this.setState({avgBlockTime:15000,contractsLoaded:true,clickScreenTop:-90000,clickScreenOpacity:0})
+  if(this.state.clickScreenOpacity==0){
+    this.setState({avgBlockTime:15000,contractsLoaded:true,clickScreenTop:-90000})//clickScreenTop:-90000,clickScreenOpacity:0
+  }else{
+    this.setState({avgBlockTime:15000,contractsLoaded:true,clickScreenReadyToGetOut:true})
+  }
+
   //dev loop only...
   //setInterval(this.syncContacts.bind(this),4001)
   //this.syncContacts()
@@ -1377,7 +1399,14 @@ let clickScreen = (
   >
   {currentStyles => {
     return (
-      <div style={{width:this.state.clickScreenWidth,height:this.state.clickScreenHeight,opacity:currentStyles.opacity,backgroundColor:"#000000",position:"fixed",left:0,top:this.state.clickScreenTop,zIndex:899}} onClick={this.clickScreenClick.bind(this)}>
+      <div style={{width:this.state.clickScreenWidth,height:this.state.clickScreenHeight,opacity:currentStyles.opacity,backgroundColor:"#0a1727",position:"fixed",left:0,top:this.state.clickScreenTop,zIndex:899}} onClick={this.clickScreenClick.bind(this)}>
+        <img style={{
+          opacity:this.state.loaderOpacity,
+          position:"absolute",
+          zIndex:-99,
+          left:"50%",
+          top:"50%"
+        }} src="loading3.gif" />
       </div>
     )
   }}
@@ -1786,7 +1815,7 @@ return (
     }
 
     return (
-      <div style={{zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
+      <div style={{zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
       <div style={{position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
       <img src="exit.png" />
       </div>
@@ -1807,8 +1836,7 @@ return (
 
 
 
-
-
+    <img src="maptexturelightfaded.jpg" style={{position:'absolute',width:1,height:1,left:1,top:1}} />
   </div>
 );
 }

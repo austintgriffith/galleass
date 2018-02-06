@@ -48,7 +48,7 @@ class Clouds extends Component {
     //console.log("CLOUDS",clouds)
     for(let c in clouds){
       let blocksTraveled = this.props.blockNumber - clouds[c].block;
-      let image = "cloud"+clouds[c].image+".png";
+      let image = "cloud"+clouds[c].image+"_smaller.png";
       let speed = (256-(parseInt(clouds[c].speed*2)))
       let startingLocation = parseInt(clouds[c].location);
       let location = startingLocation + blocksTraveled*speed;
