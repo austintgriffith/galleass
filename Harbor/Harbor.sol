@@ -81,7 +81,7 @@ contract Harbor is Galleasset, Ownable {
     address experienceContractAddress = getContract("Experience");
     require( experienceContractAddress!=address(0) );
     Experience experienceContract = Experience(experienceContractAddress);
-    experienceContract.update(msg.sender,1,true);//milestone 1: buy ship
+    require( experienceContract.update(msg.sender,1,true) );//milestone 1: buy ship
 
     return availableShip;
   }

@@ -248,7 +248,26 @@ module.exports = {
       });
     });
   },
-
+  shouldNotHaveExperience:(accountindex,milestone)=>{
+    describe('#shouldNotHaveExperience() ', function() {
+      it('should Not Have Experience', async function() {
+        this.timeout(120000)
+        const accounts = await clevis("accounts")
+        const setResult = await clevis("contract","experience","Experience",accounts[accountindex],milestone)
+        assert(setResult==false,"Account should not have experience but it does!")
+      });
+    });
+  },
+  shouldHaveExperience:(accountindex,milestone)=>{
+    describe('#shouldHaveExperience() ', function() {
+      it('should Have Experience', async function() {
+        this.timeout(120000)
+        const accounts = await clevis("accounts")
+        const setResult = await clevis("contract","experience","Experience",accounts[accountindex],milestone)
+        assert(setResult==true,"Account should have experience but it doesn't!")
+      });
+    });
+  },
   allowSpecies:(contract,accountindex)=>{
     describe('#allowSpecies() '+contract.magenta, function() {
       it('should allow species '+contract.magenta, async function() {

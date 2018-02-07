@@ -538,7 +538,7 @@ class App extends Component {
           contracts["Harbor"].methods.buyShip(web3.utils.fromAscii("Dogger")).send({
             value: currentPrice,
             from: accounts[0],
-            gas:110000,
+            gas:130000,
             gasPrice:this.state.GWEI * 1000000000
           },(error,hash)=>{
             console.log("CALLBACK!",error,hash)
@@ -586,7 +586,7 @@ class App extends Component {
     //console.log("methods.embark(",this.state.inventoryDetail['Ships'][0])
     contracts["Sea"].methods.embark(this.state.inventoryDetail['Dogger'][0]).send({
       from: accounts[0],
-      gas:250000,
+      gas:200000,
       gasPrice:this.state.GWEI * 1000000000
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
@@ -607,7 +607,7 @@ class App extends Component {
     console.log("Fishmonger is paying ",paying," for ",fishContract._address)
     contracts["Fishmonger"].methods.sellFish(fishContract._address,1).send({
       from: accounts[0],
-      gas:230000,
+      gas:330000,
       gasPrice:this.state.GWEI * 1000000000
     },/*(error,hash)=>{
       console.log("CALLBACK!",error,hash)
@@ -741,7 +741,7 @@ reelIn(){
 
     contracts["Sea"].methods.reelIn(bestId,baitToUse).send({
       from: _accounts[0],
-      gas:120000,
+      gas:200000,
       gasPrice:this.state.GWEI * 1000000000
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
@@ -973,7 +973,7 @@ async tileClick(name,index,px) {
     modalObject:modalObject,
     modalHeight:180,
     clickScreenTop:0,
-    clickScreenOpacity:0.5
+    clickScreenOpacity:0.33
   })
 }
 setHintMode(num){
@@ -1834,8 +1834,8 @@ return (
       </div>
       <div style={{position:'absolute',left:118,top:24,textAlign:"left"}}>
       <div><Writing style={{opacity:0.9}} string={this.state.modalObject.name} size={28}/>  -  {this.state.modalObject.index} @ ({this.state.landX},{this.state.landY})</div>
-      <div>Contract: <a href={this.state.etherscan+"address/"+this.state.modalObject.contract}>{this.state.modalObject.contract}</a></div>
-      <div>Owner: <a href={this.state.etherscan+"address/"+this.state.modalObject.owner}>{this.state.modalObject.owner}</a></div>
+      <div>Contract: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.contract}>{this.state.modalObject.contract}</a></div>
+      <div>Owner: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.owner}>{this.state.modalObject.owner}</a></div>
 
       </div>
       </div>

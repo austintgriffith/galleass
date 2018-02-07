@@ -31,6 +31,11 @@ contract Experience is Galleasset, HasNoEther {
     ExperienceUpdate(_player,_milestone,experience[_player][_milestone]);
     return true;
   }
-  event ExperienceUpdate(address owner,uint256 experience,bool value);
+  event ExperienceUpdate(address _owner,uint16 _milestone,bool _value);
 
+  /*
+  for some reason the automatic getter wasn't working until I made this one and now it's fine?!?
+  function hasExperience(address _player,uint16 _milestone) public constant returns (bool){
+    return experience[_player][_milestone];
+  }*/
 }
