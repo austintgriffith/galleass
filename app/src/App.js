@@ -31,7 +31,7 @@ import Metamask from './Metamask.js'
 import {Motion, spring, presets} from 'react-motion';
 const ReactHint = ReactHintFactory(React)
 
-const IPFSADDRESS = "QmTFBpYpacFs9TPvWn16wrVuTEwHpEuAHtaqzqAb6U8mHH";
+const IPFSADDRESS = "QmdxrdYyHifG79Qu45xPPka48KmQPA6GWCS5HCYfpFwQB1";
 
 
 
