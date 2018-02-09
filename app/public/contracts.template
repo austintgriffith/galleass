@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.60, shrink-to-fit=no">
+    <meta name="theme-color" content="#000000">
+
+    <title>Galleass.io Smart Contracts</title>
+
+    <meta name='description' content='Fully decentralized, hand painted, age of sail, resource management game built on the Ethereum blockchain.'>
+    <meta name='keywords' content='galleass, ethereum, blockchain, game, dapp, dogger, snark, dangler, fishing'>
+    <meta name='author' content='Austin Thomas Griffith, austin@concurrence.io'>
+
+    <meta property="og:title" content="Galleass.io - Blockchain in the Age of Sail!">
+    <meta property="og:type" content="game">
+    <meta property="og:url" content="https://galleass.io">
+    <meta property="og:image" content="https://galleass.io/galleassscreen.png">
+    <meta property="og:description" content="Fully decentralized, hand painted, age of sail, resource management game built on the Ethereum blockchain.">
+
+    <meta name="twitter:title" content="Galleass.io - Blockchain in the Age of Sail!">
+    <meta name="twitter:description" content="Fully decentralized, hand painted, age of sail, resource management game built on the Ethereum blockchain.">
+    <meta name="twitter:image" content="https://galleass.io/galleassscreen.png">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="shortcut icon" href="favicon.ico">
+
+  </head>
+  <body style="background-color:#0a1727">
+    <div style="margin: 0 auto;width: 700px;background-color:#ffffff;padding:50px;font-family: Helvetica,Arial,sans-serif;">
+      <h1>Galleass.io - Smart Contracts</h1>
+
+      <div style="width:77%;border-bottom:1px solid #dddddd"></div>
+      <div>
+        <!--CONTRACTS-->
+      </div>
+
+
+    </div>
+  </body>
+</html>
