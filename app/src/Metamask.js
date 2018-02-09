@@ -24,52 +24,60 @@ class Metamask extends Component {
     } else {
       this.props.setHintMode(0);
       window.web3.version.getNetwork((err,network)=>{
-        //console.log("PEERS",window.web3.net)
+
         network = translateNetwork(network);
-        let accounts
-        try{
-          window.web3.eth.getAccounts((err,_accounts)=>{
-            if(err){
-              if(this.state.metamask!=-1) this.setState({metamask:-1,network:network})
-            }else{
-              accounts = _accounts;
-              if(network){
-                let etherscan = "https://etherscan.io/"
-                if(network=="Unknown"||network=="private"){
-                  etherscan = "http://localhost:8000/#/"
-                }else if(network!="Mainnet"){
-                  etherscan = "https://"+network.toLowerCase()+".etherscan.io/"
-                }
-                this.props.setEtherscan(etherscan)
-              }
-
-              if(!accounts){
+        if(network=="Mainnet" || network=="Morden" || network=="Rinkeby" || network=="Kovan"){
+          if(this.state.metamask!=2) this.setState({metamask:2,network:network})
+        }else{
+          //console.log("network",network)
+          let accounts
+          try{
+            window.web3.eth.getAccounts((err,_accounts)=>{
+              if(err){
+                console.log("metamask error",err)
                 if(this.state.metamask!=-1) this.setState({metamask:-1,network:network})
-              } else if(accounts.length<=0){
-                if(this.state.metamask!=2) this.setState({metamask:2,network:network})
-              } else{
+              }else{
+                accounts = _accounts;
+                if(network){
+                  let etherscan = "https://etherscan.io/"
+                  if(network=="Unknown"||network=="private"){
+                    etherscan = "http://localhost:8000/#/"
+                  }else if(network!="Mainnet"){
+                    etherscan = "https://"+network.toLowerCase()+".etherscan.io/"
+                  }
+                  this.props.setEtherscan(etherscan)
+                }
 
-                if(this.props.account&&this.props.account!=accounts[0]){
-                  window.location.reload(true);
-                }else{
-                  if(this.state.metamask!=3) {
-                    this.setState({metamask:3,accounts:accounts,network:network},()=>{
-                      this.props.init(accounts[0])
-                    })
+                if(!accounts){
+                  if(this.state.metamask!=-1) this.setState({metamask:-1,network:network})
+                } else if(accounts.length<=0){
+                  if(this.state.metamask!=2) this.setState({metamask:2,network:network})
+                } else{
+
+                  if(this.props.account&&this.props.account!=accounts[0]){
+                    window.location.reload(true);
+                  }else{
+                    if(this.state.metamask!=3) {
+                      this.setState({metamask:3,accounts:accounts,network:network},()=>{
+                        this.props.init(accounts[0])
+                      })
+                    }
                   }
                 }
               }
-            }
-          })
-        }catch(e){
-          console.log(e)
-          if(this.state.metamask!=-1) this.setState({metamask:-1,network:network})
+            })
+          }catch(e){
+            console.log(e)
+            if(this.state.metamask!=-1) this.setState({metamask:-1,network:network})
+          }
         }
+
       })
     }
   }
   render(){
     let metamask
+    //console.log("this.state.metamask",this.state.metamask,"this.state.network",this.state.network)
     if(-1==this.state.metamask){
       //not installed
       metamask = (
@@ -137,7 +145,7 @@ class Metamask extends Component {
         metamask = (
           <div>
             <span style={this.props.textStyle}>
-              <Writing string={"Unlock MetaMask to play"} size={24} space={5}/>
+                <Writing string={"Unlock MetaMask to play"} size={24} space={5}/>
             </span>
             <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
               src="metamaskhah.png"

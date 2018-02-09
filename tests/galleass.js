@@ -722,6 +722,7 @@ module.exports = {
         fs.writeFileSync("app/src/blockNumber.js","module.exports = \""+blockNumber+"\"");
 
         loadAbi("Galleass")
+        loadAbi("Experience")
         loadAbi("Sea")
         loadAbi("Harbor")
         loadAbi("Dogger")

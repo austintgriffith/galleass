@@ -4,6 +4,7 @@
 [ ] refactor code to clean up App.js, it's huge
 [x] oh man resizing the window breaks things bad
   [ ] - still does on mobile
+[ ] mess around with the uport api
 [x] left control bar until title that adjusts gas, links to main contract, links to ipfs, and links to github
 [x] bug where buy ship button appears when it shouldn't both at load and after you buyship and you are waiting for embark button
 [ ] I'd like the offline demo to be less random... make sure that first page load shows big ships, little ships, clouds, village, etc
@@ -43,10 +44,16 @@
 
 notes for first feedback session with my dudes:
 -----------------------------------------------
-[ ] ropsten message didn't work so mainnet looked fine
-[ ] buy ship button wasn't obvious enough.. jiggle that thing and then throw up some arrows or something
-[ ] you don't know how the fish catching mechanics work without looking at the contracts, there should be some way to throw some hints
-[ ] a couple of times we got stuck on the green loader without any kind of error, maybe timeout to a reload until you can solve it?
+[ ] talk about gas in the write up with some examples
+[x] tooltips!!!
+[ ] take out the initial fee and make it gas only
+[ ] set up a faucet button for testnet that sends when they don't have test ether?
+[ ] need to break the cache, pushing lots of updates that require hard reloads
+[ ] explain the loader bars blue, green, grey
+[-] ropsten message didn't work so mainnet looked fine
+[x] buy ship button wasn't obvious enough.. jiggle that thing and then throw up some arrows or something
+[x] you don't know how the fish catching mechanics work without looking at the contracts, there should be some way to throw some hints
+[-] a couple of times we got stuck on the green loader without any kind of error, maybe timeout to a reload until you can solve it?
 [ ] there needs to be more things to interact with while you are waiting for the block to mine, more moving pieces and hints
 [ ] nam actually had issues syncing with the fish events (he was trying to catch a fish that didn't exist)
 [ ] generally, metamask wasn't intuitive enough but that will get better and users will learn how it works
@@ -54,3 +61,4 @@ notes for first feedback session with my dudes:
 [ ] the loader looks small on mobile, is there way to make it bigger without looking shitty?
 [ ] the complexity is kind of lost on a first time viewer, maybe that is good, but exposing the contracts and code somehow is important
 [ ] trading the tokens around is fun, even while you are waiting for other things, maybe put more trading in somehow
+[x] might want to register the name with one "l" too?

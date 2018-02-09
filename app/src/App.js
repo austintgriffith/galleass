@@ -8,6 +8,8 @@ by Austin Thomas Griffith
 import React, { Component } from 'react';
 import Draggable from 'react-draggable';
 
+import ReactHintFactory from 'react-hint'
+import './reacthint.css'
 import './App.css';
 import galleassAddress from './Address.js'
 import galleassBlockNumber from './blockNumber.js'
@@ -27,7 +29,7 @@ import Clouds from './Clouds.js'
 import Inventory from './Inventory.js'
 import Metamask from './Metamask.js'
 import {Motion, spring, presets} from 'react-motion';
-
+const ReactHint = ReactHintFactory(React)
 
 const IPFSADDRESS = "QmTFBpYpacFs9TPvWn16wrVuTEwHpEuAHtaqzqAb6U8mHH";
 
@@ -60,7 +62,8 @@ let loadContracts = [
   "Dangler",
   "Fishmonger",
   "Copper",
-  "Land"
+  "Land",
+  "Experience"
 ]
 
 let inventoryTokens = [
@@ -145,6 +148,8 @@ class App extends Component {
       clickScreenTop:0,
       clickScreenOpacity:1,
       clickScreenConfig:{stiffness:28, damping: 20},
+      experienceBuyShip:false,
+      staticFillerShipsX:0,
     }
 
     let timeoutLoader = 8000
@@ -248,7 +253,52 @@ class App extends Component {
     clearTimeout(bottomBarTimeout)
     bottomBarTimeout = setTimeout(()=>{
       this.setState({bottomBar:-80})
-    },130000)
+      setTimeout(()=>{
+        this.setState({bottomBar:0,bottomBarMessage:"The #gas  Gas slider controls the cost and speed of transactions.",bottomBarSize:23})
+        clearTimeout(bottomBarTimeout)
+        bottomBarTimeout = setTimeout(()=>{
+          this.setState({bottomBar:-80})
+          setTimeout(()=>{
+            this.setState({bottomBar:0,bottomBarMessage:"Get closer to #fish  Fish to increase the odds of catching them.",bottomBarSize:23})
+            clearTimeout(bottomBarTimeout)
+            bottomBarTimeout = setTimeout(()=>{
+              this.setState({bottomBar:-80})
+              setTimeout(()=>{
+                this.setState({bottomBar:0,bottomBarMessage:"Use the #mapicon  Map to navigate to other islands.",bottomBarSize:23})
+                clearTimeout(bottomBarTimeout)
+                bottomBarTimeout = setTimeout(()=>{
+                  this.setState({bottomBar:-80})
+                  setTimeout(()=>{
+                    this.setState({bottomBar:0,bottomBarMessage:"Read the #help  Help section for more information.",bottomBarSize:23})
+                    clearTimeout(bottomBarTimeout)
+                    bottomBarTimeout = setTimeout(()=>{
+                      this.setState({bottomBar:-80})
+                      this.setState({bottomBar:0,bottomBarMessage:"Stage 1: Use a #Dogger  Dogger to catch #Fish  Fish then sell them for #Copper  Copper.",bottomBarSize:23})
+                      clearTimeout(bottomBarTimeout)
+                      bottomBarTimeout = setTimeout(()=>{
+                        this.setState({bottomBar:-80})
+                      },120000)
+                    },30000)
+                  },3000)
+                },30000)
+              },3000)
+            },30000)
+          },3000)
+        },30000)
+      },3000)
+    },30000)
+
+    let buyShipBump = setInterval(()=>{
+      if(this.state.experienceBuyShip){
+        clearInterval(buyShipBump)
+      }else{
+        this.bumpButton("buyship")
+        setTimeout(()=>{
+          this.resetButton("buyship")
+        },1000)
+      }
+    },3000)
+
   }
 
   async sync(name,doSyncFn,CRAWLBACKDELAY,SYNCINVERVAL) {
@@ -371,6 +421,12 @@ class App extends Component {
       let updateDetail = false
       if(DEBUG_INVENTORY) console.log("account",this.state.account)
 
+      let experienceBuyShip = await contracts["Experience"].methods.experience(this.state.account,1).call()
+      if(this.state.experienceBuyShip!=experienceBuyShip){
+        console.log("experienceBuyShip update",experienceBuyShip);
+        this.setState({experienceBuyShip:experienceBuyShip})
+      }
+
       if(inventory['Dogger']>0){
         let myShipArray = await contracts["Dogger"].methods.tokensOfOwner(this.state.account).call()
         if(myShipArray && !isEquivalentAndNotEmpty(myShipArray,inventoryDetail['Dogger'])){
@@ -397,11 +453,11 @@ class App extends Component {
       }
 
       if(update){
-        //console.log("INVENTORY UPDATE....")
+        console.log("INVENTORY UPDATE....")
         this.setState({loading:0,inventory:inventory,waitingForInventoryUpdate:false})
       }
       if(updateDetail){
-        //.log("DETAIL INVENTORY UPDATE....")
+        console.log("DETAIL INVENTORY UPDATE....")
         this.setState({loading:0,inventoryDetail:inventoryDetail,waitingForInventoryUpdate:false})
       }
     }
@@ -480,6 +536,8 @@ class App extends Component {
     }
   }
   async syncBlockNumber(){
+    this.setState({staticFillerShipsX:this.state.staticFillerShipsX+2})
+
     //console.log("checking block number....")
     if( !web3 || !web3.eth || typeof web3.eth.getBlockNumber !="function" || !this.state.contractsLoaded){
       let offlineCounter = this.state.offlineCounter;
@@ -615,7 +673,7 @@ class App extends Component {
       if(!error) this.load()
     }*/).on('error',this.handleError.bind(this)).then((receipt)=>{
     console.log("RESULT:",receipt)
-    this.startWaiting(receipt.transactionHash)
+    //this.startWaiting(receipt.transactionHash)
   })
 }
 setSail(direction){
@@ -1079,6 +1137,9 @@ render() {
     let timeSpentWaiting = Date.now() - this.state.waitingForTransactionTime
     timeSpentWaiting = Math.floor(timeSpentWaiting/1200)+1;
     //console.log("timeSpentWaiting",timeSpentWaiting)
+    if(timeSpentWaiting>30){
+      window.location.reload(true);
+    }
     if(timeSpentWaiting>12) timeSpentWaiting=12
     loadingBar = (
       <a href={this.state.etherscan+"tx/"+this.state.currentTx} target='_blank'><img src={"loader_"+timeSpentWaiting+".png"} /></a>
@@ -1353,7 +1414,7 @@ let galley= (
   <div key={"galley"} style={{
     zIndex:20,
     position:'absolute',
-    left:3500,
+    left:500+this.state.staticFillerShipsX,
     top:500,
     opacity:0.9,
     height:75,
@@ -1377,7 +1438,7 @@ let galleass= (
   <div key={"galleass"} style={{
     zIndex:20,
     position:'absolute',
-    left:3700,
+    left:3700+this.state.staticFillerShipsX,
     top:500,
     opacity:0.9,
     height:131,
@@ -1413,8 +1474,9 @@ let clickScreen = (
           opacity:this.state.loaderOpacity,
           position:"absolute",
           zIndex:-99,
-          left:"50%",
-          top:"50%"
+          left:"47%",
+          top:"47%",
+          opacity:0.8,
         }} src="loading3.gif" />
       </div>
     )
@@ -1429,6 +1491,7 @@ let clickScreen = (
 //console.log(this.state.titleRightStart)
 return (
   <div className="App" style={{zoom:this.state.zoom}}>
+  <ReactHint events delay={100} />
   {menu}
   {clickScreen}
 
@@ -1746,10 +1809,19 @@ return (
       <img src={"corner.png"} />
       </div>
       <div style={{cursor:"pointer",zIndex:1,position:'fixed',opacity:1-this.state.cornerOpacity,top:currentStyles.titleBottomFaster-20,left:-20}} >
-      <a href="https://github.com/austintgriffith/galleass" target="_blank"><img style={{maxHeight:36,position:"absolute",left:25+iconOffset,top:83,opacity:0.8}} src="github.png" /></a>
-      <a href="http://austingriffith.com/portfolio/galleass/" target="_blank"><img style={{maxHeight:36,position:"absolute",left:70+iconOffset,top:83,opacity:0.8}} src="moreinfo.png" /></a>
-      <a href="https://ropsten.etherscan.io/address/0xc15fa062d898f89e943429d056200d08614ddf89#code" target="_blank"><img style={{maxHeight:36,position:"absolute",left:115+iconOffset,top:83,opacity:0.8}} src="smartcontract.png" /></a>
-      <a href={decentralizedLink} target="_blank"><img style={{maxHeight:36,position:"absolute",left:160+iconOffset,top:83,opacity:0.8}} src="ipfs.png" /></a>
+      <a href="https://github.com/austintgriffith/galleass" target="_blank">
+        <img data-rh="Source" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:25+iconOffset,top:83,opacity:0.8}} src="github.png" />
+      </a>
+      <a href="http://austingriffith.com/portfolio/galleass/" target="_blank">
+        <img data-rh="Info" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:70+iconOffset,top:83,opacity:0.8}} src="moreinfo.png" />
+      </a>
+      <a href="https://ropsten.etherscan.io/address/0xc15fa062d898f89e943429d056200d08614ddf89#code" target="_blank">
+        <img data-rh="Contracts" data-rh-at="bottom"  style={{maxHeight:36,position:"absolute",left:115+iconOffset,top:83,opacity:0.8}} src="smartcontract.png" />
+      </a>
+      <a href={decentralizedLink} target="_blank">
+        <img data-rh="IPFS" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:160+iconOffset,top:83,opacity:0.8}} src="ipfs.png" />
+      </a>
+
       {gasDragger}
       <img style={{zIndex:2}} src={"mapicon.png"} onClick={this.titleClick.bind(this)}/>
       </div>

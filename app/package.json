@@ -8,6 +8,7 @@
     "react-blockies": "^1.2.2",
     "react-dom": "^16.2.0",
     "react-draggable": "^3.0.5",
+    "react-hint": "^3.0.0",
     "react-motion": "^0.5.2",
     "react-scripts": "1.0.17",
     "s3": "^4.4.0",
