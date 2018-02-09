@@ -1339,7 +1339,7 @@ buttons.push(
 )
 }
 buttons.push(
-  <div style={{zIndex:201,position:'absolute',left:buttonsLeft-50,top:buttonsTop+50,opacity:0.7}}>
+  <div style={{zIndex:2001,position:'absolute',left:buttonsLeft-50,top:buttonsTop+50,opacity:0.7}}>
   {loadingBar}
   </div>
 )
