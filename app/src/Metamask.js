@@ -91,19 +91,21 @@ class Metamask extends Component {
         </a>
       )
     }else if(!this.state.metamask){
-      //setTimeout(()=>{
-      //  window.location.reload();
-      //},5000)
       //not installed
+      let mmClick = ()=>{
+        window.open('https://metamask.io', '_blank');
+      }
       metamask = (
-        <a target="_blank" href="https://metamask.io/">
-        <span style={this.props.textStyle}>
-          <Writing string={"Install MetaMask to play"} size={20} space={5}/>
-        </span>
-        <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
-        src="metamaskhah.png"
-        />
-        </a>
+        <div style={{zIndex:999999}} onClick={mmClick}>
+          <a target="_blank" href="https://metamask.io/">
+          <span style={this.props.textStyle}>
+            <Writing string={"Install MetaMask to play"} size={20} space={5}/>
+          </span>
+          <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
+          src="metamaskhah.png"
+          />
+          </a>
+        </div>
       )
     }else if(this.state.metamask==1){
       //not installed

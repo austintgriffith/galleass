@@ -1039,20 +1039,30 @@ setHintMode(num){
   //0 means just keep shaking the metamask hint
   this.setState({hintMode:num})
 }
-clickScreenClick(){
+clickScreenClick(event){
   var userAgent = window.navigator.userAgent;
-  console.log("CLICK SCREEN CLICKED",userAgent)
+
+  let clickXRatio = event.clientX/this.state.clickScreenWidth;
+  let clickYRatio = event.clientY/this.state.clickScreenHeight;
+  console.log("CLICK SCREEN CLICKED",clickXRatio,clickYRatio,userAgent)
+
+  if(clickXRatio>0.73 && clickYRatio<0.15){
+    window.open('https://metamask.io', '_blank');
+  }
+
   if(this.state.modalHeight>=0){
     //click screen is up for modal
     this.setState({modalHeight:-600,clickScreenTop:-5000,clickScreenOpacity:0})
   }else{
-    if(this.state.hintClicks>0 && this.state.hintClicks%2==1 && this.state.hintMode==1 && userAgent.indexOf("iPhone")<0){
-      window.open('https://metamask.io', '_blank');
-    }
-    else{
+
+
+    //if(this.state.hintClicks>0 && this.state.hintClicks%2==1 && this.state.hintMode==1 && userAgent.indexOf("iPhone")<0){
+      //window.open('https://metamask.io', '_blank');
+    //}
+    //else{
       this.metamaskHint()
-    }
-    this.setState({hintClicks:this.state.hintClicks+1})
+    //}
+    //this.setState({hintClicks:this.state.hintClicks+1})
   }
 }
 handleWhiskeyStart(){
@@ -1161,7 +1171,7 @@ render() {
             return (<div></div>)
           }else{
             return (
-              <div key={"buyship"} style={{cursor:"pointer",zIndex:200,position:'absolute',left:theLeft,top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
+              <div key={"buyship"} style={{cursor:"pointer",zIndex:2000,position:'absolute',left:theLeft,top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
               <img src="buyship.png" style={{maxWidth:150-(extraWidth)}}/>
               </div>
             )
@@ -1178,7 +1188,7 @@ render() {
           if(animated.top>50) animated.top=50
           let extraWidth = animated.top - buttonsTop
           return (
-            <div key={"approveAndEmbark"} style={{cursor:"pointer",zIndex:200,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
+            <div key={"approveAndEmbark"} style={{cursor:"pointer",zIndex:2000,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
             <img src="approveAndEmbark.png" style={{maxWidth:150-(extraWidth)}}/>
             </div>
           )
@@ -1204,7 +1214,7 @@ render() {
         return (<div></div>)
       }else{
         return (
-          <div key={"buyshipHolder"} style={{cursor:"pointer",zIndex:200,position:'absolute',left:theLeft,top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
+          <div key={"buyshipHolder"} style={{cursor:"pointer",zIndex:2000,position:'absolute',left:theLeft,top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
           <img src="buyship.png" style={{maxWidth:150-(extraWidth)}}/>
           </div>
         )
@@ -1229,7 +1239,7 @@ buttons.push(
       if(animated.top>50) animated.top=50
       let extraWidth = animated.top - buttonsTop
       return (
-        <div key={"dropanchor"} style={{cursor:"pointer",zIndex:200,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
+        <div key={"dropanchor"} style={{cursor:"pointer",zIndex:2000,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
         <img src="dropanchor.png" style={{maxWidth:150-(extraWidth)}}/>
         </div>
       )
@@ -1247,7 +1257,7 @@ buttons.push(
       if(animated.top>50) animated.top=50
       let extraWidth = animated.top - buttonsTop
       return (
-        <div key={"reelin"} style={{cursor:"pointer",zIndex:200,position:'absolute',top:animated.top,left:buttonsLeft-75+((extraWidth)/2),opacity:buttonOpacity}} onClick={clickFn}>
+        <div key={"reelin"} style={{cursor:"pointer",zIndex:2000,position:'absolute',top:animated.top,left:buttonsLeft-75+((extraWidth)/2),opacity:buttonOpacity}} onClick={clickFn}>
         <img src="reelin.png" style={{maxWidth:150-(extraWidth)}}/>
         </div>
       )
@@ -1262,7 +1272,7 @@ buttons.push(
       if(animated.top>50) animated.top=50
       let extraWidth = animated.top - buttonsTop
       return (
-        <div key={"saileast"} style={{cursor:"pointer",zIndex:200,position:'absolute',left:buttonsLeft+180-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn1}>
+        <div key={"saileast"} style={{cursor:"pointer",zIndex:2000,position:'absolute',left:buttonsLeft+180-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn1}>
         <img src="saileast.png" style={{maxWidth:150-(extraWidth)}}/>
         </div>
       )
@@ -1276,7 +1286,7 @@ buttons.push(
     if(animated.top>50) animated.top=50
     let extraWidth = animated.top - buttonsTop
     return (
-      <div key={"castLine"} style={{cursor:"pointer",zIndex:200,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn2}>
+      <div key={"castLine"} style={{cursor:"pointer",zIndex:2000,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn2}>
       <img src="castLine.png" style={{maxWidth:150-(extraWidth)}}/>
       </div>
     )
@@ -1291,7 +1301,7 @@ buttons.push(
     if(animated.top>50) animated.top=50
     let extraWidth = animated.top - buttonsTop
     return (
-      <div key={"sailwest"} style={{cursor:"pointer",zIndex:200,position:'absolute',left:buttonsLeft-180-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn3}>
+      <div key={"sailwest"} style={{cursor:"pointer",zIndex:2000,position:'absolute',left:buttonsLeft-180-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn3}>
       <img src="sailwest.png" style={{maxWidth:150-(extraWidth)}}/>
       </div>
     )
@@ -1469,7 +1479,7 @@ let clickScreen = (
   >
   {currentStyles => {
     return (
-      <div style={{width:this.state.clickScreenWidth,height:this.state.clickScreenHeight,opacity:currentStyles.opacity,backgroundColor:"#0a1727",position:"fixed",left:0,top:this.state.clickScreenTop,zIndex:899}} onClick={this.clickScreenClick.bind(this)}>
+      <div style={{cursor:'pointer',width:this.state.clickScreenWidth,height:this.state.clickScreenHeight,opacity:currentStyles.opacity,backgroundColor:"#0a1727",position:"fixed",left:0,top:this.state.clickScreenTop,zIndex:899}} onClick={this.clickScreenClick.bind(this)}>
         <img style={{
           opacity:this.state.loaderOpacity,
           position:"absolute",
@@ -1489,6 +1499,9 @@ let clickScreen = (
 //right:window.innerWidth,bottom:window.innerHeight
 //width:window.innerWidth,height:window.innerHeight
 //console.log(this.state.titleRightStart)
+//
+//  {galley}
+//  {galleass}
 return (
   <div className="App" style={{zoom:this.state.zoom}}>
   <ReactHint events delay={100} />
@@ -1498,8 +1511,7 @@ return (
   {inventory}
   {sea}
   {land}
-  {galley}
-  {galleass}
+
   <Motion
   defaultStyle={{
     right:this.state.mapRightStart,
