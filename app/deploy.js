@@ -29,9 +29,13 @@ const { exec } = require('child_process');
 
 console.log("BUILDING AND DEPLOYING TO https://galleass.io  -- run: 'ipfs daemon' to deploy to ipfs and 'node invalidate.js' to invalidate the cache.... ")
 
+console.log("npm run build")
 exec('npm run build', (err, stdout, stderr) => {
   if (err) {
     // node couldn't execute the command
+    if(err){
+      console.log("ERROR ON BUILD",err)
+    }
     return;
   }
 
