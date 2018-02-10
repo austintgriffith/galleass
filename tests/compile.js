@@ -1,5 +1,6 @@
 const galleass = require("./galleass.js")
 galleass.compile("Galleass")
+galleass.compile("Experience")
 galleass.compile("Land")
 galleass.compile("Sea")
 galleass.compile("Dogger")
