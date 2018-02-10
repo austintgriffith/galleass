@@ -31,7 +31,7 @@ import Metamask from './Metamask.js'
 import {Motion, spring, presets} from 'react-motion';
 const ReactHint = ReactHintFactory(React)
 
-const IPFSADDRESS = "QmZMQt2V7Aw83E5Y6iVDQKoPo2PABccbjYBUMagUJ4GrFh";
+const IPFSADDRESS = "Qmd3eKFpXVX3KS7b823ECAfMrHSokNPm4GvaFQUWGZPLdv";
 
 
 
@@ -490,7 +490,7 @@ class App extends Component {
           veryFirstLoad=false;
           setTimeout(()=>{
             this.setState({scrollLeft:myLocation-windowWidthWithZoom/2})
-          },3000)//delay so when it scrolls to the middle first it will scroll here next
+          },5000)//delay so when it scrolls to the middle first it will scroll here next
         }else{
           this.setState({scrollLeft:myLocation-windowWidthWithZoom/2})
         }
@@ -1171,7 +1171,7 @@ render() {
             return (<div></div>)
           }else{
             return (
-              <div key={"buyship"} style={{cursor:"pointer",zIndex:2000,position:'absolute',left:theLeft,top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
+              <div key={"buyship"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:theLeft,top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
               <img src="buyship.png" style={{maxWidth:150-(extraWidth)}}/>
               </div>
             )
@@ -1188,7 +1188,7 @@ render() {
           if(animated.top>50) animated.top=50
           let extraWidth = animated.top - buttonsTop
           return (
-            <div key={"approveAndEmbark"} style={{cursor:"pointer",zIndex:2000,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
+            <div key={"approveAndEmbark"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
             <img src="approveAndEmbark.png" style={{maxWidth:150-(extraWidth)}}/>
             </div>
           )
@@ -1214,7 +1214,7 @@ render() {
         return (<div></div>)
       }else{
         return (
-          <div key={"buyshipHolder"} style={{cursor:"pointer",zIndex:2000,position:'absolute',left:theLeft,top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
+          <div key={"buyshipHolder"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:theLeft,top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
           <img src="buyship.png" style={{maxWidth:150-(extraWidth)}}/>
           </div>
         )
@@ -1239,7 +1239,7 @@ buttons.push(
       if(animated.top>50) animated.top=50
       let extraWidth = animated.top - buttonsTop
       return (
-        <div key={"dropanchor"} style={{cursor:"pointer",zIndex:2000,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
+        <div key={"dropanchor"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
         <img src="dropanchor.png" style={{maxWidth:150-(extraWidth)}}/>
         </div>
       )
@@ -1257,7 +1257,7 @@ buttons.push(
       if(animated.top>50) animated.top=50
       let extraWidth = animated.top - buttonsTop
       return (
-        <div key={"reelin"} style={{cursor:"pointer",zIndex:2000,position:'absolute',top:animated.top,left:buttonsLeft-75+((extraWidth)/2),opacity:buttonOpacity}} onClick={clickFn}>
+        <div key={"reelin"} style={{cursor:"pointer",zIndex:700,position:'absolute',top:animated.top,left:buttonsLeft-75+((extraWidth)/2),opacity:buttonOpacity}} onClick={clickFn}>
         <img src="reelin.png" style={{maxWidth:150-(extraWidth)}}/>
         </div>
       )
@@ -1272,7 +1272,7 @@ buttons.push(
       if(animated.top>50) animated.top=50
       let extraWidth = animated.top - buttonsTop
       return (
-        <div key={"saileast"} style={{cursor:"pointer",zIndex:2000,position:'absolute',left:buttonsLeft+180-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn1}>
+        <div key={"saileast"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:buttonsLeft+180-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn1}>
         <img src="saileast.png" style={{maxWidth:150-(extraWidth)}}/>
         </div>
       )
@@ -1286,7 +1286,7 @@ buttons.push(
     if(animated.top>50) animated.top=50
     let extraWidth = animated.top - buttonsTop
     return (
-      <div key={"castLine"} style={{cursor:"pointer",zIndex:2000,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn2}>
+      <div key={"castLine"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn2}>
       <img src="castLine.png" style={{maxWidth:150-(extraWidth)}}/>
       </div>
     )
@@ -1301,7 +1301,7 @@ buttons.push(
     if(animated.top>50) animated.top=50
     let extraWidth = animated.top - buttonsTop
     return (
-      <div key={"sailwest"} style={{cursor:"pointer",zIndex:2000,position:'absolute',left:buttonsLeft-180-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn3}>
+      <div key={"sailwest"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:buttonsLeft-180-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn3}>
       <img src="sailwest.png" style={{maxWidth:150-(extraWidth)}}/>
       </div>
     )
@@ -1329,7 +1329,7 @@ buttons.push(
       return (<div></div>)
     }else{
       return (
-        <div key={"disembark"} style={{cursor:"pointer",zIndex:199,position:'absolute',left:theLeft,top:animated.top+150,opacity:theOpacity}} onClick={clickFn}>
+        <div key={"disembark"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:theLeft,top:animated.top+150,opacity:theOpacity}} onClick={clickFn}>
         <img src="disembark.png" style={{maxWidth:75-(extraWidth)}}/>
         </div>
       )
@@ -1339,7 +1339,7 @@ buttons.push(
 )
 }
 buttons.push(
-  <div style={{zIndex:2001,position:'absolute',left:buttonsLeft-50,top:buttonsTop+50,opacity:0.7}}>
+  <div style={{zIndex:701,position:'absolute',left:buttonsLeft-50,top:buttonsTop+50,opacity:0.7}}>
   {loadingBar}
   </div>
 )
@@ -1789,6 +1789,11 @@ return (
       decentralizedLink = "https://galleass.io";
     }
 
+    let mapZ = 300
+    if(this.state.mapUp){
+      mapZ = 750
+    }
+
     return (
 
       <div style={{
@@ -1797,7 +1802,7 @@ return (
         bottom:currentStyles.bottom,
         width:this.state.clientWidth,
         height:this.state.clientHeight,
-        zIndex:300
+        zIndex:mapZ
       }}>
 
       <div style={{
@@ -1827,7 +1832,7 @@ return (
       <a href="http://austingriffith.com/portfolio/galleass/" target="_blank">
         <img data-rh="Info" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:70+iconOffset,top:83,opacity:0.8}} src="moreinfo.png" />
       </a>
-      <a href="https://ropsten.etherscan.io/address/0xc15fa062d898f89e943429d056200d08614ddf89#code" target="_blank">
+      <a href="contracts.html" target="_blank">
         <img data-rh="Contracts" data-rh-at="bottom"  style={{maxHeight:36,position:"absolute",left:115+iconOffset,top:83,opacity:0.8}} src="smartcontract.png" />
       </a>
       <a href={decentralizedLink} target="_blank">
@@ -1877,7 +1882,7 @@ return (
   {currentStyles => {
     //console.log("currentStyles.scrollLeft",currentStyles.scrollLeft)
     return (
-      <div style={{zIndex:400,position:'fixed',left:this.state.clientWidth/2-400,paddingTop:30,textAlign:"center",bottom:currentStyles.bottom,opacity:1,backgroundImage:"url('bottomBar.png')",backgroundRepeat:'no-repeat',height:50,width:800}}>
+      <div style={{zIndex:760,position:'fixed',left:this.state.clientWidth/2-400,paddingTop:30,textAlign:"center",bottom:currentStyles.bottom,opacity:1,backgroundImage:"url('bottomBar.png')",backgroundRepeat:'no-repeat',height:50,width:800}}>
       <Writing style={{opacity:0.9}} string={this.state.bottomBarMessage} size={this.state.bottomBarSize}/>
       </div>
     )
