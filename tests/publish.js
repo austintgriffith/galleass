@@ -23,6 +23,7 @@ let loadContracts = [
   "Snark",
   "Dangler",
   "Copper",
+  "Fillet",
   "Experience",
   "Galleasset",
   "Staged",
@@ -31,7 +32,7 @@ let loadContracts = [
 contractsHtml = "<table cellspacing='0' cellpadding='10' border='0'>"
 
 for(let c in loadContracts){
-  console.log(loadContracts[c])
+  console.log("\t\t Publish Contract: "+loadContracts[c].magenta)
   let address = ""
   let link = ""
   let block = ""
@@ -47,9 +48,8 @@ for(let c in loadContracts){
     block = fs.readFileSync(loadContracts[c]+"/"+loadContracts[c]+".blockNumber").toString().trim();
 
   }catch(e){}
-  console.log(image,address,link,block,source)
+  //console.log(image,address,link,block,source)
   if(image) {
-    console.log("IMAGE:",image)
     image = "<img style='vertical-align:middle;max-height:40px;max-width:40px' src='"+image+"'/>"
   }else{
     image=""
@@ -76,6 +76,6 @@ contractsHtml += "</table>"
 
 content = content.split("##CONTRACTS##").join(contractsHtml);
 
-//console.log(content)
+console.log("\t\t\t"+content.length+" bytes written to ","app/public/contracts.html".cyan)
 
 fs.writeFileSync("app/public/contracts.html",content);

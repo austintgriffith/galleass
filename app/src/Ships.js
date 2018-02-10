@@ -89,21 +89,26 @@ class Ships extends Component {
       }else{
         idHash = "0x"+sha3_224(""+ships[b].id+b)
       }
-
+      let idTopOffset = 0
+      let idLeftOffset = 0
       //console.log("idHash",idHash)
-      let lastTwoBytes = idHash.substring(idHash.length-2);
-      let idTopOffset = lastTwoBytes.substring(0,1);
-      let idLeftOffset = lastTwoBytes.substring(1);
-      idTopOffset = 1+parseInt(idTopOffset, 16)*3
-      idLeftOffset = (7-parseInt(idLeftOffset, 16))
+
+
+
 
       let extraZ = 0
 
       if(this.props && this.props.account && ships[b]&&ships[b].owner&&ships[b].owner.toLowerCase()==this.props.account.toLowerCase()){
         //pull the current account's ship forward so it is easier to see
         //// this will cause some inconsistancies when looking at multiple different screens at once though
-        extraZ+=25
-        idTopOffset+=40
+        extraZ+=45
+        idTopOffset+=75
+      }else{
+        let lastTwoBytes = idHash.substring(idHash.length-2);
+        idTopOffset = lastTwoBytes.substring(0,1);
+        idLeftOffset = lastTwoBytes.substring(1);
+        idTopOffset = 1+parseInt(idTopOffset, 16)*3
+        idLeftOffset = (7-parseInt(idLeftOffset, 16))
       }
 
       const INGORESHIP = "0xe7ae776ffdcdcf769fdc85d94a6d1c98ddb73c01";

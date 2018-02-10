@@ -14,6 +14,7 @@ import './App.css';
 import galleassAddress from './Address.js'
 import galleassBlockNumber from './blockNumber.js'
 import Writing from './Writing.js'
+import BuySellTable from './modal/BuySellTable.js'
 /*
 assuming that galleassBlockNumber is the oldest block for all contracts
 that means if you redeploy the galleass contract you have to redeploy ALL
@@ -63,7 +64,8 @@ let loadContracts = [
   "Fishmonger",
   "Copper",
   "Land",
-  "Experience"
+  "Experience",
+  "Fillet"
 ]
 
 let inventoryTokens = [
@@ -150,6 +152,10 @@ class App extends Component {
       clickScreenConfig:{stiffness:28, damping: 20},
       experienceBuyShip:false,
       staticFillerShipsX:0,
+      blockieRight:10,
+      blockieTop:10,
+      blockieSize:6,
+      isEmbarking:false,
     }
 
     let timeoutLoader = 8000
@@ -198,7 +204,7 @@ class App extends Component {
 
   }
 
-  updateDimensions() {
+  async updateDimensions() {
     let clientWidth = document.documentElement.clientWidth
     let clientHeight = document.documentElement.clientHeight
     let mapRightStart = (clientWidth-300)
@@ -224,8 +230,17 @@ class App extends Component {
       update.titleBottom = clientHeight-68
       update.titleBottomFaster = clientHeight-68
     }
+    let myLocation = 2000;
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+    let getMyShip = await contracts["Sea"].methods.getShip(accounts[0]).call();
+    if(getMyShip&&getMyShip.floating){
+      //console.log("======MY myLocation",getMyShip.location)
+      myLocation = 4000 * getMyShip.location / 65535
+      update.scrollLeft = myLocation-clientWidth/2
+    }
+
     this.setState(update)
-    console.log(update)
+    //console.log(update)
   }
   handleKeyPress(e) {
     if(e.keyCode === 27) {
@@ -606,6 +621,10 @@ class App extends Component {
           }).on('error',this.handleError.bind(this)).then((receipt)=>{
             console.log("RESULT:",receipt)
             this.startWaiting(receipt.transactionHash,"inventoryUpdate")
+            if(this.state.modalHeight>=0){
+              //click screen is up for modal
+              this.setState({modalHeight:-600,clickScreenTop:-5000,clickScreenOpacity:0})
+            }
           })
         }
 
@@ -653,6 +672,7 @@ class App extends Component {
       this.resetButton("approveandembark")
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
+      this.setState({isEmbarking:true})
       this.startWaiting(receipt.transactionHash)
     })
   }
@@ -673,7 +693,10 @@ class App extends Component {
       if(!error) this.load()
     }*/).on('error',this.handleError.bind(this)).then((receipt)=>{
     console.log("RESULT:",receipt)
-    //this.startWaiting(receipt.transactionHash)
+    if(this.state.modalHeight>=0){
+      //click screen is up for modal
+      this.setState({modalHeight:-600,clickScreenTop:-5000,clickScreenOpacity:0})
+    }
   })
 }
 setSail(direction){
@@ -876,6 +899,14 @@ async startWaitingForTransaction(hash){
         //this.setState({loading:0,waitingForTransaction:false,waitingForShipUpdate:false,waitingForInventoryUpdate:false})
         console.log("CALL A SYNC OF EVERYTHING!!")
         this.syncEverythingOnce()
+
+        if(this.state.isEmbarking){
+          //hint by animating the blockie down
+          setTimeout(()=>{
+            this.doBlockieHint()
+          },6000)
+        }
+
       }
 
     }
@@ -885,6 +916,12 @@ async startWaitingForTransaction(hash){
     this.setState({loading:0,waitingForTransaction:false})
   }
   console.log("DONE WAITING ON TRANSACTION")
+}
+doBlockieHint(){
+  this.setState({isEmbarking:false,blockieTop:454-document.documentElement.scrollTop,blockieRight:this.state.clientWidth/2-45,blockieSize:2})
+  setTimeout(()=>{
+    this.setState({blockieTop:10,blockieRight:10,blockieSize:6})
+  },3100)
 }
 bumpButton(name){
   let currentBumps = this.state.buttonBumps
@@ -1026,7 +1063,38 @@ async tileClick(name,index,px) {
     index:index,
     px:px
   }
-  console.log("modalObject",modalObject)
+
+  if(contracts[name]){
+    if(name=="Harbor"){
+      modalObject.doggers = await contracts["Harbor"].methods.countShips(web3.utils.asciiToHex("Dogger")).call();
+      modalObject.doggerPrice = await contracts["Harbor"].methods.currentPrice(web3.utils.asciiToHex("Dogger")).call();
+    }
+
+    if(name=="Fishmonger"){
+      modalObject.fish = [
+        "Pinner",
+        "Redbass",
+        "Catfish",
+        "Snark",
+        "Dangler",
+      ]
+      modalObject.prices = []
+      for(let f in modalObject.fish){
+        modalObject.prices[modalObject.fish[f]] = await contracts["Fishmonger"].methods.price(contracts[modalObject.fish[f]]._address).call();
+      }
+      modalObject.filletPrice = await contracts["Fishmonger"].methods.filletPrice().call();
+      modalObject.filletBalance = await contracts["Fillet"].methods.balanceOf(contracts["Fishmonger"]._address).call();
+    }
+
+    if(contracts[name].methods.getBalance) modalObject.balance = await contracts[name].methods.getBalance().call();
+    modalObject.copperBalance = await contracts["Copper"].methods.balanceOf(contracts[name]._address).call();
+    modalObject.filletBalance = await contracts["Fillet"].methods.balanceOf(contracts[name]._address).call();
+
+    console.log("copperBalance",contracts["Copper"]._address,name,contracts[name]._address,modalObject.copperBalance)
+
+  }
+
+
   this.setState({
     modalObject:modalObject,
     modalHeight:180,
@@ -1092,6 +1160,10 @@ mapWheel(obj,b,c){
     obj.preventDefault()
   }
 }
+testSomething(){
+  console.log("TEST SOMETHING")
+  this.doBlockieHint()
+}
 render() {
   let buttons = [];
   if(!this.state){
@@ -1118,7 +1190,7 @@ render() {
 
   //console.log("ACCOUNT",this.state.account)
   //console.log("SHIPS:",this.state.ships)
-  let buttonsTop = horizon-290;
+  let buttonsTop = horizon-260;
   let buttonsLeft = -1000;
   let loadingBar = ""
 
@@ -1130,6 +1202,8 @@ render() {
 
   if(myShip&&myShip.floating&&myShip.location){
     buttonsLeft = this.state.myLocation
+    if(buttonsLeft<300) buttonsLeft=300
+    if(buttonsLeft>3700) buttonsLeft=3700
   }
   if(!buttonsLeft) buttonsLeft=-2000
 
@@ -1313,7 +1387,7 @@ buttons.push(
   this.bumpableButton("disembark",buttonsTop,(animated) => {
     if(animated.top>50) animated.top=50
     let extraWidth = animated.top - buttonsTop
-    let theLeft = this.state.harborLocation-(75/2)+((extraWidth)/2)
+    let theLeft = this.state.harborLocation-(50/2)+((extraWidth)/2)
     let theOpacity = buttonOpacity
     if(!this.state.ship.inRangeToDisembark){
       theOpacity=0.25
@@ -1329,8 +1403,8 @@ buttons.push(
       return (<div></div>)
     }else{
       return (
-        <div key={"disembark"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:theLeft,top:animated.top+150,opacity:theOpacity}} onClick={clickFn}>
-        <img src="disembark.png" style={{maxWidth:75-(extraWidth)}}/>
+        <div key={"disembark"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:theLeft,top:animated.top+160,opacity:theOpacity}} onClick={clickFn}>
+        <img src="disembark.png" style={{maxWidth:50-(extraWidth)}}/>
         </div>
       )
     }
@@ -1347,7 +1421,7 @@ buttons.push(
 
 let menuSize = 60;
 let menu = (
-  <div key={"MENU"} onClick={()=>{console.log("MENUCLICK")}} style={{position:"fixed",left:0,top:0,width:"100%",height:menuSize,overflow:'hidden',borderBottom:"0px solid #a0aab5",color:"#DDDDDD",zIndex:99}} >
+  <div key={"MENU"} onClick={()=>{console.log("MENUCLICK")}} style={{position:"fixed",left:0,top:0,width:"100%",height:menuSize,borderBottom:"0px solid #a0aab5",color:"#DDDDDD",zIndex:99}} >
   <Motion
   defaultStyle={{
     marginRight:0
@@ -1369,6 +1443,9 @@ let menu = (
       setEtherscan={this.setEtherscan.bind(this)}
       lastBlockWasAt={this.state.lastBlockWasAt}
       avgBlockTime={this.state.avgBlockTime}
+      blockieRight={this.state.blockieRight}
+      blockieTop={this.state.blockieTop}
+      blockieSize={this.state.blockieSize}
       />
       </div>
     )
@@ -1822,7 +1899,7 @@ return (
       <div style={{position:'absolute',opacity:this.state.cornerOpacity,right:0,top:0}}>
       <img style={{maxWidth:(this.state.clientWidth/5)}} src={"toprightcorner.png"} />
       </div>
-      <div style={{position:'absolute',opacity:this.state.cornerOpacity,right:0,bottom:-4}} onClick={this.titleClick.bind(this)}>
+      <div style={{cursor:"pointer",zIndex:2,position:'absolute',opacity:this.state.cornerOpacity,right:0,bottom:-4}} onClick={this.titleClick.bind(this)}>
       <img src={"corner.png"} />
       </div>
       <div style={{cursor:"pointer",zIndex:1,position:'fixed',opacity:1-this.state.cornerOpacity,top:currentStyles.titleBottomFaster-20,left:-20}} >
@@ -1845,6 +1922,16 @@ return (
       <div style={{position:'absolute',opacity:this.state.cornerOpacity,left:10,bottom:10}} onClick={this.titleClick.bind(this)}>
       <img src={"compass.png"} style={{maxWidth:60}} />
       </div>
+      </div>
+
+      <div style={{zIndex:1,position:'fixed',right:20,bottom:-4,opacity:1-this.state.cornerOpacity}}>
+        <a href="https://join.slack.com/t/galleass/shared_invite/enQtMzE0MjQ5MzMyMzQzLTk3MmI2Zjk4Njc2ZmUwYzI5ZjA1ZmRiNzY4MjQ1OTM1OTM0NTM0MmZjNWVhZWEzMWI2ZTk1MzJjNDk4OTIzZmY" target="_blank">
+          <img data-rh="Slack" data-rh-at="top" style={{maxHeight:36,opacity:0.7}} src="slack.png" />
+        </a>
+      </div>
+
+      <div style={{zIndex:1,position:'fixed',right:60,bottom:-4,opacity:1}} onClick={this.testSomething.bind(this)}>
+            <img style={{maxHeight:36,opacity:0.7}} src="moreinfo.png" />
       </div>
 
 
@@ -1912,6 +1999,106 @@ return (
       image = "blank_grass.png"
     }
 
+    let content = []
+
+    content.push(
+      <div style={{padding:50}}>
+      </div>
+    )
+
+
+
+    const invHeight = 20
+
+    const modalInvStyle = {
+      marginRight:invHeight
+    }
+
+    let inventoryItems = []
+    if(this.state.modalObject.balance>0){
+      inventoryItems.push(
+        <span style={modalInvStyle}><img style={{maxHeight:invHeight}} src="ether.png" />
+          <Writing string={Math.round(web3.utils.fromWei(this.state.modalObject.balance,'ether')*10000)/10000} size={invHeight+2}/>
+        </span>
+      )
+    }
+    if(this.state.modalObject.copperBalance>0){
+      inventoryItems.push(
+        <span style={modalInvStyle}><img style={{maxHeight:invHeight}} src="copper.png" />
+          <Writing string={this.state.modalObject.copperBalance} size={invHeight+2}/>
+        </span>
+      )
+    }
+    if(this.state.modalObject.filletBalance>0){
+      inventoryItems.push(
+        <span style={modalInvStyle}><img style={{maxHeight:invHeight}} src="fillet.png" />
+          <Writing string={this.state.modalObject.filletBalance} size={invHeight+2}/>
+        </span>
+      )
+    }
+    content.push(
+      <div style={{position:'absolute',left:20,bottom:50}}>
+        {inventoryItems}
+      </div>
+    )
+
+
+    if(this.state.modalObject.name == "Harbor"){
+      let buyArray = [{
+        amount: "1",
+        balance: this.state.modalObject.doggers,
+        first:"dogger",
+        price: web3.utils.fromWei(this.state.modalObject.doggerPrice,'ether'),
+        second:"ether",
+        clickFn: this.buyShip.bind(this),
+      }]
+      let sellArray = []
+      content.push(
+        <BuySellTable buyArray={buyArray} sellArray={sellArray}/>
+      )
+    }
+    if(this.state.modalObject.name == "Fishmonger"){
+      let buyArray = [{
+        amount: "1",
+        balance: this.state.modalObject.filletBalance,
+        first:"fillet",
+        price: this.state.modalObject.filletPrice,
+        second:"copper",
+      }]
+      let sellArray = []
+      for(let f in this.state.modalObject.fish){
+        sellArray[f] = {
+          amount:"1",
+          balance:false,
+          first:this.state.modalObject.fish[f],
+          price:this.state.modalObject.prices[this.state.modalObject.fish[f]],
+          second:"copper",
+          clickFn: this.sellFish.bind(this,this.state.modalObject.fish[f]),
+        }
+      }
+      content.push(
+        <BuySellTable buyArray={buyArray} sellArray={sellArray}/>
+      )
+    }
+
+    /*
+    modalObject.fish = [
+      "Pinner",
+      "Redbass",
+      "Catfish",
+      "Snark",
+      "Dangler",
+    ]
+    modalObject.prices = []
+    for(let f in modalObject.fish){
+      modalObject.prices[modalObject.fish[f]] = await contracts["Fishmonger"].methods.price(contracts[modalObject.fish[f]]._address).call();
+    }
+    modalObject.filletPrice = await contracts["Fishmonger"].methods.filletPrice().call();
+    modalObject.filletBalance = await contracts["Fillet"].methods.balanceOf(contracts["Fishmonger"]._address).call();
+    modalObject.copperBalance = await contracts["Copper"].methods.balanceOf(contracts["Fishmonger"]._address).call();
+     */
+
+
     //  <div>Price: {this.state.modalObject.price}</div>
     return (
       <div style={{zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
@@ -1925,8 +2112,8 @@ return (
       <div><Writing style={{opacity:0.9}} string={this.state.modalObject.name} size={28}/>  -  {this.state.modalObject.index} @ ({this.state.landX},{this.state.landY})</div>
       <div>Contract: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.contract}>{this.state.modalObject.contract}</a></div>
       <div>Owner: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.owner}>{this.state.modalObject.owner}</a></div>
-
       </div>
+      {content}
       </div>
     )
 

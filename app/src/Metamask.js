@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import Writing from './Writing.js'
+import {Motion, spring, presets} from 'react-motion';
 
 class Metamask extends Component {
   constructor(props) {
@@ -192,9 +193,12 @@ class Metamask extends Component {
 
         /*.substring(0,20)*/
 
+        const blockieAnimation = {stiffness: 50, damping: 14}
+
         metamask = (
           <div style={{padding:4}}>
 
+            <div style={{marginRight:50}}>
               <span style={{
                 float:'left',
                 marginTop:3,
@@ -219,12 +223,30 @@ class Metamask extends Component {
                   {littleBlockLoaderBar}
                 </div>
               </span>
-
-              <this.props.Blockies
-              seed={this.state.accounts[0]}
-              scale={6}
-              />
-
+            </div>
+              <Motion
+              defaultStyle={{
+                right:10,
+                top:10,
+                size:6,
+              }}
+              style={{
+                right: spring(this.props.blockieRight,blockieAnimation),// presets.noWobble)
+                top: spring(this.props.blockieTop,blockieAnimation),
+                size: spring(this.props.blockieSize,blockieAnimation),
+              }}
+              >
+                {currentStyles => {
+                  return (
+                    <div style={{position:"absolute",right:currentStyles.right,top:currentStyles.top}}>
+                      <this.props.Blockies
+                      seed={this.state.accounts[0]}
+                      scale={currentStyles.size}
+                      />
+                    </div>
+                  )
+                }}
+              </Motion>
           </div>
         )
 

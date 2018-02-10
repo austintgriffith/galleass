@@ -18,9 +18,10 @@ contract Harbor is Galleasset, Ownable {
 
   mapping (bytes32 => uint256[99]) public shipStorage;
   mapping (bytes32 => uint256) public currentPrice;
+  mapping (bytes32 => uint256) public copperPrice; //this will be to buy ships for copper instead of ether
 
   function Harbor(address _galleass) public Galleasset(_galleass) {
-    currentPrice["Dogger"] = ((1 ether)/1000)*3;
+    currentPrice["Dogger"] = ((1 ether)/1000);
   }
 
   function onTokenTransfer(address _sender, uint _value, bytes _data) {
@@ -115,6 +116,18 @@ contract Harbor is Galleasset, Ownable {
     return false;
   }
 
+  function countShips(bytes32 _model) public constant returns (uint256) {
+    uint256 count = 0;
+    uint256 index = 0;
+    while(index<shipStorage[_model].length){
+      if(shipStorage[_model][index]!=0){
+        count++;
+      }
+      index++;
+    }
+    return count;
+  }
+
   //assuming this is more like a tip jar while building, you can pull out ether
   //in the long run the eth used to buy a ship is meant to pay
   //the ship builder for their citizens' time and timber used to build
@@ -125,12 +138,21 @@ contract Harbor is Galleasset, Ownable {
     return true;
   }
 
+  function withdrawToken(address _token,uint256 _amount) public onlyOwner isBuilding returns (bool) {
+    StandardToken token = StandardToken(_token);
+    token.transfer(msg.sender,_amount);
+    return true;
+  }
+
   function getBalance() public view returns (uint256) {
     return this.balance;
   }
 
 }
 
+contract StandardToken {
+  function transfer(address _to, uint256 _value) public returns (bool) { }
+}
 
 contract NFT {
   function build() public returns (uint) { }

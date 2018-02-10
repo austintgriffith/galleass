@@ -734,6 +734,7 @@ module.exports = {
         loadAbi("Dangler")
         loadAbi("Copper")
         loadAbi("Fishmonger")
+        loadAbi("Fillet")
 
         loadAbi("Land")
       });
@@ -761,6 +762,8 @@ module.exports = {
         //firefox
         await clevis("sendTo","0.1","0","0x5f19cEfc9C9D1BC63f9e4d4780493ff5577D238B")
         await clevis("sendTo","0.1","0","0xF11b9dCa0972e95b292891b027F5d8102e2cB8a5")
+
+
 
 
       });

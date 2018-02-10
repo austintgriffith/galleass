@@ -21,6 +21,8 @@ contract Fishmonger is Galleasset, HasNoEther {
   //how much the fishmonger is willing to pay for each species of fish
   mapping (address => uint256) public price;
 
+  uint256 public filletPrice = 1;
+
   function setPrice(address _species,uint256 _price) onlyOwner public returns (bool) {
     assert( _species != address(0) );
     price[_species]=_price;
@@ -53,6 +55,23 @@ contract Fishmonger is Galleasset, HasNoEther {
     return true;
   }
 
+  function buyFillet(uint256 _amount) public isGalleasset("Fishmonger") returns (bool) {
+    address filletAddress = getContract("Fillet");
+    require(filletAddress != address(0));
+    require(filletPrice != 0);
+
+    StandardToken filletContract = StandardToken(filletAddress);
+    require(_amount <= filletContract.balanceOf(address(this)));
+
+    address copperContractAddress = getContract("Copper");
+    StandardToken copperContract = StandardToken(copperContractAddress);
+    require( copperContract.transferFrom(msg.sender, address(this), _amount*filletPrice ));
+
+    require( filletContract.transfer(msg.sender,_amount) );
+
+    return true;
+  }
+
   function updateExperience(address _player) internal returns (bool){
     address experienceContractAddress = getContract("Experience");
     require( experienceContractAddress!=address(0) );
@@ -60,7 +79,12 @@ contract Fishmonger is Galleasset, HasNoEther {
     experienceContract.update(_player,3,true);//milestone 3: Sell Fish for Copper
   }
 
-  //event sellFish(address _sender,address _species,uint256 _amount,bool _permission);
+  function withdrawToken(address _token,uint256 _amount) public onlyOwner isBuilding returns (bool) {
+    StandardToken token = StandardToken(_token);
+    token.transfer(msg.sender,_amount);
+    return true;
+  }
+
 }
 
 contract Sea{
@@ -75,6 +99,7 @@ contract StandardToken {
   function galleassTransferFrom(address _from, address _to, uint256 _value) public returns (bool) { }
   function transferFrom(address _from, address _to, uint256 _value) public returns (bool) { }
   function transfer(address _to, uint256 _value) public returns (bool) { }
+  function balanceOf(address _owner) public view returns (uint256 balance) { }
 }
 
 contract Experience{
