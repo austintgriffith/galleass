@@ -32,7 +32,7 @@ import Metamask from './Metamask.js'
 import {Motion, spring, presets} from 'react-motion';
 const ReactHint = ReactHintFactory(React)
 
-const IPFSADDRESS = "Qmd3eKFpXVX3KS7b823ECAfMrHSokNPm4GvaFQUWGZPLdv";
+const IPFSADDRESS = "QmXxMtcefCFSgWxksjjF73hnL1ApZ9cVWqWha9YfS981KH";
 
 var Web3 = require('web3');
 let width = 4000;
