@@ -238,7 +238,7 @@ class Metamask extends Component {
               >
                 {currentStyles => {
                   return (
-                    <div style={{position:"absolute",right:currentStyles.right,top:currentStyles.top}}>
+                    <div style={{position:"absolute",right:currentStyles.right,top:currentStyles.top}} onClick={this.props.clickBlockie}>
                       <this.props.Blockies
                       seed={this.state.accounts[0]}
                       scale={currentStyles.size}

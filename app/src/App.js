@@ -34,12 +34,6 @@ const ReactHint = ReactHintFactory(React)
 
 const IPFSADDRESS = "Qmd3eKFpXVX3KS7b823ECAfMrHSokNPm4GvaFQUWGZPLdv";
 
-
-
-//var smoothScroll = require('smoothscroll');
-//var Scroll  = require('react-scroll');
-//var scroll     = Scroll.animateScroll;
-//let DragScroll = require("DragScroll");
 var Web3 = require('web3');
 let width = 4000;
 let height = 1050;
@@ -72,12 +66,14 @@ let inventoryTokens = [
   "Dogger",
   "Copper",
   "Timber",
+  "Fillet",
   "Catfish",
   "Pinner",
   "Redbass",
   "Snark",
   "Dangler",
 ]
+
 const MINGWEI = 0.1
 const MAXGWEI = 151
 const STARTINGGWEI = 51;
@@ -95,12 +91,12 @@ let bottomBarTimeout;
 
 /*
 let textStyle = {
-  zIndex:210,
-  fontWeight:'bold',
-  fontSize:22,
-  paddingRight:10,
-  color:"#dddddd",
-  textShadow: "-1px 0 #777777, 0 1px #777777, 1px 0 #777777, 0 -1px #777777"
+zIndex:210,
+fontWeight:'bold',
+fontSize:22,
+paddingRight:10,
+color:"#dddddd",
+textShadow: "-1px 0 #777777, 0 1px #777777, 1px 0 #777777, 0 -1px #777777"
 }*/
 
 class App extends Component {
@@ -181,8 +177,6 @@ class App extends Component {
     this.state.titleRight = this.state.titleRightStart;
     this.state.titleBottom = this.state.titleBottomStart;
     this.state.titleBottomFaster = this.state.titleBottomStart;
-
-
     this.state.mapRight = this.state.mapRightStart;
     this.state.mapBottom = this.state.mapBottomStart;
 
@@ -201,7 +195,6 @@ class App extends Component {
     }
 
     this.handleKeyPress = this.handleKeyPress.bind(this);
-
   }
 
   async updateDimensions() {
@@ -230,21 +223,30 @@ class App extends Component {
       update.titleBottom = clientHeight-68
       update.titleBottomFaster = clientHeight-68
     }
-    let myLocation = 2000;
-    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
-    let getMyShip = await contracts["Sea"].methods.getShip(accounts[0]).call();
-    if(getMyShip&&getMyShip.floating){
-      //console.log("======MY myLocation",getMyShip.location)
-      myLocation = 4000 * getMyShip.location / 65535
-      update.scrollLeft = myLocation-clientWidth/2
-    }
 
     this.setState(update)
-    //console.log(update)
+    //this.scrollToMyShip()
+  }
+  async scrollToMyShip(){
+    if(contracts["Sea"]){
+      let myLocation = 2000;
+      const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+      let getMyShip = await contracts["Sea"].methods.getShip(accounts[0]).call();
+      if(getMyShip&&getMyShip.floating){
+        console.log("======Scrolling to MY myLocation",getMyShip.location)
+        myLocation = 4000 * getMyShip.location / 65535
+        this.setState({scrollLeft:(myLocation-document.documentElement.clientWidth/2)})
+      }
+    }
   }
   handleKeyPress(e) {
     if(e.keyCode === 27) {
-      this.setState({modalHeight:-600,clickScreenTop:-5000,clickScreenOpacity:0})
+
+      if(this.state.mapUp){
+        this.titleClick()
+      }else{
+        this.setState({modalHeight:-600,clickScreenTop:-5000,clickScreenOpacity:0})
+      }
     }
   }
   componentDidMount() {
@@ -687,305 +689,330 @@ class App extends Component {
       from: accounts[0],
       gas:330000,
       gasPrice:this.state.GWEI * 1000000000
-    },/*(error,hash)=>{
-      console.log("CALLBACK!",error,hash)
-      this.setState({currentTx:hash});
-      if(!error) this.load()
-    }*/).on('error',this.handleError.bind(this)).then((receipt)=>{
-    console.log("RESULT:",receipt)
-    if(this.state.modalHeight>=0){
-      //click screen is up for modal
-      this.setState({modalHeight:-600,clickScreenTop:-5000,clickScreenOpacity:0})
-    }
-  })
-}
-setSail(direction){
-  console.log("SET SAIL")
-  if(direction) this.bumpButton("saileast")
-  else this.bumpButton("sailwest")
-  window.web3.eth.getAccounts((err,_accounts)=>{
-    console.log(_accounts)
-    contracts["Sea"].methods.setSail(direction).send({
-      from: _accounts[0],
-      gas:40000,
-      gasPrice:this.state.GWEI * 1000000000
-    },(error,hash)=>{
-      console.log("CALLBACK!",error,hash)
-      this.setState({currentTx:hash});
-      if(!error) this.load()
-      if(direction) this.resetButton("saileast")
-      else this.resetButton("sailwest")
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
-      this.startWaiting(receipt.transactionHash,"shipUpdate")
+      if(this.state.modalHeight>=0){
+        //click screen is up for modal
+        this.setState({modalHeight:-600,clickScreenTop:-5000,clickScreenOpacity:0})
+      }
     })
-  })
-}
-dropAnchor(){
-  console.log("DROP ANCHOR")
-  this.bumpButton("dropanchor")
-  window.web3.eth.getAccounts((err,_accounts)=>{
-    console.log(_accounts)
-    contracts["Sea"].methods.dropAnchor().send({
-      from: _accounts[0],
-      gas:40000,
+  }
+  async buyFillet(fish){
+    console.log("BUY FILLET ")
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+
+    let filletPrice = await contracts["Fishmonger"].methods.filletPrice().call()
+    console.log("Fishmonger charges ",filletPrice," for fillets")
+    contracts["Fishmonger"].methods.buyFillet(1).send({
+      from: accounts[0],
+      gas:330000,
       gasPrice:this.state.GWEI * 1000000000
-    },(error,hash)=>{
-      console.log("CALLBACK!",error,hash)
-      this.setState({currentTx:hash});
-      if(!error) this.load()
-      this.resetButton("dropanchor")
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
-      this.startWaiting(receipt.transactionHash,"shipUpdate")
+      if(this.state.modalHeight>=0){
+        //click screen is up for modal
+        this.setState({modalHeight:-600,clickScreenTop:-5000,clickScreenOpacity:0})
+      }
     })
-  })
-}
-castLine(){
-  console.log("CAST LINE")
-  this.bumpButton("castline")
-  window.web3.eth.getAccounts((err,_accounts)=>{
-    let bait = web3.utils.sha3(Math.random()+_accounts[0])
-    console.log(bait)
-    let baitHash = web3.utils.sha3(bait)
-    this.setState({bait:bait,baitHash:baitHash})
-    contracts["Sea"].methods.castLine(baitHash).send({
-      from: _accounts[0],
-      gas:60000,
-      gasPrice:this.state.GWEI * 1000000000
-    },(error,hash)=>{
-      console.log("CALLBACK!",error,hash)
-      this.setState({currentTx:hash});
-      if(!error) this.load()
-      this.resetButton("castline")
-    }).on('error',this.handleError.bind(this))
-    .on('transactionHash', function(transactionHash){
-      console.log("transactionHash",transactionHash)
+  }
+  setSail(direction){
+    console.log("SET SAIL")
+    if(direction) this.bumpButton("saileast")
+    else this.bumpButton("sailwest")
+    window.web3.eth.getAccounts((err,_accounts)=>{
+      console.log(_accounts)
+      contracts["Sea"].methods.setSail(direction).send({
+        from: _accounts[0],
+        gas:40000,
+        gasPrice:this.state.GWEI * 1000000000
+      },(error,hash)=>{
+        console.log("CALLBACK!",error,hash)
+        this.setState({currentTx:hash});
+        if(!error) this.load()
+        if(direction) this.resetButton("saileast")
+        else this.resetButton("sailwest")
+      }).on('error',this.handleError.bind(this)).then((receipt)=>{
+        console.log("RESULT:",receipt)
+        this.startWaiting(receipt.transactionHash,"shipUpdate")
+      })
     })
-    .on('receipt', function(receipt){
-      console.log("receipt",receipt) // contains the new contract address
+  }
+  dropAnchor(){
+    console.log("DROP ANCHOR")
+    this.bumpButton("dropanchor")
+    window.web3.eth.getAccounts((err,_accounts)=>{
+      console.log(_accounts)
+      contracts["Sea"].methods.dropAnchor().send({
+        from: _accounts[0],
+        gas:40000,
+        gasPrice:this.state.GWEI * 1000000000
+      },(error,hash)=>{
+        console.log("CALLBACK!",error,hash)
+        this.setState({currentTx:hash});
+        if(!error) this.load()
+        this.resetButton("dropanchor")
+      }).on('error',this.handleError.bind(this)).then((receipt)=>{
+        console.log("RESULT:",receipt)
+        this.startWaiting(receipt.transactionHash,"shipUpdate")
+      })
     })
-    .on('confirmation', function(confirmationNumber, receipt){
-      console.log("confirmation",confirmationNumber,receipt)
+  }
+  castLine(){
+    console.log("CAST LINE")
+    this.bumpButton("castline")
+    window.web3.eth.getAccounts((err,_accounts)=>{
+      let bait = web3.utils.sha3(Math.random()+_accounts[0])
+      console.log(bait)
+      let baitHash = web3.utils.sha3(bait)
+      this.setState({bait:bait,baitHash:baitHash})
+      contracts["Sea"].methods.castLine(baitHash).send({
+        from: _accounts[0],
+        gas:60000,
+        gasPrice:this.state.GWEI * 1000000000
+      },(error,hash)=>{
+        console.log("CALLBACK!",error,hash)
+        this.setState({currentTx:hash});
+        if(!error) this.load()
+        this.resetButton("castline")
+      }).on('error',this.handleError.bind(this))
+      .on('transactionHash', function(transactionHash){
+        console.log("transactionHash",transactionHash)
+      })
+      .on('receipt', function(receipt){
+        console.log("receipt",receipt) // contains the new contract address
+      })
+      .on('confirmation', function(confirmationNumber, receipt){
+        console.log("confirmation",confirmationNumber,receipt)
+      })
+      .then((receipt)=>{
+        console.log("RESULT:",receipt)
+        this.startWaiting(receipt.transactionHash,"shipUpdate")
+      })
     })
-    .then((receipt)=>{
-      console.log("RESULT:",receipt)
-      this.startWaiting(receipt.transactionHash,"shipUpdate")
-    })
-  })
-}
-reelIn(){
-  console.log("REEL IN")
-  this.bumpButton("reelin")
+  }
+  reelIn(){
+    console.log("REEL IN")
+    this.bumpButton("reelin")
 
-  const DEBUG_REEL_IN = false;
-  window.web3.eth.getAccounts((err,_accounts)=>{
-    //console.log(_accounts)
+    const DEBUG_REEL_IN = false;
+    window.web3.eth.getAccounts((err,_accounts)=>{
+      //console.log(_accounts)
 
-    let bestDist = width*width
-    let bestId = false
-    let myShip = this.state.ships[this.state.account];
+      let bestDist = width*width
+      let bestId = false
+      let myShip = this.state.ships[this.state.account];
 
-    for(let f in this.state.fish){
-      if(DEBUG_REEL_IN) console.log("f",f)
-      if(this.state.fish[f].dead){
-        //console.log("DEAD FISH IGNORE ",f)
-      }else{
-        let a = parseInt(this.state.fish[f].x)
-        let b = parseInt(myShip.location)
-        if(DEBUG_REEL_IN) console.log(a,b)
-        let x = myShip.location-this.state.fish[f].x
-        let y = 0-this.state.fish[f].y
-        if(DEBUG_REEL_IN) console.log(x,y)
-        let diff = Math.sqrt(x*x + (y*y/90));
-        if(DEBUG_REEL_IN) console.log("DIFF TO ",f,"IS",diff)
-        if(DEBUG_REEL_IN) console.log(f,diff)
-        //console.log("this.state.fish.x",this.state.fish[f].x,"myShip.location",myShip.location,diff)
-        if( diff < bestDist ){
+      for(let f in this.state.fish){
+        if(DEBUG_REEL_IN) console.log("f",f)
+        if(this.state.fish[f].dead){
+          //console.log("DEAD FISH IGNORE ",f)
+        }else{
+          let a = parseInt(this.state.fish[f].x)
+          let b = parseInt(myShip.location)
+          if(DEBUG_REEL_IN) console.log(a,b)
+          let x = myShip.location-this.state.fish[f].x
+          let y = 0-this.state.fish[f].y
+          if(DEBUG_REEL_IN) console.log(x,y)
+          let diff = Math.sqrt(x*x + (y*y/90));
+          if(DEBUG_REEL_IN) console.log("DIFF TO ",f,"IS",diff)
+          if(DEBUG_REEL_IN) console.log(f,diff)
+          //console.log("this.state.fish.x",this.state.fish[f].x,"myShip.location",myShip.location,diff)
+          if( diff < bestDist ){
 
-          bestDist=diff
-          bestId=f
-          //if(DEBUG_REEL_IN)
-          console.log("========== found closer ",bestDist,bestId)
+            bestDist=diff
+            bestId=f
+            //if(DEBUG_REEL_IN)
+            console.log("========== found closer ",bestDist,bestId)
+          }
         }
       }
-    }
-    //console.log(myShip)
-    if(DEBUG_REEL_IN) console.log("BAIT",this.state.bait)
-    if(DEBUG_REEL_IN) console.log("BESTS",bestDist,bestId)
+      //console.log(myShip)
+      if(DEBUG_REEL_IN) console.log("BAIT",this.state.bait)
+      if(DEBUG_REEL_IN) console.log("BESTS",bestDist,bestId)
 
-    let baitToUse = this.state.bait
-    if(!baitToUse||baitToUse=="false") baitToUse="0x0000000000000000000000000000000000000000";
-    if(!bestId||bestId=="false") bestId="0x0000000000000000000000000000000000000000";
+      let baitToUse = this.state.bait
+      if(!baitToUse||baitToUse=="false") baitToUse="0x0000000000000000000000000000000000000000";
+      if(!bestId||bestId=="false") bestId="0x0000000000000000000000000000000000000000";
 
-    if(DEBUG_REEL_IN) console.log("FINAL ID BAIT & ACCOUNT",bestId,baitToUse,_accounts[0])
+      if(DEBUG_REEL_IN) console.log("FINAL ID BAIT & ACCOUNT",bestId,baitToUse,_accounts[0])
 
-    contracts["Sea"].methods.reelIn(bestId,baitToUse).send({
-      from: _accounts[0],
-      gas:200000,
-      gasPrice:this.state.GWEI * 1000000000
-    },(error,hash)=>{
-      console.log("CALLBACK!",error,hash)
-      this.setState({currentTx:hash});
-      if(!error) this.load()
-      this.resetButton("reelin")
-    }).on('error',this.handleError.bind(this)).then((receipt)=>{
-      if(DEBUG_REEL_IN) console.log("RESULT:",receipt)
-      this.startWaiting(receipt.transactionHash,"shipUpdate")
+      contracts["Sea"].methods.reelIn(bestId,baitToUse).send({
+        from: _accounts[0],
+        gas:200000,
+        gasPrice:this.state.GWEI * 1000000000
+      },(error,hash)=>{
+        console.log("CALLBACK!",error,hash)
+        this.setState({currentTx:hash});
+        if(!error) this.load()
+        this.resetButton("reelin")
+      }).on('error',this.handleError.bind(this)).then((receipt)=>{
+        if(DEBUG_REEL_IN) console.log("RESULT:",receipt)
+        this.startWaiting(receipt.transactionHash,"shipUpdate")
+      })
     })
-  })
-}
-
-metamaskHint(){
-  this.setState({metamaskDip:20},()=>{
-    setTimeout(()=>{
-      this.setState({metamaskDip:0})
-    },550)
-  })
-}
-handleError(error){
-  console.log("HANDLETHIS:",error)
-  if(error.toString().indexOf("Error: Transaction was not mined")>=0){
-    this.setState({loading:0,waitingForTransaction:false})
-    clearInterval(txWaitIntervals["loader"])
-    clearInterval(txWaitIntervals[this.state.currentTx])
-    this.setState({bottomBar:0,bottomBarMessage:"Warning: your transaction might not get mined, try increasing your #gas  gas price.",bottomBarSize:20})
-    clearTimeout(bottomBarTimeout)
-    bottomBarTimeout = setTimeout(()=>{
-      this.setState({bottomBar:-80})
-    },10000)
   }
-}
 
-updateLoader(){
-  let next = parseInt(this.state.loading)+1;
-  if(next>24) {
-    next=23;
-  }else{
-    //console.log("loading next",next,web3)
-    this.setState({loading:next})
-  }
-}
-async startWaitingForTransaction(hash){
-
-  this.setState({loading:0})
-  clearInterval(txWaitIntervals["loader"])
-
-  console.log("WAITING FOR TRANSACTION ",hash,this.state.waitingForTransaction,this.state.waitingForTransactionTime)
-  try {
-    var receipt = await web3.eth.getTransactionReceipt(this.state.waitingForTransaction);
-    console.log("TIME SPENT:"+Date.now()-this.state.waitingForTransactionTime)
-    if (receipt == null) {
-      //keep waiting
-
-    } else {
-      //DONE
-      //DONE
-      console.log("DONE WITH TX",receipt)
-      clearInterval(txWaitIntervals[hash])
-      txWaitIntervals[hash]=null
-      clearInterval(txWaitIntervals["loader"])
-      if(receipt.status=="0x0"){
-        //this.state.waitingForTransaction || this.state.waitingForShipUpdate || this.state.waitingForInventoryUpdate
-        this.setState({loading:0,waitingForTransaction:false,waitingForShipUpdate:false,waitingForInventoryUpdate:false})
-        this.setState({bottomBar:0,bottomBarMessage:"Warning: Transaction failed. Try again with a higher #gas  gas price.",bottomBarSize:24})
-        clearTimeout(bottomBarTimeout)
-        bottomBarTimeout = setTimeout(()=>{
-          this.setState({bottomBar:-80})
-        },10000)
-      }else{
-        this.setState({waitingForTransaction:false})
-        ////do this to skip green loader (don't)
-        //this.setState({loading:0,waitingForTransaction:false,waitingForShipUpdate:false,waitingForInventoryUpdate:false})
-        console.log("CALL A SYNC OF EVERYTHING!!")
-        this.syncEverythingOnce()
-
-        if(this.state.isEmbarking){
-          //hint by animating the blockie down
-          setTimeout(()=>{
-            this.doBlockieHint()
-          },6000)
-        }
-
-      }
-
-    }
-  } catch(e) {
-    console.log("ERROR WAITING FOR TX",e)
-    clearInterval(txWaitIntervals[hash]);
-    this.setState({loading:0,waitingForTransaction:false})
-  }
-  console.log("DONE WAITING ON TRANSACTION")
-}
-doBlockieHint(){
-  this.setState({isEmbarking:false,blockieTop:454-document.documentElement.scrollTop,blockieRight:this.state.clientWidth/2-45,blockieSize:2})
-  setTimeout(()=>{
-    this.setState({blockieTop:10,blockieRight:10,blockieSize:6})
-  },3100)
-}
-bumpButton(name){
-  let currentBumps = this.state.buttonBumps
-  if(!currentBumps[name]) currentBumps[name]= 15
-  else currentBumps[name]+= 15
-  this.setState({currentBumps:currentBumps})
-}
-resetButton(name){
-  let currentBumps = this.state.buttonBumps
-  currentBumps[name]=0
-  this.setState({currentBumps:currentBumps})
-}
-
-load(){
-  console.log("LOAD!")
-  this.setState({loading:1},()=>{
-    txWaitIntervals["loader"] = setInterval(this.updateLoader.bind(this),LOADERSPEED)
-  })
-}
-startWaiting(hash,nextPhase){
-  if(hash){
-    console.log("STARTWAITING",hash,nextPhase)
-    let update = {waitingForTransaction:hash,waitingForTransactionTime:Date.now()}
-    if(nextPhase=="inventoryUpdate"){
-      update.waitingForInventoryUpdate=true
-    }else{
-      update.waitingForShipUpdate=true
-    }
-    this.setState(update,()=>{
-      txWaitIntervals[hash] = setInterval(this.startWaitingForTransaction.bind(this,hash),1200)
-      this.startWaitingForTransaction(hash)
+  metamaskHint(){
+    this.setState({metamaskDip:20},()=>{
       setTimeout(()=>{
-        console.log("CHECKING BACK ON TX ",hash,txWaitIntervals[hash])
-        if(txWaitIntervals[hash]){
-          clearInterval(txWaitIntervals[hash]);
-          this.setState({loading:0,waitingForTransaction:false})
-          clearInterval(txWaitIntervals["loader"])
-          this.setState({bottomBar:0,bottomBarMessage:"Warning: Your transaction is taking a long time, try increasing your #gas  gas price.",bottomBarSize:20})
+        this.setState({metamaskDip:0})
+      },550)
+    })
+  }
+  handleError(error){
+    console.log("HANDLETHIS:",error)
+    if(error.toString().indexOf("Error: Transaction was not mined")>=0){
+      this.setState({loading:0,waitingForTransaction:false})
+      clearInterval(txWaitIntervals["loader"])
+      clearInterval(txWaitIntervals[this.state.currentTx])
+      this.setState({bottomBar:0,bottomBarMessage:"Warning: your transaction might not get mined, try increasing your #gas  gas price.",bottomBarSize:20})
+      clearTimeout(bottomBarTimeout)
+      bottomBarTimeout = setTimeout(()=>{
+        this.setState({bottomBar:-80})
+      },10000)
+    }
+  }
+
+  updateLoader(){
+    let next = parseInt(this.state.loading)+1;
+    if(next>24) {
+      next=23;
+    }else{
+      //console.log("loading next",next,web3)
+      this.setState({loading:next})
+    }
+  }
+  async startWaitingForTransaction(hash){
+
+    this.setState({loading:0})
+    clearInterval(txWaitIntervals["loader"])
+
+    console.log("WAITING FOR TRANSACTION ",hash,this.state.waitingForTransaction,this.state.waitingForTransactionTime)
+    try {
+      var receipt = await web3.eth.getTransactionReceipt(this.state.waitingForTransaction);
+      console.log("TIME SPENT:"+Date.now()-this.state.waitingForTransactionTime)
+      if (receipt == null) {
+        //keep waiting
+
+      } else {
+        //DONE
+        //DONE
+        console.log("DONE WITH TX",receipt)
+        clearInterval(txWaitIntervals[hash])
+        txWaitIntervals[hash]=null
+        clearInterval(txWaitIntervals["loader"])
+        if(receipt.status=="0x0"){
+          //this.state.waitingForTransaction || this.state.waitingForShipUpdate || this.state.waitingForInventoryUpdate
+          this.setState({loading:0,waitingForTransaction:false,waitingForShipUpdate:false,waitingForInventoryUpdate:false})
+          this.setState({bottomBar:0,bottomBarMessage:"Warning: Transaction failed. Try again with a higher #gas  gas price.",bottomBarSize:24})
           clearTimeout(bottomBarTimeout)
           bottomBarTimeout = setTimeout(()=>{
             this.setState({bottomBar:-80})
           },10000)
+        }else{
+          this.setState({waitingForTransaction:false})
+          ////do this to skip green loader (don't)
+          //this.setState({loading:0,waitingForTransaction:false,waitingForShipUpdate:false,waitingForInventoryUpdate:false})
+          console.log("CALL A SYNC OF EVERYTHING!!")
+          this.syncEverythingOnce()
+
+          console.log("IS EMBARKING",this.state.isEmbarking)
+          if(this.state.isEmbarking){
+            //hint by animating the blockie down
+            this.waitForShipToFloatThenDoBlockieHint()
+          }
+
         }
 
-      },this.state.avgBlockTime*2)
-    })
+      }
+    } catch(e) {
+      console.log("ERROR WAITING FOR TX",e)
+      clearInterval(txWaitIntervals[hash]);
+      this.setState({loading:0,waitingForTransaction:false})
+    }
+    console.log("DONE WAITING ON TRANSACTION")
   }
-}
-startEventSync() {
-  console.log("Finished loading contracts and block number, start syncing events...",this.state.blockNumber)
-  clearInterval(waitInterval);
-  if(this.state.clickScreenOpacity==0){
-    this.setState({avgBlockTime:15000,contractsLoaded:true,clickScreenTop:-90000})//clickScreenTop:-90000,clickScreenOpacity:0
-  }else{
-    this.setState({avgBlockTime:15000,contractsLoaded:true,clickScreenReadyToGetOut:true})
+  waitForShipToFloatThenDoBlockieHint(){
+    if(this.state.ship&&this.state.ship.floating){
+      setTimeout(this.doBlockieHint.bind(this),1000)
+    }else{
+      setTimeout(this.waitForShipToFloatThenDoBlockieHint.bind(this),1000)
+    }
+  }
+  async doBlockieHint(){
+    if(this.state.ship&&this.state.ship.floating){
+      let xOffset = this.state.scrollLeft-document.documentElement.scrollLeft
+      setTimeout(()=>{
+        this.setState({isEmbarking:false,blockieTop:454-document.documentElement.scrollTop,blockieRight:(this.state.clientWidth/2-45)-xOffset,blockieSize:2})
+        setTimeout(()=>{
+          this.setState({blockieTop:10,blockieRight:10,blockieSize:6})
+        },3100)
+      },500)
+    }
+  }
+  bumpButton(name){
+    let currentBumps = this.state.buttonBumps
+    if(!currentBumps[name]) currentBumps[name]= 15
+    else currentBumps[name]+= 15
+    this.setState({currentBumps:currentBumps})
+  }
+  resetButton(name){
+    let currentBumps = this.state.buttonBumps
+    currentBumps[name]=0
+    this.setState({currentBumps:currentBumps})
   }
 
-  //dev loop only...
-  //setInterval(this.syncContacts.bind(this),4001)
-  //this.syncContacts()
-  /*setTimeout(
-  ()=>{
-  this.setState({scrollConfig: {stiffness: 2, damping: 20}})
-},3000
+  load(){
+    console.log("LOAD!")
+    this.setState({loading:1},()=>{
+      txWaitIntervals["loader"] = setInterval(this.updateLoader.bind(this),LOADERSPEED)
+    })
+  }
+  startWaiting(hash,nextPhase){
+    if(hash){
+      console.log("STARTWAITING",hash,nextPhase)
+      let update = {waitingForTransaction:hash,waitingForTransactionTime:Date.now()}
+      if(nextPhase=="inventoryUpdate"){
+        update.waitingForInventoryUpdate=true
+      }else{
+        update.waitingForShipUpdate=true
+      }
+      this.setState(update,()=>{
+        txWaitIntervals[hash] = setInterval(this.startWaitingForTransaction.bind(this,hash),1200)
+        this.startWaitingForTransaction(hash)
+        setTimeout(()=>{
+          console.log("CHECKING BACK ON TX ",hash,txWaitIntervals[hash])
+          if(txWaitIntervals[hash]){
+            clearInterval(txWaitIntervals[hash]);
+            this.setState({loading:0,waitingForTransaction:false})
+            clearInterval(txWaitIntervals["loader"])
+            this.setState({bottomBar:0,bottomBarMessage:"Warning: Your transaction is taking a long time, try increasing your #gas  gas price.",bottomBarSize:20})
+            clearTimeout(bottomBarTimeout)
+            bottomBarTimeout = setTimeout(()=>{
+              this.setState({bottomBar:-80})
+            },10000)
+          }
+
+        },this.state.avgBlockTime*2)
+      })
+    }
+  }
+  startEventSync() {
+    console.log("Finished loading contracts and block number, start syncing events...",this.state.blockNumber)
+    clearInterval(waitInterval);
+    if(this.state.clickScreenOpacity==0){
+      this.setState({avgBlockTime:15000,contractsLoaded:true,clickScreenTop:-90000})//clickScreenTop:-90000,clickScreenOpacity:0
+    }else{
+      this.setState({avgBlockTime:15000,contractsLoaded:true,clickScreenReadyToGetOut:true})
+    }
+
+    //dev loop only...
+    //setInterval(this.syncContacts.bind(this),4001)
+    //this.syncContacts()
+    /*setTimeout(
+    ()=>{
+    this.setState({scrollConfig: {stiffness: 2, damping: 20}})
+  },3000
 )*/
 setInterval(this.syncMyShip.bind(this),1381)
 setInterval(this.syncInventory.bind(this),2273)
@@ -1125,10 +1152,10 @@ clickScreenClick(event){
 
 
     //if(this.state.hintClicks>0 && this.state.hintClicks%2==1 && this.state.hintMode==1 && userAgent.indexOf("iPhone")<0){
-      //window.open('https://metamask.io', '_blank');
+    //window.open('https://metamask.io', '_blank');
     //}
     //else{
-      this.metamaskHint()
+    this.metamaskHint()
     //}
     //this.setState({hintClicks:this.state.hintClicks+1})
   }
@@ -1162,7 +1189,7 @@ mapWheel(obj,b,c){
 }
 testSomething(){
   console.log("TEST SOMETHING")
-  this.doBlockieHint()
+  //this.waitForShipToFloatThenDoBlockieHint()
 }
 render() {
   let buttons = [];
@@ -1421,7 +1448,7 @@ buttons.push(
 
 let menuSize = 60;
 let menu = (
-  <div key={"MENU"} onClick={()=>{console.log("MENUCLICK")}} style={{position:"fixed",left:0,top:0,width:"100%",height:menuSize,borderBottom:"0px solid #a0aab5",color:"#DDDDDD",zIndex:99}} >
+  <div key={"MENU"} style={{position:"fixed",left:0,top:0,width:"100%",height:menuSize,borderBottom:"0px solid #a0aab5",color:"#DDDDDD",zIndex:99}} >
   <Motion
   defaultStyle={{
     marginRight:0
@@ -1434,6 +1461,7 @@ let menu = (
     return (
       <div style={currentStyles}>
       <Metamask
+      clickBlockie={this.doBlockieHint.bind(this)}
       setHintMode={this.setHintMode.bind(this)}
       account={this.state.account}
       init={this.init.bind(this)}
@@ -1557,14 +1585,14 @@ let clickScreen = (
   {currentStyles => {
     return (
       <div style={{cursor:'pointer',width:this.state.clickScreenWidth,height:this.state.clickScreenHeight,opacity:currentStyles.opacity,backgroundColor:"#0a1727",position:"fixed",left:0,top:this.state.clickScreenTop,zIndex:899}} onClick={this.clickScreenClick.bind(this)}>
-        <img style={{
-          opacity:this.state.loaderOpacity,
-          position:"absolute",
-          zIndex:-99,
-          left:"47%",
-          top:"47%",
-          opacity:0.8,
-        }} src="loading3.gif" />
+      <img style={{
+        opacity:this.state.loaderOpacity,
+        position:"absolute",
+        zIndex:-99,
+        left:"47%",
+        top:"47%",
+        opacity:0.8,
+      }} src="loading3.gif" />
       </div>
     )
   }}
@@ -1904,16 +1932,16 @@ return (
       </div>
       <div style={{cursor:"pointer",zIndex:1,position:'fixed',opacity:1-this.state.cornerOpacity,top:currentStyles.titleBottomFaster-20,left:-20}} >
       <a href="https://github.com/austintgriffith/galleass" target="_blank">
-        <img data-rh="Source" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:25+iconOffset,top:83,opacity:0.8}} src="github.png" />
+      <img data-rh="Source" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:25+iconOffset,top:83,opacity:0.8}} src="github.png" />
       </a>
       <a href="http://austingriffith.com/portfolio/galleass/" target="_blank">
-        <img data-rh="Info" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:70+iconOffset,top:83,opacity:0.8}} src="moreinfo.png" />
+      <img data-rh="Info" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:70+iconOffset,top:83,opacity:0.8}} src="moreinfo.png" />
       </a>
       <a href="contracts.html" target="_blank">
-        <img data-rh="Contracts" data-rh-at="bottom"  style={{maxHeight:36,position:"absolute",left:115+iconOffset,top:83,opacity:0.8}} src="smartcontract.png" />
+      <img data-rh="Contracts" data-rh-at="bottom"  style={{maxHeight:36,position:"absolute",left:115+iconOffset,top:83,opacity:0.8}} src="smartcontract.png" />
       </a>
       <a href={decentralizedLink} target="_blank">
-        <img data-rh="IPFS" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:160+iconOffset,top:83,opacity:0.8}} src="ipfs.png" />
+      <img data-rh="IPFS" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:160+iconOffset,top:83,opacity:0.8}} src="ipfs.png" />
       </a>
 
       {gasDragger}
@@ -1925,13 +1953,13 @@ return (
       </div>
 
       <div style={{zIndex:1,position:'fixed',right:20,bottom:-4,opacity:1-this.state.cornerOpacity}}>
-        <a href="https://join.slack.com/t/galleass/shared_invite/enQtMzE0MjQ5MzMyMzQzLTk3MmI2Zjk4Njc2ZmUwYzI5ZjA1ZmRiNzY4MjQ1OTM1OTM0NTM0MmZjNWVhZWEzMWI2ZTk1MzJjNDk4OTIzZmY" target="_blank">
-          <img data-rh="Slack" data-rh-at="top" style={{maxHeight:36,opacity:0.7}} src="slack.png" />
-        </a>
+      <a href="https://join.slack.com/t/galleass/shared_invite/enQtMzE0MjQ5MzMyMzQzLTk3MmI2Zjk4Njc2ZmUwYzI5ZjA1ZmRiNzY4MjQ1OTM1OTM0NTM0MmZjNWVhZWEzMWI2ZTk1MzJjNDk4OTIzZmY" target="_blank">
+      <img data-rh="Slack" data-rh-at="top" style={{maxHeight:36,opacity:0.7}} src="slack.png" />
+      </a>
       </div>
 
-      <div style={{zIndex:1,position:'fixed',right:60,bottom:-4,opacity:1}} onClick={this.testSomething.bind(this)}>
-            <img style={{maxHeight:36,opacity:0.7}} src="moreinfo.png" />
+      <div style={{zIndex:1,position:'fixed',right:60,bottom:-4,opacity:0}} onClick={this.testSomething.bind(this)}>
+      <img style={{maxHeight:36,opacity:0.7}} src="moreinfo.png" />
       </div>
 
 
@@ -2018,27 +2046,27 @@ return (
     if(this.state.modalObject.balance>0){
       inventoryItems.push(
         <span style={modalInvStyle}><img style={{maxHeight:invHeight}} src="ether.png" />
-          <Writing string={Math.round(web3.utils.fromWei(this.state.modalObject.balance,'ether')*10000)/10000} size={invHeight+2}/>
+        <Writing string={Math.round(web3.utils.fromWei(this.state.modalObject.balance,'ether')*10000)/10000} size={invHeight+2}/>
         </span>
       )
     }
     if(this.state.modalObject.copperBalance>0){
       inventoryItems.push(
         <span style={modalInvStyle}><img style={{maxHeight:invHeight}} src="copper.png" />
-          <Writing string={this.state.modalObject.copperBalance} size={invHeight+2}/>
+        <Writing string={this.state.modalObject.copperBalance} size={invHeight+2}/>
         </span>
       )
     }
     if(this.state.modalObject.filletBalance>0){
       inventoryItems.push(
         <span style={modalInvStyle}><img style={{maxHeight:invHeight}} src="fillet.png" />
-          <Writing string={this.state.modalObject.filletBalance} size={invHeight+2}/>
+        <Writing string={this.state.modalObject.filletBalance} size={invHeight+2}/>
         </span>
       )
     }
     content.push(
       <div style={{position:'absolute',left:20,bottom:50}}>
-        {inventoryItems}
+      {inventoryItems}
       </div>
     )
 
@@ -2064,6 +2092,7 @@ return (
         first:"fillet",
         price: this.state.modalObject.filletPrice,
         second:"copper",
+        clickFn: this.buyFillet.bind(this),
       }]
       let sellArray = []
       for(let f in this.state.modalObject.fish){
@@ -2083,47 +2112,47 @@ return (
 
     /*
     modalObject.fish = [
-      "Pinner",
-      "Redbass",
-      "Catfish",
-      "Snark",
-      "Dangler",
-    ]
-    modalObject.prices = []
-    for(let f in modalObject.fish){
-      modalObject.prices[modalObject.fish[f]] = await contracts["Fishmonger"].methods.price(contracts[modalObject.fish[f]]._address).call();
-    }
-    modalObject.filletPrice = await contracts["Fishmonger"].methods.filletPrice().call();
-    modalObject.filletBalance = await contracts["Fillet"].methods.balanceOf(contracts["Fishmonger"]._address).call();
-    modalObject.copperBalance = await contracts["Copper"].methods.balanceOf(contracts["Fishmonger"]._address).call();
-     */
+    "Pinner",
+    "Redbass",
+    "Catfish",
+    "Snark",
+    "Dangler",
+  ]
+  modalObject.prices = []
+  for(let f in modalObject.fish){
+  modalObject.prices[modalObject.fish[f]] = await contracts["Fishmonger"].methods.price(contracts[modalObject.fish[f]]._address).call();
+}
+modalObject.filletPrice = await contracts["Fishmonger"].methods.filletPrice().call();
+modalObject.filletBalance = await contracts["Fillet"].methods.balanceOf(contracts["Fishmonger"]._address).call();
+modalObject.copperBalance = await contracts["Copper"].methods.balanceOf(contracts["Fishmonger"]._address).call();
+*/
 
 
-    //  <div>Price: {this.state.modalObject.price}</div>
-    return (
-      <div style={{zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
-      <div style={{position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
-      <img src="exit.png" />
-      </div>
-      <div style={{position:'absolute',left:24,top:24,border:"3px solid #777777"}}>
-      <img style={{maxWidth:83}} src={image}/>
-      </div>
-      <div style={{position:'absolute',left:118,top:24,textAlign:"left"}}>
-      <div><Writing style={{opacity:0.9}} string={this.state.modalObject.name} size={28}/>  -  {this.state.modalObject.index} @ ({this.state.landX},{this.state.landY})</div>
-      <div>Contract: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.contract}>{this.state.modalObject.contract}</a></div>
-      <div>Owner: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.owner}>{this.state.modalObject.owner}</a></div>
-      </div>
-      {content}
-      </div>
-    )
-
-  }}
-  </Motion>
-
-
-
-    <img src="maptexturelightfaded.jpg" style={{position:'absolute',width:1,height:1,left:1,top:1}} />
+//  <div>Price: {this.state.modalObject.price}</div>
+return (
+  <div style={{zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
+  <div style={{position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
+  <img src="exit.png" />
   </div>
+  <div style={{position:'absolute',left:24,top:24,border:"3px solid #777777"}}>
+  <img style={{maxWidth:83}} src={image}/>
+  </div>
+  <div style={{position:'absolute',left:118,top:24,textAlign:"left"}}>
+  <div><Writing style={{opacity:0.9}} string={this.state.modalObject.name} size={28}/>  -  {this.state.modalObject.index} @ ({this.state.landX},{this.state.landY})</div>
+  <div>Contract: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.contract}>{this.state.modalObject.contract}</a></div>
+  <div>Owner: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.owner}>{this.state.modalObject.owner}</a></div>
+  </div>
+  {content}
+  </div>
+)
+
+}}
+</Motion>
+
+
+
+<img src="maptexturelightfaded.jpg" style={{position:'absolute',width:1,height:1,left:1,top:1}} />
+</div>
 );
 }
 }
