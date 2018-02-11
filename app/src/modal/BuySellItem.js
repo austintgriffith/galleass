@@ -14,17 +14,17 @@ class BuySellItem extends Component {
     let firstImage
     if(this.props.balance){
       firstImage = (
-        <img data-rh={this.props.balance} data-rh-at="bottom" src={this.props.first+".png"} style={{maxHeight:textSize}}/>
+        <img data-rh={this.props.balance} data-rh-at="bottom" src={this.props.first.toLowerCase()+".png"} style={{maxHeight:textSize}}/>
       )
     }else{
       firstImage = (
-        <img src={this.props.first+".png"} style={{maxHeight:textSize}}/>
+        <img src={this.props.first.toLowerCase()+".png"} style={{maxHeight:textSize}}/>
       )
     }
 
     return (
       <div>
-        <Writing string={this.props.amount} size={textSize} space={5}/> {firstImage} <Writing string={":"} size={textSize}/> <Writing string={this.props.price} size={textSize} space={5}/> <img style={{maxHeight:textSize}} src={this.props.second+".png"} />
+        <Writing string={this.props.amount} size={textSize} space={5}/> {firstImage} <Writing string={":"} size={textSize}/> <Writing string={this.props.price} size={textSize} space={5}/> <img style={{maxHeight:textSize}} src={this.props.second.toLowerCase()+".png"} />
         {clickImage}
       </div>
     )
