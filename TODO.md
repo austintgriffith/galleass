@@ -1,6 +1,7 @@
 # TODO
 [ ] ipfs contract that holds current value and is auto updated on deploy instead of pushing code twice
 [ ] hint to click on the buildings
+[ ] maybe have a link to the Cipher browser similar to the metamask link 
 [x] when you get too far to the left the title is over your buttons
 [x] it might be a good idea to draw the player's ship a little different, like in front of others. might get lost in the noise
 [x] get design looking better in non-metamask browsers like Safari just so it looks better at a glance
