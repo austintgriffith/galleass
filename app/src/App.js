@@ -536,14 +536,18 @@ class App extends Component {
       })
     }else{
       let land = this.state.land;
+      let landOwners = this.state.landOwners;
       if(!land) land=[]
+      if(!landOwners) landOwners=[]
       for(let l=0;l<18;l++){
         let currentTileHere = await contracts["Land"].methods.tileTypeAt(this.state.landX,this.state.landY,l).call();
+        let ownerOfTileHere = await contracts["Land"].methods.ownerAt(this.state.landX,this.state.landY,l).call();
         land[l]=currentTileHere
+        landOwners[l]=ownerOfTileHere
       }
-      if(land!=this.state.land){
-        console.log("LAND UPDATE",land)
-        this.setState({land:land})
+      if(land!=this.state.land || landOwners!=this.state.landOwners){
+        console.log("LAND UPDATE",land,landOwners)
+        this.setState({land:land,landOwners:landOwners})
       }
       console.log("Loading Harbor Location",this.state.landX,this.state.landY,contracts["Harbor"]._address)
       let harborLocation = await contracts["Land"].methods.getTileLocation(this.state.landX,this.state.landY,contracts["Harbor"]._address).call();
@@ -715,6 +719,58 @@ class App extends Component {
       }
     })
   }
+  async buyLand(x,y,i,copper){
+    console.log("BUY LAND ",x,y,i,copper)
+
+    let xHex = parseInt(x).toString(16)
+    while(xHex.length<4) xHex="0"+xHex;
+    let yHex = parseInt(y).toString(16)
+    while(yHex.length<4) yHex="0"+yHex;
+    let iHex = parseInt(i).toString(16)
+    while(iHex.length<2) iHex="0"+iHex;
+
+    console.log("hex:",xHex,yHex,iHex)
+
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+
+    console.log("Purchasing land x:"+xHex+" y:"+yHex+" i:"+iHex+" for "+copper+" copper")
+    contracts["Copper"].methods.transferAndCall(contracts["Land"]._address,copper,"0x01"+xHex+yHex+iHex).send({
+      from: accounts[0],
+      gas:120000,
+      gasPrice:this.state.GWEI * 1000000000
+    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+      console.log("RESULT:",receipt)
+      if(this.state.modalHeight>=0){
+        //click screen is up for modal
+        this.setState({modalHeight:-600,clickScreenTop:-5000,clickScreenOpacity:0})
+      }
+    })
+  }
+  handleFocus(event) {
+    event.target.select();
+  }
+  handleModalInput(e){
+    console.log(e.target.value)
+    let obj = this.state.modalObject
+    obj.price = e.target.value
+    this.setState({modalObject:obj})
+  }
+  async setLandPrice(x,y,i,copper){
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+    console.log("Setting price of land x:"+x+" y:"+y+" i:"+i+" to "+copper+" copper")
+    contracts["Land"].methods.setPrice(x,y,i,copper).send({
+      from: accounts[0],
+      gas:120000,
+      gasPrice:this.state.GWEI * 1000000000
+    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+      console.log("RESULT:",receipt)
+      if(this.state.modalHeight>=0){
+        //click screen is up for modal
+        this.setState({modalHeight:-600,clickScreenTop:-5000,clickScreenOpacity:0})
+      }
+    })
+  }
+
   setSail(direction){
     console.log("SET SAIL")
     if(direction) this.bumpButton("saileast")
@@ -1519,7 +1575,7 @@ let sea = (
 
 let land = (
   <div style={{position:"absolute",left:0,top:horizon-60,width:width}} >
-  <Land land={this.state.land} Blockies={Blockies} tileClick={this.tileClick.bind(this)}/>
+  <Land land={this.state.land} landOwners={this.state.landOwners} Blockies={Blockies} tileClick={this.tileClick.bind(this)}/>
   </div>
 )
 
@@ -2030,7 +2086,7 @@ return (
     let content = []
 
     content.push(
-      <div style={{padding:50}}>
+      <div style={{padding:60}}>
       </div>
     )
 
@@ -2129,6 +2185,33 @@ modalObject.copperBalance = await contracts["Copper"].methods.balanceOf(contract
 
 
 //  <div>Price: {this.state.modalObject.price}</div>
+//
+let tilePriceAndPurchase = ""
+if(this.state.account && this.state.modalObject.owner && this.state.account.toLowerCase()==this.state.modalObject.owner.toLowerCase()){
+  tilePriceAndPurchase = (
+    <div style={{float:'right',padding:10}}>
+      <Writing style={{verticalAlign:'middle',opacity:0.9}} string={"Land Price: "} size={20}/>
+       <input style={{textAlign:'right',width:40,marginRight:3,maxHeight:20,padding:5,border:'2px solid #ccc',borderRadius:5}} type="text" name="landPurchasePrice" value={this.state.modalObject.price} onFocus={this.handleFocus} onChange={this.handleModalInput.bind(this)}/>
+       <img  style={{verticalAlign:'middle',maxHeight:20}} src="copper.png" />
+       <img data-rh={"Offer to sell land for "+this.state.modalObject.price+" Copper"} data-rh-at="right"
+        src="metamasksign.png"
+        style={{verticalAlign:'middle',maxHeight:20,marginLeft:10,cursor:"pointer"}} onClick={this.setLandPrice.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,this.state.modalObject.price)}
+      />
+    </div>
+  )
+}else if(this.state.modalObject.price>0){
+  tilePriceAndPurchase = (
+    <div style={{float:'right',padding:10}}>
+      <Writing style={{opacity:0.9}} string={"Purchase Land: "+this.state.modalObject.price+" "} size={20}/>
+       <img  style={{maxHeight:20}} src="copper.png" />
+       <img data-rh={"Purchase land for  "+this.state.modalObject.price+" Copper"} data-rh-at="right"
+        src="metamasksign.png"
+        style={{maxHeight:20,marginLeft:10,cursor:"pointer"}} onClick={this.buyLand.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,this.state.modalObject.price)}
+      />
+    </div>
+  )
+}
+
 return (
   <div style={{zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
   <div style={{position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
@@ -2141,6 +2224,7 @@ return (
   <div><Writing style={{opacity:0.9}} string={this.state.modalObject.name} size={28}/>  -  {this.state.modalObject.index} @ ({this.state.landX},{this.state.landY})</div>
   <div>Contract: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.contract}>{this.state.modalObject.contract}</a></div>
   <div>Owner: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.owner}>{this.state.modalObject.owner}</a></div>
+  {tilePriceAndPurchase}
   </div>
   {content}
   </div>

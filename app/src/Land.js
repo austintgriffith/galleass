@@ -214,7 +214,7 @@ class Land extends Component {
           }
           islands[islandCount++]=1
         }else{
-          tempIsland.push({tile:thisTile,index:l})
+          tempIsland.push({tile:thisTile,index:l,owner:this.props.landOwners[l]})
           if(!buildingIsland){
             buildingIsland=true;
           }
@@ -321,9 +321,10 @@ class Land extends Component {
               )
               currentPixelLocation+=120
             }else if(islands[i][t].tile==2000){
+              //console.log("VILLAGE:",islands[i][t])
               tiles.push(
                 this.wrapLandTileWithLink("Village",islands[i][t].index,currentPixelLocation,
-                  this.villageTile(currentPixelLocation,"0x34aA3F359A9D614239015126635CE7732c18fDF3")
+                  this.villageTile(currentPixelLocation,islands[i][t].owner)
                 )
               )
               currentPixelLocation+=120

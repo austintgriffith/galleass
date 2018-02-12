@@ -703,7 +703,19 @@ module.exports = {
       });
     });
   },
+  setPriceOfFirstTileOfType:(accountindex,tiletype,price)=>{
+    describe('#setPriceOfFirstTileOfType()', function() {
+      it('should set the price of the first tile of a specific type', async function() {
+        this.timeout(120000)
+        let mainLand = await getMainLand();
 
+        let found = await searchLandFromCenterOut(mainLand,9,tiletype)
+        console.log(tab,"Found tile at:",found)
+
+        module.exports.setPriceOfTile(accountindex,mainLand[0],mainLand[1],found,price)
+      });
+    });
+  },
 
   publish:()=>{
     describe('#publish() ', function() {
@@ -912,6 +924,12 @@ findFirstLandTile = async (mainLand)=>{
   }
 }
 
+findFirstTileType = async (mainLand,tileType)=>{
+  for(let i=0;i<18;i++){
+    const tileType = await clevis("contract","tileTypeAt","Land",mainLand[0],mainLand[1],i)
+    if(tileType!=0) return i;
+  }
+}
 
 searchLandFromCenterOut = async (mainLand,startingPoint,tileType) =>{
   let bestTile = false;

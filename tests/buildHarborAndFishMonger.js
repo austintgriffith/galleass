@@ -4,10 +4,12 @@ const galleass = require('./galleass.js')
 //
 // galleass.deploy("Land",0)
 // galleass.setContract("Land",0)
-//
-//
+
+
 
 galleass.generateLand(0)
+
+
 
 galleass.editMiddleTile(0,"Harbor",100)
 galleass.editMiddleTile(0,"Fishmonger",101)
@@ -24,3 +26,6 @@ galleass.testMint("Copper",0,0,10) //mint copper to 0 account
 galleass.approveContract("Copper",0,"Land",10) //approve Land to xfer account 0 copper
 
 galleass.buyFirstLandTile(0)
+
+//put the village up for sale
+galleass.setPriceOfFirstTileOfType(0,2000,14)

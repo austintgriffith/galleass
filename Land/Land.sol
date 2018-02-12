@@ -130,7 +130,7 @@ contract Land is Galleasset, Ownable {
       if(_newTileType==tileTypes["Village"]){
 
         require( getTokens(msg.sender,"Timber",6) );
-        
+
 
         return true;
       }else{
@@ -151,6 +151,30 @@ contract Land is Galleasset, Ownable {
     priceAt[_x][_y][_tile]=0;
     return true;
   }
+
+  //erc677 receiver
+  function onTokenTransfer(address _sender, uint _value, bytes _data) public isGalleasset("Land") returns (bool) {
+    uint8 action = uint8(_data[0]);
+    if(action==1){
+      //buy tile
+      address copperContractAddress = getContract("Copper");
+      require(msg.sender == copperContractAddress);
+      uint16 _x = uint16(_data[1]) << 8 | uint16(_data[2]);
+      uint16 _y = uint16(_data[3]) << 8 | uint16(_data[4]);
+      uint8 _tile = uint8(_data[5]);
+      require(priceAt[_x][_y][_tile]>0);//must be for sale
+      require(_value>=priceAt[_x][_y][_tile]);
+      StandardToken copperContract = StandardToken(copperContractAddress);
+      require(copperContract.transfer(ownerAt[_x][_y][_tile],_value));
+      ownerAt[_x][_y][_tile]=_sender;
+      priceAt[_x][_y][_tile]=0;
+      return true;
+    }
+
+    Debug(msg.sender,_sender,_value,_data,_data.length);
+  }
+  event Test(uint8 _num);
+  event Debug(address _msgsender,address _sender, uint _value, bytes _data,uint _len);
 
   function setPrice(uint16 _x,uint16 _y,uint8 _tile,uint256 _price) public isGalleasset("Land") returns (bool) {
     require(msg.sender==ownerAt[_x][_y][_tile]);
@@ -275,5 +299,6 @@ contract Land is Galleasset, Ownable {
 }
 
 contract StandardToken {
+  function transfer(address _to, uint256 _value) public returns (bool) { }
   function transferFrom(address _from, address _to, uint256 _value) public returns (bool) { }
 }
