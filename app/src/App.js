@@ -32,7 +32,9 @@ import Metamask from './Metamask.js'
 import {Motion, spring, presets} from 'react-motion';
 const ReactHint = ReactHintFactory(React)
 
-const IPFSADDRESS = "QmPLpq9XyLQp6uskiBq8LzRLtJnfvZBnYdySbJGBNso8xZ";
+const UPGRADING = false;
+
+const IPFSADDRESS = "QmbYzLtfYVBt8waMQoL5UzBbZdEzfCGex5bkHiF1xXXDRU";
 
 var Web3 = require('web3');
 let width = 4000;
@@ -265,56 +267,71 @@ class App extends Component {
   }
   init(account) {
     console.log("Init "+account+"...")
-    this.setState({account:account})
-    this.setState({bottomBar:0,bottomBarMessage:"Stage 1: Use a #Dogger  Dogger to catch #Fish  Fish then sell them for #Copper  Copper.",bottomBarSize:23})
-    clearTimeout(bottomBarTimeout)
-    bottomBarTimeout = setTimeout(()=>{
-      this.setState({bottomBar:-80})
-      setTimeout(()=>{
-        this.setState({bottomBar:0,bottomBarMessage:"The #gas  Gas slider controls the cost and speed of transactions.",bottomBarSize:23})
-        clearTimeout(bottomBarTimeout)
-        bottomBarTimeout = setTimeout(()=>{
-          this.setState({bottomBar:-80})
-          setTimeout(()=>{
-            this.setState({bottomBar:0,bottomBarMessage:"Get closer to #fish  Fish to increase the odds of catching them.",bottomBarSize:23})
-            clearTimeout(bottomBarTimeout)
-            bottomBarTimeout = setTimeout(()=>{
-              this.setState({bottomBar:-80})
-              setTimeout(()=>{
-                this.setState({bottomBar:0,bottomBarMessage:"Use the #mapicon  Map to navigate to other islands.",bottomBarSize:23})
-                clearTimeout(bottomBarTimeout)
-                bottomBarTimeout = setTimeout(()=>{
-                  this.setState({bottomBar:-80})
-                  setTimeout(()=>{
-                    this.setState({bottomBar:0,bottomBarMessage:"Read the #help  Help section for more information.",bottomBarSize:23})
-                    clearTimeout(bottomBarTimeout)
-                    bottomBarTimeout = setTimeout(()=>{
-                      this.setState({bottomBar:-80})
-                      this.setState({bottomBar:0,bottomBarMessage:"Stage 1: Use a #Dogger  Dogger to catch #Fish  Fish then sell them for #Copper  Copper.",bottomBarSize:23})
+    if(UPGRADING){
+      console.log("Displaying upgrade screen...")
+      this.setState({
+      modalObject:{
+        simpleMessage:"Galleass.io is undergoing a contract upgrade",
+        simpleMessage2:"we will back online soon.",
+        simpleMessage3:"Thanks",
+      },
+      modalHeight:180,
+      clickScreenTop:0,
+      clickScreenOpacity:0.33
+    })
+    }else{
+      this.setState({account:account})
+      this.setState({bottomBar:0,bottomBarMessage:"Stage 1: Use a #Dogger  Dogger to catch #Fish  Fish then sell them for #Copper  Copper.",bottomBarSize:23})
+      clearTimeout(bottomBarTimeout)
+      bottomBarTimeout = setTimeout(()=>{
+        this.setState({bottomBar:-80})
+        setTimeout(()=>{
+          this.setState({bottomBar:0,bottomBarMessage:"The #gas  Gas slider controls the cost and speed of transactions.",bottomBarSize:23})
+          clearTimeout(bottomBarTimeout)
+          bottomBarTimeout = setTimeout(()=>{
+            this.setState({bottomBar:-80})
+            setTimeout(()=>{
+              this.setState({bottomBar:0,bottomBarMessage:"Get closer to #fish  Fish to increase the odds of catching them.",bottomBarSize:23})
+              clearTimeout(bottomBarTimeout)
+              bottomBarTimeout = setTimeout(()=>{
+                this.setState({bottomBar:-80})
+                setTimeout(()=>{
+                  this.setState({bottomBar:0,bottomBarMessage:"Use the #mapicon  Map to navigate to other islands.",bottomBarSize:23})
+                  clearTimeout(bottomBarTimeout)
+                  bottomBarTimeout = setTimeout(()=>{
+                    this.setState({bottomBar:-80})
+                    setTimeout(()=>{
+                      this.setState({bottomBar:0,bottomBarMessage:"Read the #help  Help section for more information.",bottomBarSize:23})
                       clearTimeout(bottomBarTimeout)
                       bottomBarTimeout = setTimeout(()=>{
                         this.setState({bottomBar:-80})
-                      },120000)
-                    },30000)
-                  },3000)
-                },30000)
-              },3000)
-            },30000)
-          },3000)
-        },30000)
-      },3000)
-    },30000)
+                        this.setState({bottomBar:0,bottomBarMessage:"Stage 1: Use a #Dogger  Dogger to catch #Fish  Fish then sell them for #Copper  Copper.",bottomBarSize:23})
+                        clearTimeout(bottomBarTimeout)
+                        bottomBarTimeout = setTimeout(()=>{
+                          this.setState({bottomBar:-80})
+                        },120000)
+                      },30000)
+                    },3000)
+                  },30000)
+                },3000)
+              },30000)
+            },3000)
+          },30000)
+        },3000)
+      },30000)
 
-    let buyShipBump = setInterval(()=>{
-      if(this.state.experienceBuyShip){
-        clearInterval(buyShipBump)
-      }else{
-        this.bumpButton("buyship")
-        setTimeout(()=>{
-          this.resetButton("buyship")
-        },1000)
-      }
-    },3000)
+      let buyShipBump = setInterval(()=>{
+        if(this.state.experienceBuyShip){
+          clearInterval(buyShipBump)
+        }else{
+          this.bumpButton("buyship")
+          setTimeout(()=>{
+            this.resetButton("buyship")
+          },1000)
+        }
+      },3000)
+    }
+
 
   }
 
@@ -734,6 +751,7 @@ class App extends Component {
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
 
     console.log("Purchasing land x:"+xHex+" y:"+yHex+" i:"+iHex+" for "+copper+" copper")
+    console.log(contracts["Land"]._address,copper,"0x01"+xHex+yHex+iHex)
     contracts["Copper"].methods.transferAndCall(contracts["Land"]._address,copper,"0x01"+xHex+yHex+iHex).send({
       from: accounts[0],
       gas:120000,
@@ -2070,6 +2088,32 @@ return (
   }}
   >
   {currentStyles => {
+    /*
+    fire modal with:
+    this.setState({
+    modalObject:modalObject,
+    modalHeight:180,
+    clickScreenTop:0,
+    clickScreenOpacity:0.33
+  })
+  */
+
+  if(this.state.modalObject.simpleMessage){
+    return (
+      <div style={{zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
+      <div style={{position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
+      <img src="exit.png" />
+      </div>
+      <div style={{paddingBottom:100}}></div>
+      <div><Writing style={{opacity:0.9}} string={this.state.modalObject.simpleMessage} size={22}/></div>
+      <div><Writing style={{opacity:0.9}} string={this.state.modalObject.simpleMessage2} size={22}/></div>
+      <div><Writing style={{opacity:0.9}} string={this.state.modalObject.simpleMessage3} size={22}/></div>
+
+      </div>
+    )
+  }else{
+
+
     let image = this.state.modalObject.name.toLowerCase()+".png"
     if(this.state.modalObject.name.indexOf("Resource")>=0){
       image = this.state.modalObject.name.split("Resource").join("");
@@ -2166,69 +2210,55 @@ return (
       )
     }
 
-    /*
-    modalObject.fish = [
-    "Pinner",
-    "Redbass",
-    "Catfish",
-    "Snark",
-    "Dangler",
-  ]
-  modalObject.prices = []
-  for(let f in modalObject.fish){
-  modalObject.prices[modalObject.fish[f]] = await contracts["Fishmonger"].methods.price(contracts[modalObject.fish[f]]._address).call();
-}
-modalObject.filletPrice = await contracts["Fishmonger"].methods.filletPrice().call();
-modalObject.filletBalance = await contracts["Fillet"].methods.balanceOf(contracts["Fishmonger"]._address).call();
-modalObject.copperBalance = await contracts["Copper"].methods.balanceOf(contracts["Fishmonger"]._address).call();
-*/
 
 
-//  <div>Price: {this.state.modalObject.price}</div>
-//
-let tilePriceAndPurchase = ""
-if(this.state.account && this.state.modalObject.owner && this.state.account.toLowerCase()==this.state.modalObject.owner.toLowerCase()){
-  tilePriceAndPurchase = (
-    <div style={{float:'right',padding:10}}>
-      <Writing style={{verticalAlign:'middle',opacity:0.9}} string={"Land Price: "} size={20}/>
-       <input style={{textAlign:'right',width:40,marginRight:3,maxHeight:20,padding:5,border:'2px solid #ccc',borderRadius:5}} type="text" name="landPurchasePrice" value={this.state.modalObject.price} onFocus={this.handleFocus} onChange={this.handleModalInput.bind(this)}/>
-       <img  style={{verticalAlign:'middle',maxHeight:20}} src="copper.png" />
-       <img data-rh={"Offer to sell land for "+this.state.modalObject.price+" Copper"} data-rh-at="right"
+    //  <div>Price: {this.state.modalObject.price}</div>
+    //
+    let tilePriceAndPurchase = ""
+    if(this.state.account && this.state.modalObject.owner && this.state.account.toLowerCase()==this.state.modalObject.owner.toLowerCase()){
+      tilePriceAndPurchase = (
+        <div style={{float:'right',padding:10}}>
+        <Writing style={{verticalAlign:'middle',opacity:0.9}} string={"Land Price: "} size={20}/>
+        <input style={{textAlign:'right',width:40,marginRight:3,maxHeight:20,padding:5,border:'2px solid #ccc',borderRadius:5}} type="text" name="landPurchasePrice" value={this.state.modalObject.price} onFocus={this.handleFocus} onChange={this.handleModalInput.bind(this)}/>
+        <img  style={{verticalAlign:'middle',maxHeight:20}} src="copper.png" />
+        <img data-rh={"Offer to sell land for "+this.state.modalObject.price+" Copper"} data-rh-at="right"
         src="metamasksign.png"
         style={{verticalAlign:'middle',maxHeight:20,marginLeft:10,cursor:"pointer"}} onClick={this.setLandPrice.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,this.state.modalObject.price)}
-      />
-    </div>
-  )
-}else if(this.state.modalObject.price>0){
-  tilePriceAndPurchase = (
-    <div style={{float:'right',padding:10}}>
-      <Writing style={{opacity:0.9}} string={"Purchase Land: "+this.state.modalObject.price+" "} size={20}/>
-       <img  style={{maxHeight:20}} src="copper.png" />
-       <img data-rh={"Purchase land for  "+this.state.modalObject.price+" Copper"} data-rh-at="right"
+        />
+        </div>
+      )
+    }else if(this.state.modalObject.price>0){
+      tilePriceAndPurchase = (
+        <div style={{float:'right',padding:10}}>
+        <Writing style={{opacity:0.9}} string={"Purchase Land: "+this.state.modalObject.price+" "} size={20}/>
+        <img  style={{maxHeight:20}} src="copper.png" />
+        <img data-rh={"Purchase land for  "+this.state.modalObject.price+" Copper"} data-rh-at="right"
         src="metamasksign.png"
         style={{maxHeight:20,marginLeft:10,cursor:"pointer"}} onClick={this.buyLand.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,this.state.modalObject.price)}
-      />
-    </div>
-  )
-}
+        />
+        </div>
+      )
+    }
 
-return (
-  <div style={{zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
-  <div style={{position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
-  <img src="exit.png" />
-  </div>
-  <div style={{position:'absolute',left:24,top:24,border:"3px solid #777777"}}>
-  <img style={{maxWidth:83}} src={image}/>
-  </div>
-  <div style={{position:'absolute',left:118,top:24,textAlign:"left"}}>
-  <div><Writing style={{opacity:0.9}} string={this.state.modalObject.name} size={28}/>  -  {this.state.modalObject.index} @ ({this.state.landX},{this.state.landY})</div>
-  <div>Contract: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.contract}>{this.state.modalObject.contract}</a></div>
-  <div>Owner: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.owner}>{this.state.modalObject.owner}</a></div>
-  {tilePriceAndPurchase}
-  </div>
-  {content}
-  </div>
-)
+    return (
+      <div style={{zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
+      <div style={{position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
+      <img src="exit.png" />
+      </div>
+      <div style={{position:'absolute',left:24,top:24,border:"3px solid #777777"}}>
+      <img style={{maxWidth:83}} src={image}/>
+      </div>
+      <div style={{position:'absolute',left:118,top:24,textAlign:"left"}}>
+      <div><Writing style={{opacity:0.9}} string={this.state.modalObject.name} size={28}/>  -  {this.state.modalObject.index} @ ({this.state.landX},{this.state.landY})</div>
+      <div>Contract: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.contract}>{this.state.modalObject.contract}</a></div>
+      <div>Owner: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.owner}>{this.state.modalObject.owner}</a></div>
+      {tilePriceAndPurchase}
+      </div>
+      {content}
+      </div>
+    )
+  }
+
 
 }}
 </Motion>
