@@ -34,7 +34,7 @@ const ReactHint = ReactHintFactory(React)
 
 const UPGRADING = false;
 
-const IPFSADDRESS = "QmbYzLtfYVBt8waMQoL5UzBbZdEzfCGex5bkHiF1xXXDRU";
+const IPFSADDRESS = "Qmb5fNbSZ6zooVQjKqccEsq33nVX1RaCg9zd2Wm3qhQjrT";
 
 var Web3 = require('web3');
 let width = 4000;
