@@ -29,3 +29,12 @@ galleass.buyFirstLandTile(0)
 
 //put the village up for sale
 galleass.setPriceOfFirstTileOfType(0,2000,14)
+
+
+
+
+
+
+
+// galleass.editMiddleTile(0,"Village",2000,"0x34aa3f359a9d614239015126635ce7732c18fdf3")
+// galleass.setPriceOfTile(0,28379,52695,17,13)//setPriceOfSecondTileOfType(0,2000,14)
