@@ -747,8 +747,8 @@ module.exports = {
         loadAbi("Copper")
         loadAbi("Fishmonger")
         loadAbi("Fillet")
-
         loadAbi("Land")
+        loadAbi("Ipfs")
       });
     });
   },

@@ -38,7 +38,7 @@
   </head>
   <body style="background-color:#0a1727">
     <div style="margin: 0 auto;width: 800px;background-color:#ffffff;padding:50px;font-family: Helvetica,Arial,sans-serif;">
-      <h1>Galleass.io - Smart Contracts <span style="color:#629a62;opacity:0.6">[Live on Ropsten]</span></h1>
+      <h1><a href="https://galleass.io">Galleass.io</a> - Smart Contracts <span style="color:#629a62;opacity:0.6">[Live on Ropsten]</span></h1>
       <div style="width:77%;border-bottom:1px solid #dddddd;margin-bottom:20px"></div>
 
       <div>

@@ -25,8 +25,10 @@ let loadContracts = [
   "Copper",
   "Fillet",
   "Experience",
+  "Ipfs",
   "Galleasset",
   "Staged",
+
 ]
 
 contractsHtml = "<table cellspacing='0' cellpadding='10' border='0'>"
