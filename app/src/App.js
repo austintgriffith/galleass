@@ -290,7 +290,7 @@ class App extends Component {
       })
     }else{
       this.setState({account:account})
-      this.setState({bottomBar:0,bottomBarMessage:"Stage 1: Use a #Dogger  Dogger to catch #Fish  Fish then sell them for #Copper  Copper.",bottomBarSize:23})
+      this.setState({bottomBar:0,bottomBarMessage:"Stage 1: Use a #Dogger  Dogger to catch #Fish  Fish and sell them for #Copper  Copper.",bottomBarSize:23})
       clearTimeout(bottomBarTimeout)
       bottomBarTimeout = setTimeout(()=>{
         this.setState({bottomBar:-80})
