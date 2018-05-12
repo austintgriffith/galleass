@@ -953,6 +953,10 @@ class App extends Component {
       bottomBarTimeout = setTimeout(()=>{
         this.setState({bottomBar:-80})
       },10000)
+
+      //ACTUALLY LET'S JUST RELOAD AT THIS POINT
+      //THIS NEEDS A LOT MORE WORK
+      window.location.reload(true);
     }
   }
 
