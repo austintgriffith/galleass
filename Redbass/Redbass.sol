@@ -10,10 +10,11 @@ pragma solidity ^0.4.15;
 */
 
 import 'Galleasset.sol';
+import 'ERC677Token.sol';
 import 'zeppelin-solidity/contracts/ownership/HasNoEther.sol';
 import 'zeppelin-solidity/contracts/token/MintableToken.sol';
 
-contract Redbass is Galleasset, HasNoEther, MintableToken {
+contract Redbass is Galleasset, HasNoEther, MintableToken, ERC677Token {
 
   string public constant name = "Galleass Redbass";
   string public constant symbol = "G_REDBASS";

@@ -14,8 +14,6 @@ import 'ERC677Token.sol';
 import 'zeppelin-solidity/contracts/ownership/HasNoEther.sol';
 import 'zeppelin-solidity/contracts/token/MintableToken.sol';
 
-
-
 contract Copper is Galleasset, HasNoEther, MintableToken, ERC677Token {
 
   string public constant name = "Galleass Copper";

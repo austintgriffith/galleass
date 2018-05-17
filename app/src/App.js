@@ -63,7 +63,8 @@ let loadContracts = [
   "Land",
   "Experience",
   "Fillet",
-  "Ipfs"
+  "Ipfs",
+  "Village"
 ]
 
 let inventoryTokens = [
@@ -730,12 +731,12 @@ class App extends Component {
   async buyFillet(fish){
     console.log("BUY FILLET ")
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
-
+    let buyAmount = 1
     let filletPrice = await contracts["Fishmonger"].methods.filletPrice().call()
     console.log("Fishmonger charges ",filletPrice," for fillets")
-    contracts["Fishmonger"].methods.buyFillet(1).send({
+    contracts["Copper"].methods.transferAndCall(contracts["Fishmonger"]._address,filletPrice*buyAmount,"0x01").send({
       from: accounts[0],
-      gas:330000,
+      gas:120000,
       gasPrice:this.state.GWEI * 1000000000
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)

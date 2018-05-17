@@ -29,8 +29,6 @@ contract ERC677Token is StandardToken {
     receiver.onTokenTransfer(msg.sender, _value, _data);
   }
 
-
-
   function isContract(address _addr)
     private
     returns (bool hasCode)

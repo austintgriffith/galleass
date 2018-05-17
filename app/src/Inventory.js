@@ -47,7 +47,7 @@ class Inventory extends Component {
         let extra = "";
         let maxWidth = 64
         let maxHeight = 32
-        if(i!="Ether" && i!="Copper" && i!="Dogger" && i!="Timber") extra = sellForCopper(i);
+        if(i!="Ether" && i!="Copper" && i!="Dogger" && i!="Timber" && i!="Fillet") extra = sellForCopper(i);
         if(i=="Dogger") maxHeight=58
 
         let extraBottomMargin=0;

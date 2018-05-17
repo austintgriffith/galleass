@@ -23,6 +23,7 @@ contract Harbor is Galleasset, Ownable {
   function Harbor(address _galleass) public Galleasset(_galleass) {
     currentPrice["Dogger"] = ((1 ether)/1000);
   }
+  function () public {revert();}
 
   function onTokenTransfer(address _sender, uint _value, bytes _data) {
     if( msg.sender == getContract("Timber") ){

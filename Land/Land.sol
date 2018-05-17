@@ -59,6 +59,7 @@ contract Land is Galleasset, Ownable {
 
     tileTypes["Village"]=2000;
   }
+  function () public {revert();}
 
   function generateLand() onlyOwner isBuilding public returns (bool) {
 
@@ -124,14 +125,10 @@ contract Land is Galleasset, Ownable {
   function buildTile(uint16 _x, uint16 _y,uint8 _tile,uint16 _newTileType) public isGalleasset("Land") returns (bool) {
     require(msg.sender==ownerAt[_x][_y][_tile]);
     uint16 tileType = tileTypeAt[_x][_y][_tile];
-
     if(tileType==tileTypes["MainHills"]||tileType==tileTypes["MainGrass"]){
       //they want to build on a main, blank spot whether hills or grass
       if(_newTileType==tileTypes["Village"]){
-
         require( getTokens(msg.sender,"Timber",6) );
-
-
         return true;
       }else{
         return false;
@@ -153,7 +150,8 @@ contract Land is Galleasset, Ownable {
   }
 
   //erc677 receiver
-  function onTokenTransfer(address _sender, uint _value, bytes _data) public isGalleasset("Land") returns (bool) {
+  function onTokenTransfer(address _sender, uint _amount, bytes _data) public isGalleasset("Land") returns (bool) {
+    TokenTransfer(msg.sender,_sender,_amount,_data);
     uint8 action = uint8(_data[0]);
     if(action==1){
       //buy tile
@@ -163,18 +161,15 @@ contract Land is Galleasset, Ownable {
       uint16 _y = uint16(_data[3]) << 8 | uint16(_data[4]);
       uint8 _tile = uint8(_data[5]);
       require(priceAt[_x][_y][_tile]>0);//must be for sale
-      require(_value>=priceAt[_x][_y][_tile]);
+      require(_amount>=priceAt[_x][_y][_tile]);
       StandardToken copperContract = StandardToken(copperContractAddress);
-      require(copperContract.transfer(ownerAt[_x][_y][_tile],_value));
+      require(copperContract.transfer(ownerAt[_x][_y][_tile],_amount));
       ownerAt[_x][_y][_tile]=_sender;
       priceAt[_x][_y][_tile]=0;
       return true;
     }
-
-    Debug(msg.sender,_sender,_value,_data,_data.length);
   }
-  event Test(uint8 _num);
-  event Debug(address _msgsender,address _sender, uint _value, bytes _data,uint _len);
+  event TokenTransfer(address token,address sender,uint amount,bytes data);
 
   function setPrice(uint16 _x,uint16 _y,uint8 _tile,uint256 _price) public isGalleasset("Land") returns (bool) {
     require(msg.sender==ownerAt[_x][_y][_tile]);
@@ -182,11 +177,11 @@ contract Land is Galleasset, Ownable {
     return true;
   }
 
-  function setTileContract(uint16 _x,uint16 _y,uint8 _tile,address _contract) public isGalleasset("Land") returns (bool) {
+  /* function setTileContract(uint16 _x,uint16 _y,uint8 _tile,address _contract) public isGalleasset("Land") returns (bool) {
     require(msg.sender==ownerAt[_x][_y][_tile]);
     contractAt[_x][_y][_tile]=_contract;
     return true;
-  }
+  } */
 
   function transferTile(uint16 _x,uint16 _y,uint8 _tile,address _newOwner) public isGalleasset("Land") returns (bool) {
     require(msg.sender==ownerAt[_x][_y][_tile]);

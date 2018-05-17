@@ -27,6 +27,7 @@ contract Dogger is Galleasset, NFT {
       });
       items.push(_item);
     }
+    function () public {revert();}
 
     struct Item{
       uint16 strength;

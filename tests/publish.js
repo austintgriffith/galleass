@@ -15,6 +15,7 @@ let loadContracts = [
   "Sea",
   "Harbor",
   "Fishmonger",
+  "Village",
   "Dogger",
   "Timber",
   "Catfish",
@@ -28,7 +29,6 @@ let loadContracts = [
   "Ipfs",
   "Galleasset",
   "Staged",
-
 ]
 
 contractsHtml = "<table cellspacing='0' cellpadding='10' border='0'>"
@@ -49,6 +49,9 @@ for(let c in loadContracts){
     link = etherscan+"/address/"+address+"#code"
     block = fs.readFileSync(loadContracts[c]+"/"+loadContracts[c]+".blockNumber").toString().trim();
 
+    let abi = fs.readFileSync(loadContracts[c]+"/"+loadContracts[c]+".abi").toString().trim();
+    fs.writeFileSync("app/public/"+loadContracts[c]+".json",abi);
+
   }catch(e){}
   //console.log(image,address,link,block,source)
   if(image) {
@@ -68,7 +71,7 @@ for(let c in loadContracts){
     contactLink="<a href='"+link+"' target='_blank'><img style='max-width:30px;vertical-align:middle;' src='smartcontract.png' /></a>  <a href='"+link+"' target='_blank'>"+address+"</a>"
   }
 
-  contractsHtml += "<tr><td>"+image+"</td><td>"+loadContracts[c]+"</td><td><a href='"+source+"' target='_blank'><img style='max-width:30px;vertical-align:middle;' src='github.png' /></a></td><td>"+contactLink+"</td><td>"+block+"</td></tr>"
+  contractsHtml += "<tr><td>"+image+"</td><td>"+loadContracts[c]+"</td><td><a href='"+source+"' target='_blank'><img style='max-width:30px;vertical-align:middle;' src='github.png' /></a></td><td>"+contactLink+"</td><td><a href='/"+loadContracts[c]+".json' target='_blank'>ABI</a></td><td>"+block+"</td></tr>"
 }
 
 contractsHtml += "</table>"

@@ -16,6 +16,7 @@ contract Ships is Galleasset, NFT {
       });
       ships.push(_ship);
     }
+    function () public {revert();}
 
     enum Model{
       FISHING,

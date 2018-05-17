@@ -12,7 +12,11 @@ function localContractAddress(contract){
   return fs.readFileSync(contract+"/"+contract+".address").toString().trim()
 }
 function printTxResult(result){
-  console.log(tab,result.transactionHash.gray,(""+result.gasUsed).yellow)
+  if(!result||!result.transactionHash){
+    console.log("ERROR".red,"MISSING TX HASH".yellow)
+  }else{
+    console.log(tab,result.transactionHash.gray,(""+result.gasUsed).yellow)
+  }
 }
 function bigHeader(str){
   return "########### "+str+" "+Array(128-str.length).join("#")
@@ -32,11 +36,32 @@ let TARGET_FISH
 let BAIT
 
 module.exports = {
+  web3:web3,
+  localContractAddress,localContractAddress,
+  reload:()=>{
+    describe('#reload() ', function() {
+      it('should force browser to reload', async function() {
+        fs.writeFileSync("app/public/reload.txt",Date.now());
+      });
+    });
+  },
+  version:()=>{
+    describe('#version() ', function() {
+      it('should get version', async function() {
+        this.timeout(90000)
+        const result = await clevis("version")
+        console.log(result)
+      });
+    });
+  },
   compile:(contract)=>{
     describe('#compile() '+contract.magenta, function() {
       it('should compile '+contract.magenta+' contract to bytecode', async function() {
         this.timeout(90000)
         const result = await clevis("compile",contract)
+
+        console.log(result)
+
         assert(Object.keys(result.contracts).length>0, "No compiled contacts found.")
         let count = 0
         for(let c in result.contracts){
@@ -287,7 +312,8 @@ module.exports = {
         const result = await clevis("contract","stock","Sea",accountindex,speciesAddress,amount)
         console.log(tab,result.transactionHash.gray,speciesAddress.blue,(""+result.gasUsed).yellow)
         assert(result.transactionHash,"No transaction hash!?")
-        assert(result.status=="0x1","Failed Transaction?")
+        //console.log("RESULT:",result)
+        assert(result.status=="0x01","Failed Transaction?")
       });
     });
   },
@@ -470,14 +496,14 @@ module.exports = {
   },
   transferAndCall:(contract,accountindex,toContract,amount,data)=>{
     describe('#transferAndCall() '+contract.magenta, function() {
-      it('should transfer '+amount+' '+contract+' tokens to '+toContract+' and then call function '+data, async function() {
+      it('should transfer '+amount+' '+contract.yellow+' tokens to '+toContract+' and then call receiver function with data:'+data.blue, async function() {
         this.timeout(120000)
         let toContractAddress = localContractAddress(toContract);
-        console.log("Transferring "+amount+" "+contract+" to "+toContract+" ("+toContractAddress+") and then calling "+data)
-        const result = await clevis("contract","transferAndCall",contract,accountindex,toContractAddress,amount,web3.utils.fromAscii(data))
+        console.log("Transferring "+amount+" "+contract+" to "+toContract+" ("+toContractAddress+") and then calling receiver with data: "+data)
+        const result = await clevis("contract","transferAndCall",contract,accountindex,toContractAddress,amount,data)
         printTxResult(result)
-        const events = await clevis("contract","eventTokensIncoming",toContract)
-        console.log(events)
+        const events = await clevis("contract","eventTokenTransfer",toContract)
+        console.log(events[events.length-1].returnValues)
       });
     });
   },
@@ -539,6 +565,16 @@ module.exports = {
         let speciesAddress = localContractAddress(species);
         console.log(tab,"Selling "+amount+" "+speciesAddress+" fish to Fishmonger to butcher from "+accountindex)
         const result = await clevis("contract","sellFish","Fishmonger",accountindex,speciesAddress,amount)
+        printTxResult(result)
+      });
+    });
+  },
+  buyFillet:(accountindex,amount)=>{
+    describe('#buyFillet()', function() {
+      it('should buy fillet from Fishmonger', async function() {
+        this.timeout(120000)
+        console.log(tab,"Buying "+amount+" fillets from Fishmonger as "+accountindex)
+        const result = await clevis("contract","buyFillet","Fishmonger",accountindex,amount)
         printTxResult(result)
       });
     });
@@ -650,6 +686,28 @@ module.exports = {
       });
     });
   },
+  /*setContractOfTile:(accountindex,x,y,tileIndex,contract)=>{
+    describe('#setContractOfTile()', function() {
+      it('should set the contract of a tile', async function() {
+        this.timeout(120000)
+        const accounts = await clevis("accounts")
+
+        const tileType = await clevis("contract","tileTypeAt","Land",x,y,tileIndex)
+        console.log(tab,"Setting contract of tile at index "+tileIndex+" at "+x+","+y+" (type "+tileType+") from account "+accountindex+"("+accounts[accountindex].blue+") to "+(""+contract).cyan+"")
+
+        const currentOwnerStart = await clevis("contract","ownerAt","Land",x,y,tileIndex)
+        assert(currentOwnerStart==accounts[accountindex],"Account index "+accountindex+" doesn't own tile "+tileIndex+" at "+x+","+y)
+
+        const result = await clevis("contract","setTileContract","Land",accountindex,x,y,tileIndex,contract)
+        printTxResult(result)
+
+        //const currentContract = await clevis("contract","contractAt","Land",x,y,tileIndex)
+        //assert(currentContract==contract,"Failed to set contract of tile "+tileIndex+" at "+x+","+y+" to "+contract+" (current contract is "+currentContract+")")
+
+      });
+    });
+  },
+  */
   buyTile:(accountindex,x,y,tileIndex)=>{
     describe('#buyTile()', function() {
       it('should buy a tile for copper', async function() {
@@ -716,7 +774,19 @@ module.exports = {
       });
     });
   },
+  /*setContractOfFirstTileOfType:(accountindex,tiletype,contract)=>{
+    describe('#setContractOfFirstTileOfType()', function() {
+      it('should set the contract of the first tile of a specific type', async function() {
+        this.timeout(120000)
+        let mainLand = await getMainLand();
 
+        let found = await searchLandFromCenterOut(mainLand,9,tiletype)
+        console.log(tab,"Found tile at:",found)
+
+        module.exports.setContractOfTile(accountindex,mainLand[0],mainLand[1],found,contract)
+      });
+    });
+  },*/
   publish:()=>{
     describe('#publish() ', function() {
       it('should inject contract address and abi into web app', async function() {
@@ -749,6 +819,7 @@ module.exports = {
         loadAbi("Fillet")
         loadAbi("Land")
         loadAbi("Ipfs")
+        loadAbi("Village")
       });
     });
   },
@@ -818,6 +889,84 @@ module.exports = {
       });
     });
   },
+
+  //a new method to sandbox deploy to just what you need for testing
+  fastdeploy:()=>{
+    describe(bigHeader('DEPLOY'), function() {
+      it('should deploy', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","deploy")
+        assert(result==0,"deploy ERRORS")
+      });
+    });
+    describe(bigHeader('BUILD HARBOR AND FISH MONGER'), function() {
+      it('should buildHarborAndFishMonger', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","buildHarborAndFishMonger")
+        assert(result==0,"buildHarborAndFishMonger ERRORS")
+      });
+    });
+    //do an initail publish just to get the browser to reload with the latest
+    describe(bigHeader('PUBLISH'), function() {
+      it('should publish conract address to app', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","publish")
+        assert(result==0,"publish ERRORS")
+      });
+    });
+    describe(bigHeader('MINT FISH AND STOCK'), function() {
+      it('should mintCatfishAndStockSea', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","mintCatfishAndStockSea")
+        assert(result==0,"mintCatfishAndStockSea ERRORS")
+      });
+    });
+    describe(bigHeader('MINT Copper AND TEST FISH MONGER'), function() {
+      it('should mintCopperTestFishmonger', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","mintCopperTestFishmonger")
+        assert(result==0,"mintCopperTestFishmonger ERRORS")
+      });
+    });
+    //do a final publish to reload the browser with updates
+    describe(bigHeader('PUBLISH'), function() {
+      it('should publish conract address to app', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","publish")
+        assert(result==0,"publish ERRORS")
+      });
+    });
+    describe(bigHeader('TIMBER MINTING & BUILD SHIPS'), function() {
+      it('should mintTimberBuildShips', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","mintTimberBuildShips")
+        assert(result==0,"mintTimberBuildShips ERRORS")
+      });
+    });
+    describe(bigHeader('METAMASK'), function() {
+      it('should give metamask users some fake ether', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","metamask")
+        assert(result==0,"metamask ERRORS")
+      });
+    });
+    describe(bigHeader('BUY/SELL SHIPS'), function() {
+      it('should buyAndSellShips', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","buyAndSellShips")
+        assert(result==0,"buyAndSellShips ERRORS")
+      });
+    });
+    describe(bigHeader('EMBARK AND GO FISHING'), function() {
+      it('should embarkAndGoFishing', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","embarkAndGoFishing")
+        assert(result==0,"embarkAndGoFishing ERRORS")
+      });
+    });
+
+  },
+
   redeploy:()=>{
     describe(bigHeader('DEPLOY'), function() {
       it('should deploy', async function() {

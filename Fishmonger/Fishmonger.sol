@@ -1,13 +1,13 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.23;
 
 /*
 
-  https://galleass.io
-  by Austin Thomas Griffith
+https://galleass.io
+by Austin Thomas Griffith
 
-  The Fishmonger buys fish from players for Copper. It then butchers the fish
-  to produce Fillets. When a fish is butchered, it is actually restocked into
-  the Sea for other players to catch.
+The Fishmonger buys fish from players for Copper. It then butchers the fish
+to produce Fillets. When a fish is butchered, it is actually restocked into
+the Sea for other players to catch.
 
 */
 
@@ -51,24 +51,6 @@ contract Fishmonger is Galleasset, HasNoEther {
     require( copperContract.transfer(msg.sender,fishPrice*_amount) );
 
     updateExperience(msg.sender);
-
-    return true;
-  }
-
-  function buyFillet(uint256 _amount) public isGalleasset("Fishmonger") returns (bool) {
-    address filletAddress = getContract("Fillet");
-    require(filletAddress != address(0));
-    require(filletPrice != 0);
-
-    StandardToken filletContract = StandardToken(filletAddress);
-    require(_amount <= filletContract.balanceOf(address(this)));
-
-    address copperContractAddress = getContract("Copper");
-    StandardToken copperContract = StandardToken(copperContractAddress);
-    require( copperContract.transferFrom(msg.sender, address(this), _amount*filletPrice ));
-
-    require( filletContract.transfer(msg.sender,_amount) );
-
     return true;
   }
 
@@ -79,6 +61,35 @@ contract Fishmonger is Galleasset, HasNoEther {
     experienceContract.update(_player,3,true);//milestone 3: Sell Fish for Copper
   }
 
+  function onTokenTransfer(address _sender, uint _amount, bytes _data) isGalleasset("Fishmonger") {
+    TokenTransfer(msg.sender,_sender,_amount,_data);
+    uint8 action = uint8(_data[0]);
+    if(action==1){
+      buyFillet(_sender,_amount,_data);
+    } else if(action==2){
+      //sellFish
+    } else {
+      revert("unknown action");
+    }
+  }
+  event TokenTransfer(address token,address sender,uint amount,bytes data);
+
+  function buyFillet(address _sender, uint _amount, bytes _data) internal {
+    require(msg.sender == getContract("Copper"),"Requires copper");
+
+    address filletAddress = getContract("Fillet");
+    require(filletAddress != address(0), "Fillet must have address");
+    require(filletPrice != 0, "Fillet must have a price");
+
+    uint filletAmount = _amount / filletPrice;
+    require(filletAmount>0,"Amount was too low?");
+    require(_amount >= (filletAmount*filletPrice),"Not enough Copper?");
+
+    StandardToken filletContract = StandardToken(filletAddress);
+    require(filletAmount <= filletContract.balanceOf(address(this)), "Fishmonger does not have enough fillets");
+    require(filletContract.transfer(_sender,filletAmount), "Failed to transfer fillets");
+  }
+
   function withdrawToken(address _token,uint256 _amount) public onlyOwner isBuilding returns (bool) {
     StandardToken token = StandardToken(_token);
     token.transfer(msg.sender,_amount);
@@ -87,21 +98,21 @@ contract Fishmonger is Galleasset, HasNoEther {
 
 }
 
-contract Sea{
-  function stock(address _species,uint256 _amount) public returns (bool) { }
-}
+  contract Sea{
+    function stock(address _species,uint256 _amount) public returns (bool) { }
+  }
 
-contract StandardToken {
-  bytes32 public image;
-  function approve(address _spender, uint256 _value) public returns (bool) { }
-  function galleassMint(address _to, uint256 _amount) public returns (bool) { }
-  function hasPermission(address _contract,bytes32 _permission) public view returns (bool){ }
-  function galleassTransferFrom(address _from, address _to, uint256 _value) public returns (bool) { }
-  function transferFrom(address _from, address _to, uint256 _value) public returns (bool) { }
-  function transfer(address _to, uint256 _value) public returns (bool) { }
-  function balanceOf(address _owner) public view returns (uint256 balance) { }
-}
+  contract StandardToken {
+    bytes32 public image;
+    function approve(address _spender, uint256 _value) public returns (bool) { }
+    function galleassMint(address _to, uint256 _amount) public returns (bool) { }
+    function hasPermission(address _contract,bytes32 _permission) public view returns (bool){ }
+    function galleassTransferFrom(address _from, address _to, uint256 _value) public returns (bool) { }
+    function transferFrom(address _from, address _to, uint256 _value) public returns (bool) { }
+    function transfer(address _to, uint256 _value) public returns (bool) { }
+    function balanceOf(address _owner) public view returns (uint256 balance) { }
+  }
 
-contract Experience{
-  function update(address _player,uint16 _milestone,bool _value) public returns (bool) { }
-}
+  contract Experience{
+    function update(address _player,uint16 _milestone,bool _value) public returns (bool) { }
+  }

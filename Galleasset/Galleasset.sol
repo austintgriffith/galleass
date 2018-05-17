@@ -32,6 +32,9 @@ contract Galleasset {
     return galleassContract.hasPermission(_contract,_permission);
   }
 
+  //this prevents old contracts from remaining active
+  //if you want to disable functions after the contract is retired,
+  //add this as a modifier 
   modifier isGalleasset(bytes32 _name) {
     Galleass galleassContract = Galleass(galleass);
     require(address(this) == galleassContract.getContract(_name));

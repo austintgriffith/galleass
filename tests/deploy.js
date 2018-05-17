@@ -53,9 +53,9 @@ galleass.setPermission("Fishmonger",0,"transferFish","true")
 galleass.setPermission("Fishmonger",0,"mintFillet","true")
 galleass.setPermission("Fishmonger",0,"updateExperience","true")
 
-galleass.testMint("Copper",0,1,100)
-galleass.approveContract("Copper",1,"Fishmonger",100)
-galleass.transferTokens("Copper",1,"Fishmonger",100)
+galleass.testMint("Copper",0,1,10000)
+galleass.approveContract("Copper",1,"Fishmonger",10000)
+galleass.transferTokens("Copper",1,"Fishmonger",10000)
 
 galleass.setFishPrice(0,"Pinner",1)
 galleass.setFishPrice(0,"Redbass",2)
@@ -65,3 +65,7 @@ galleass.setFishPrice(0,"Dangler",7)
 
 galleass.deploy("Ipfs",0)
 galleass.setContract("Ipfs",0)
+
+
+galleass.deploy("Village",0)
+galleass.setContract("Village",0)

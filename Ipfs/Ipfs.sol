@@ -8,6 +8,7 @@ contract Ipfs is Galleasset, Ownable {
   string public ipfs;
 
   function Ipfs(address _galleass) Galleasset(_galleass) public { }
+  function () public {revert();}
 
   function setIpfs(string _ipfs) public isGalleasset("Ipfs") onlyOwner returns (bool) {
     ipfs=_ipfs;
