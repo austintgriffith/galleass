@@ -15,6 +15,7 @@ import galleassAddress from './Address.js'
 import galleassBlockNumber from './blockNumber.js'
 import Writing from './Writing.js'
 import BuySellTable from './modal/BuySellTable.js'
+import BuildTable from './modal/BuildTable.js'
 /*
 assuming that galleassBlockNumber is the oldest block for all contracts
 that means if you redeploy the galleass contract you have to redeploy ALL
@@ -64,7 +65,8 @@ let loadContracts = [
   "Experience",
   "Fillet",
   "Ipfs",
-  "Village"
+  "Village",
+  "Citizens"
 ]
 
 let inventoryTokens = [
@@ -737,6 +739,27 @@ class App extends Component {
     contracts["Copper"].methods.transferAndCall(contracts["Fishmonger"]._address,filletPrice*buyAmount,"0x01").send({
       from: accounts[0],
       gas:120000,
+      gasPrice:this.state.GWEI * 1000000000
+    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+      console.log("RESULT:",receipt)
+      if(this.state.modalHeight>=0){
+        //click screen is up for modal
+        this.setState({modalHeight:-600,clickScreenTop:-5000,clickScreenOpacity:0})
+      }
+    })
+  }
+  async buildTile(tileIndex,newTileType){
+    console.log("buildTile",tileIndex,newTileType)
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+    //let filletPrice = await contracts["Fishmonger"].methods.filletPrice().call()
+    //console.log("Fishmonger charges ",filletPrice," for fillets")
+    //
+    let mainX = await contracts["Land"].methods.mainX().call();
+    let mainY = await contracts["Land"].methods.mainY().call();
+    //buildTile(uint16 _x, uint16 _y,uint8 _tile,uint16 _newTileType)
+    contracts["Land"].methods.buildTile(mainX,mainY,tileIndex,newTileType).send({
+      from: accounts[0],
+      gas:220000,
       gasPrice:this.state.GWEI * 1000000000
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
@@ -2111,7 +2134,7 @@ return (
         </div>
       )
 
-
+      const OWNS_TILE = (this.state.account && this.state.modalObject.owner && this.state.account.toLowerCase()==this.state.modalObject.owner.toLowerCase())
 
       const invHeight = 20
 
@@ -2146,6 +2169,15 @@ return (
         {inventoryItems}
         </div>
       )
+
+      if(OWNS_TILE && this.state.modalObject.name == "Grass"){
+        let tileIndex = this.state.modalObject.index;
+        content.push(
+          <div>
+            <BuildTable tileIndex={tileIndex} clickFn={this.buildTile.bind(this)}/>
+          </div>
+        )
+      }
 
 
       if(this.state.modalObject.name == "Harbor"){
@@ -2192,7 +2224,7 @@ return (
       //  <div>Price: {this.state.modalObject.price}</div>
       //
       let tilePriceAndPurchase = ""
-      if(this.state.account && this.state.modalObject.owner && this.state.account.toLowerCase()==this.state.modalObject.owner.toLowerCase()){
+      if(OWNS_TILE){
         tilePriceAndPurchase = (
           <div style={{float:'right',padding:10}}>
           <Writing style={{verticalAlign:'middle',opacity:0.9}} string={"Land Price: "} size={20}/>

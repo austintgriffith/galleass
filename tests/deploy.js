@@ -13,6 +13,7 @@ galleass.setPermission("Sea",0,"updateExperience","true")
 
 galleass.deploy("Land",0)
 galleass.setContract("Land",0)
+galleass.setPermission("Land",0,"transferTimber","true")
 
 galleass.deploy("Dogger",0)
 galleass.setContract("Dogger",0)
@@ -69,3 +70,6 @@ galleass.setContract("Ipfs",0)
 
 galleass.deploy("Village",0)
 galleass.setContract("Village",0)
+
+galleass.deploy("Citizens",0)
+galleass.setContract("Citizens",0)

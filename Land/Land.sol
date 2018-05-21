@@ -128,7 +128,11 @@ contract Land is Galleasset, Ownable {
     if(tileType==tileTypes["MainHills"]||tileType==tileTypes["MainGrass"]){
       //they want to build on a main, blank spot whether hills or grass
       if(_newTileType==tileTypes["Village"]){
-        require( getTokens(msg.sender,"Timber",6) );
+        //require( getTokens(msg.sender,"Timber",6) );
+        StandardToken timberContract = StandardToken(getContract("Timber"));
+        require( timberContract.galleassTransferFrom(msg.sender,address(this),6) ); //charge 6 timber 
+        tileTypeAt[_x][_y][_tile] = _newTileType;
+        contractAt[_x][_y][_tile] = getContract("Village");
         return true;
       }else{
         return false;
@@ -296,4 +300,5 @@ contract Land is Galleasset, Ownable {
 contract StandardToken {
   function transfer(address _to, uint256 _value) public returns (bool) { }
   function transferFrom(address _from, address _to, uint256 _value) public returns (bool) { }
+  function galleassTransferFrom(address _from, address _to, uint256 _value) public returns (bool) { }
 }

@@ -13,6 +13,8 @@ import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
 contract Village is Galleasset, Ownable {
 
+  address landOwner;
+
   function Village(address _galleass) public Galleasset(_galleass) { }
   function () public {revert();}
 
@@ -24,6 +26,10 @@ contract Village is Galleasset, Ownable {
     }*/
   }
   event TokenTransfer(address token,address sender,uint amount,bytes data);
+
+  function createCitizen(address food1,address food2,address food3,address food4,address food5) returns (bool) {
+    
+  }
 
 
   function withdraw(uint256 _amount) public onlyOwner isBuilding returns (bool) {

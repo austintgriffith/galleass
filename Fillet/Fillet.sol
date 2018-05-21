@@ -6,7 +6,7 @@ pragma solidity ^0.4.15;
   by Austin Thomas Griffith
 
   A fillet is produced when a fishmonger butchers a fish. It is used to feed
-  citizens and is the first type of food introduced to Galleass. 
+  citizens and is the first type of food introduced to Galleass.
 
 */
 
@@ -34,6 +34,17 @@ contract Fillet is Galleasset, HasNoEther, MintableToken, ERC677Token {
     balances[_to] = balances[_to].add(_amount);
     Mint(_to, _amount);
     Transfer(address(0), _to, _amount);
+    return true;
+  }
+
+  function galleassTransferFrom(address _from, address _to, uint256 _value) public returns (bool) {
+    require(_to != address(0));
+    require(_value <= balances[_from]);
+    require(hasPermission(msg.sender,"transferFood"));
+
+    balances[_from] = balances[_from].sub(_value);
+    balances[_to] = balances[_to].add(_value);
+    Transfer(_from, _to, _value);
     return true;
   }
 

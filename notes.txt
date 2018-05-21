@@ -1,0 +1,5 @@
+--Creating a new Contract, you'll need to add it to:
+tests/compile.js
+tests/deploy.js
+tests/galleass.js publish()
+tests/publish.js

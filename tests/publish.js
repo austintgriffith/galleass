@@ -16,6 +16,7 @@ let loadContracts = [
   "Harbor",
   "Fishmonger",
   "Village",
+  "Citizens",
   "Dogger",
   "Timber",
   "Catfish",

@@ -35,6 +35,9 @@ let TARGET_LOCATION
 let TARGET_FISH
 let BAIT
 
+
+
+
 module.exports = {
   web3:web3,
   localContractAddress,localContractAddress,
@@ -135,6 +138,18 @@ module.exports = {
         const balance = await clevis("contract","balanceOf",contract,accounts[toIndex])
         assert(balance>=amount,"Mint Failed!?!")
         console.log(tab,accounts[toIndex].blue+" has "+((balance+"").yellow+" "+contract))
+      });
+    });
+  },
+  mintTo:(contract,accountindex,toAddress,amount)=>{
+    describe('#testMintTo() '+contract.magenta, function() {
+      it('should mint '+contract.magenta+' to address '+toAddress.blue, async function() {
+        this.timeout(120000)
+        const accounts = await clevis("accounts")
+        const result = await clevis("contract","mint",contract,accountindex,toAddress,amount)
+        const balance = await clevis("contract","balanceOf",contract,toAddress)
+        assert(balance>=amount,"Mint Failed!?!")
+        console.log(tab,toAddress.blue+" has "+((balance+"").yellow+" "+contract))
       });
     });
   },
@@ -742,12 +757,26 @@ module.exports = {
     });
   },
   setPriceOfFirstLandTile:(accountindex,price)=>{
-    describe('#transferFirstLandTile()', function() {
+    describe('#setPriceOfFirstLandTile()', function() {
       it('should transfer ownership of a tile from one account to another', async function() {
         this.timeout(120000)
         let mainLand = await getMainLand();
         const firstLandTile = await findFirstLandTile(mainLand);
         module.exports.setPriceOfTile(accountindex,mainLand[0],mainLand[1],firstLandTile,price)
+      });
+    });
+  },
+  setPriceOfAllOpemLandTiles:(accountindex,price)=>{
+    describe('#setPriceOfAllOpemLandTiles()', function() {
+      it('should set the price of all open land tiles', async function() {
+        this.timeout(120000)
+        let mainLand = await getMainLand();
+        for(let i=0;i<18;i++){
+          const tileType = await clevis("contract","tileTypeAt","Land",mainLand[0],mainLand[1],i)
+          if(tileType<100) {
+            module.exports.setPriceOfTile(accountindex,mainLand[0],mainLand[1],i,price)
+          }
+        }
       });
     });
   },
@@ -771,6 +800,32 @@ module.exports = {
         console.log(tab,"Found tile at:",found)
 
         module.exports.setPriceOfTile(accountindex,mainLand[0],mainLand[1],found,price)
+      });
+    });
+  },
+  buildTileOnFirstTileOfTypes:(accountindex,oldtiletypeArray,newtiletype)=>{
+    describe('#buildTileOnFirstTileOfType()', function() {
+      it('should buildTile type '+newtiletype+' OnFirstTileOfTypes '+JSON.stringify(oldtiletypeArray), async function() {
+        this.timeout(120000)
+        let mainLand = await getMainLand();
+
+        //search from middle out for one tile type
+        //let found = await searchLandFromCenterOut(mainLand,9,oldtiletype)
+        //console.log(tab,"Found tile at:",found)
+        //
+        //OR search from left to right for any type in oldtiletypeArray
+        let found = false
+        for(let i=0;i<18;i++){
+          const tileType = await clevis("contract","tileTypeAt","Land",mainLand[0],mainLand[1],i)
+          if(oldtiletypeArray.indexOf(parseInt(tileType))>=0) {
+            found=i
+            break
+          }
+        }
+
+        assert(found!=false,"Couldn't find a tile that matches types::",oldtiletypeArray)
+        const result = await clevis("contract","buildTile","Land",accountindex,mainLand[0],mainLand[1],found,newtiletype)
+        printTxResult(result)
       });
     });
   },
@@ -820,6 +875,7 @@ module.exports = {
         loadAbi("Land")
         loadAbi("Ipfs")
         loadAbi("Village")
+        loadAbi("Citizens")
       });
     });
   },
