@@ -1,10 +1,15 @@
 import React, { Component } from 'react';
 
-
-
 class Land extends Component {
   constructor(props) {
     super(props);
+    this.state = {
+      account: 0
+    }
+  }
+  async componentDidMount() {
+    const accounts = await promisify(cb => this.props.web3.eth.getAccounts(cb));
+    this.setState({account:accounts[0]})
   }
   edgeTile(location,direction){
     //if(direction=="left") location-=114;
@@ -20,7 +25,12 @@ class Land extends Component {
       </div>
     )
   }
-  landTile(location,type){
+  landTile(location,owner,type){
+
+    let blockieOpacity = 0.1
+    if(this.state.account&&owner.toLowerCase()==this.state.account.toLowerCase()){
+      blockieOpacity = 0.7
+    }
     return (
       <div key={"Land"+location} style={{
         position:'absolute',
@@ -30,12 +40,22 @@ class Land extends Component {
         width:87,
         height:125
       }}>
+      <div style={{position:'absolute',left:36,top:-23,opacity:blockieOpacity}}>
+        <this.props.Blockies
+          seed={owner.toLowerCase()}
+          scale={2}
+        />
+      </div>
       </div>
     )
   }
-  hillsMain(location){
+  hillsMain(location,owner){
     let mainWidth = 120
     let mainHeight = 125
+    let blockieOpacity = 0.1
+    if(this.state.account&&owner.toLowerCase()==this.state.account.toLowerCase()){
+      blockieOpacity = 0.7
+    }
     return (
       <div key={"Land"+location} style={{
         position:'absolute',
@@ -45,12 +65,22 @@ class Land extends Component {
         width:mainWidth,
         height:mainHeight
       }}>
+      <div style={{position:'absolute',left:50,top:-23,opacity:blockieOpacity}}>
+        <this.props.Blockies
+          seed={owner.toLowerCase()}
+          scale={2}
+        />
+      </div>
       </div>
     )
   }
   grassMain(location,owner){
     let mainWidth = 120
     let mainHeight = 125
+    let blockieOpacity = 0.1
+    if(this.state.account&&owner.toLowerCase()==this.state.account.toLowerCase()){
+      blockieOpacity = 0.7
+    }
     return (
       <div key={"Land"+location} style={{
         position:'absolute',
@@ -60,12 +90,22 @@ class Land extends Component {
         width:mainWidth,
         height:mainHeight
       }}>
+      <div style={{position:'absolute',left:50,top:-23,opacity:blockieOpacity}}>
+        <this.props.Blockies
+          seed={owner.toLowerCase()}
+          scale={2}
+        />
+      </div>
       </div>
     )
   }
-  streamMain(location){
+  streamMain(location,owner){
     let mainWidth = 120
     let mainHeight = 125
+    let blockieOpacity = 0.1
+    if(this.state.account&&owner.toLowerCase()==this.state.account.toLowerCase()){
+      blockieOpacity = 0.7
+    }
     return (
       <div key={"Land"+location} style={{
         position:'absolute',
@@ -75,6 +115,12 @@ class Land extends Component {
         width:mainWidth,
         height:mainHeight
       }}>
+      <div style={{position:'absolute',left:50,top:-23,opacity:blockieOpacity}}>
+        <this.props.Blockies
+          seed={owner.toLowerCase()}
+          scale={2}
+        />
+      </div>
       </div>
     )
   }
@@ -246,77 +292,77 @@ class Land extends Component {
             if(islands[i][t].tile==1){
               tiles.push(
                 this.wrapLandTileWithLink("Grass",islands[i][t].index,currentPixelLocation,
-                  this.hillsMain(currentPixelLocation)
+                  this.hillsMain(currentPixelLocation,islands[i][t].owner)
                 )
               )
               currentPixelLocation+=120
             }else if(islands[i][t].tile==2){
               tiles.push(
                 this.wrapLandTileWithLink("Grass",islands[i][t].index,currentPixelLocation,
-                  this.grassMain(currentPixelLocation)
+                  this.grassMain(currentPixelLocation,islands[i][t].owner)
                 )
               )
               currentPixelLocation+=120
             }else if(islands[i][t].tile==3){
               tiles.push(
                 this.wrapLandTileWithLink("Stream",islands[i][t].index,currentPixelLocation,
-                  this.streamMain(currentPixelLocation)
+                  this.streamMain(currentPixelLocation,islands[i][t].owner)
                 )
               )
               currentPixelLocation+=120
             }else if(islands[i][t].tile==50){
               tiles.push(
                 this.wrapLandTileWithLink("Grass Resource",islands[i][t].index,currentPixelLocation,
-                  this.landTile(currentPixelLocation,"grass")
+                  this.landTile(currentPixelLocation,islands[i][t].owner,"grass")
                 )
               )
               currentPixelLocation+=87
             }else if(islands[i][t].tile==51){
               tiles.push(
                 this.wrapLandTileWithLink("Forest Resource",islands[i][t].index,currentPixelLocation,
-                  this.landTile(currentPixelLocation,"forest")
+                  this.landTile(currentPixelLocation,islands[i][t].owner,"forest")
                 )
               )
               currentPixelLocation+=87
             }else if(islands[i][t].tile==52){
               tiles.push(
                 this.wrapLandTileWithLink("Mountain Resource",islands[i][t].index,currentPixelLocation,
-                  this.landTile(currentPixelLocation,"mountain")
+                  this.landTile(currentPixelLocation,islands[i][t].owner,"mountain")
                 )
               )
               currentPixelLocation+=87
             }else if(islands[i][t].tile==53){
               tiles.push(
                 this.wrapLandTileWithLink("Copper Mountain Resource",islands[i][t].index,currentPixelLocation,
-                  this.landTile(currentPixelLocation,"coppermountain")
+                  this.landTile(currentPixelLocation,islands[i][t].owner,"coppermountain")
                 )
               )
               currentPixelLocation+=87
             }else if(islands[i][t].tile==54){
               tiles.push(
                 this.wrapLandTileWithLink("Silver Mountain Resource",islands[i][t].index,currentPixelLocation,
-                  this.landTile(currentPixelLocation,"silvermountain")
+                  this.landTile(currentPixelLocation,islands[i][t].owner,"silvermountain")
                 )
               )
               currentPixelLocation+=87
             }else if(islands[i][t].tile==100){
               tiles.push(
                 this.wrapLandTileWithLink("Harbor",islands[i][t].index,currentPixelLocation,
-                  this.harborTile(currentPixelLocation,"0x34aA3F359A9D614239015126635CE7732c18fDF3")
+                  this.harborTile(currentPixelLocation,islands[i][t].owner)
                 )
               )
               currentPixelLocation+=120
             }else if(islands[i][t].tile==101){
               tiles.push(
                 this.wrapLandTileWithLink("Fishmonger",islands[i][t].index,currentPixelLocation,
-                  this.fishMongerTile(currentPixelLocation,"0x34aA3F359A9D614239015126635CE7732c18fDF3")
+                  this.fishMongerTile(currentPixelLocation,islands[i][t].owner)
                 )
               )
               currentPixelLocation+=120
             }else if(islands[i][t].tile==102){
               tiles.push(
                 this.wrapLandTileWithLink("Castle",islands[i][t].index,currentPixelLocation,
-                  this.castleTile(currentPixelLocation,"0x34aA3F359A9D614239015126635CE7732c18fDF3")
+                  this.castleTile(currentPixelLocation,islands[i][t].owner)
                 )
               )
               currentPixelLocation+=120
@@ -356,28 +402,28 @@ class Land extends Component {
 
 
           {this.edgeTile(500-60-87*2-114,"left")}
-          {this.landTile(500-60-87*2,"forest")}
-          {this.landTile(500-60-87,"mountain")}
+          {this.landTile(500-60-87*2,"0x34aA3F359A9D614239015126635CE7732c18fDF3","forest")}
+          {this.landTile(500-60-87,"0x34aA3F359A9D614239015126635CE7732c18fDF3","mountain")}
           {this.villageTile(500-60,"0xab5801a7d398351b8be11c439e05c5b3259aec9b")}
-          {this.landTile(500+60,"forest")}
+          {this.landTile(500+60,"0x34aA3F359A9D614239015126635CE7732c18fDF3","forest")}
           {this.edgeTile(500+60+87,"right")}
 
           {this.edgeTile(1200-60-87-114,"left")}
-          {this.landTile(1200-60-87,"forest")}
+          {this.landTile(1200-60-87,"0x34aA3F359A9D614239015126635CE7732c18fDF3","forest")}
           {this.castleTile(1200-60,"0x34aA3F359A9D614239015126635CE7732c18fDF3")}
-          {this.streamMain(1200+60)}
+          {this.streamMain(1200+60,"0x34aA3F359A9D614239015126635CE7732c18fDF3")}
           {this.edgeTile(1200+60+120,"right")}
 
           {this.edgeTile(2000-60-87*2-114,"left")}
-          {this.landTile(2000-60-87*2,"forest")}
-          {this.landTile(2000-60-87,"forest")}
+          {this.landTile(2000-60-87*2,"0x34aA3F359A9D614239015126635CE7732c18fDF3","forest")}
+          {this.landTile(2000-60-87,"0x34aA3F359A9D614239015126635CE7732c18fDF3","forest")}
           {this.harborTile(2000-60,"0x34aA3F359A9D614239015126635CE7732c18fDF3")}
-          {this.landTile(2000+60,"grass")}
-          {this.landTile(2000+60+87,"mountain")}
-          {this.landTile(2000+60+87*2,"forest")}
+          {this.landTile(2000+60,"0x34aA3F359A9D614239015126635CE7732c18fDF3","grass")}
+          {this.landTile(2000+60+87,"0x34aA3F359A9D614239015126635CE7732c18fDF3","mountain")}
+          {this.landTile(2000+60+87*2,"0x34aA3F359A9D614239015126635CE7732c18fDF3","forest")}
           {this.fishMongerTile(2000+60+87*3+60-60,"0x34aA3F359A9D614239015126635CE7732c18fDF3")}
-          {this.landTile(2000+60+120+87*3,"grass")}
-          {this.landTile(2000+60+120+87*4,"corn")}
+          {this.landTile(2000+60+120+87*3,"0x34aA3F359A9D614239015126635CE7732c18fDF3","grass")}
+          {this.landTile(2000+60+120+87*4,"0x34aA3F359A9D614239015126635CE7732c18fDF3","corn")}
           {this.edgeTile(2000+60+120+87*5,"right")}
 
         </div>
@@ -387,5 +433,15 @@ class Land extends Component {
 
   }
 }
+
+
+const promisify = (inner) =>
+new Promise((resolve, reject) =>
+inner((err, res) => {
+  if (err) { reject(err) }
+
+  resolve(res);
+})
+);
 
 export default Land;

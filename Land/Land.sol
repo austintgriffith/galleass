@@ -130,7 +130,7 @@ contract Land is Galleasset, Ownable {
       if(_newTileType==tileTypes["Village"]){
         //require( getTokens(msg.sender,"Timber",6) );
         StandardToken timberContract = StandardToken(getContract("Timber"));
-        require( timberContract.galleassTransferFrom(msg.sender,address(this),6) ); //charge 6 timber 
+        require( timberContract.galleassTransferFrom(msg.sender,address(this),6) ); //charge 6 timber
         tileTypeAt[_x][_y][_tile] = _newTileType;
         contractAt[_x][_y][_tile] = getContract("Village");
         return true;
@@ -144,14 +144,20 @@ contract Land is Galleasset, Ownable {
 
   function buyTile(uint16 _x,uint16 _y,uint8 _tile) public isGalleasset("Land") returns (bool) {
     require(priceAt[_x][_y][_tile]>0);//must be for sale
-    address copperContractAddress = getContract("Copper");
-    StandardToken copperContract = StandardToken(copperContractAddress);
+    StandardToken copperContract = StandardToken(getContract("Copper"));
     require(copperContract.transferFrom(msg.sender,ownerAt[_x][_y][_tile],priceAt[_x][_y][_tile]));
-
     ownerAt[_x][_y][_tile]=msg.sender;
+    //when a piece of land is purchased, an "onPurchase" function is called
+    // on the contract to help the inner contract track events and owners etc
+    if(contractAt[_x][_y][_tile]!=address(0)){
+       StandardTile tileContract = StandardTile(contractAt[_x][_y][_tile]);
+       tileContract.onPurchase(_x,_y,_tile,ownerAt[_x][_y][_tile],priceAt[_x][_y][_tile]);
+    }
+    BuyTile(_x,_y,_tile,ownerAt[_x][_y][_tile],priceAt[_x][_y][_tile],contractAt[_x][_y][_tile]);
     priceAt[_x][_y][_tile]=0;
     return true;
   }
+  event BuyTile(uint16 _x,uint16 _y,uint8 _tile,address _owner,uint _price,address _contract);
 
   //erc677 receiver
   function onTokenTransfer(address _sender, uint _amount, bytes _data) public isGalleasset("Land") returns (bool) {
@@ -169,6 +175,13 @@ contract Land is Galleasset, Ownable {
       StandardToken copperContract = StandardToken(copperContractAddress);
       require(copperContract.transfer(ownerAt[_x][_y][_tile],_amount));
       ownerAt[_x][_y][_tile]=_sender;
+      //when a piece of land is purchased, an "onPurchase" function is called
+      // on the contract to help the inner contract track events and owners etc
+      if(contractAt[_x][_y][_tile]!=address(0)){
+         StandardTile tileContract = StandardTile(contractAt[_x][_y][_tile]);
+         tileContract.onPurchase(_x,_y,_tile,ownerAt[_x][_y][_tile],priceAt[_x][_y][_tile]);
+      }
+      BuyTile(_x,_y,_tile,ownerAt[_x][_y][_tile],priceAt[_x][_y][_tile],contractAt[_x][_y][_tile]);
       priceAt[_x][_y][_tile]=0;
       return true;
     }
@@ -301,4 +314,8 @@ contract StandardToken {
   function transfer(address _to, uint256 _value) public returns (bool) { }
   function transferFrom(address _from, address _to, uint256 _value) public returns (bool) { }
   function galleassTransferFrom(address _from, address _to, uint256 _value) public returns (bool) { }
+}
+
+contract StandardTile {
+  function onPurchase(uint16 _x,uint16 _y,uint8 _tile,address _owner,uint _amount) public returns (bool) { }
 }

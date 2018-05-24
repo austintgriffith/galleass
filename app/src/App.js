@@ -16,6 +16,8 @@ import galleassBlockNumber from './blockNumber.js'
 import Writing from './Writing.js'
 import BuySellTable from './modal/BuySellTable.js'
 import BuildTable from './modal/BuildTable.js'
+import CreateTable from './modal/CreateTable.js'
+import SendToken from './modal/SendToken.js'
 /*
 assuming that galleassBlockNumber is the oldest block for all contracts
 that means if you redeploy the galleass contract you have to redeploy ALL
@@ -748,6 +750,42 @@ class App extends Component {
       }
     })
   }
+  async sendToken(name,amount,toAddress){
+    console.log("sendToken",name,amount,toAddress)
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+    contracts[name].methods.transfer(toAddress,amount).send({
+      from: accounts[0],
+      gas:120000,
+      gasPrice:this.state.GWEI * 1000000000
+    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+      console.log("RESULT:",receipt)
+      if(this.state.modalHeight>=0){
+        //click screen is up for modal
+        this.setState({modalHeight:-600,clickScreenTop:-5000,clickScreenOpacity:0})
+      }
+    })
+  }
+  async createCitizen(){
+    console.log("createCitizen")
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+    //let filletPrice = await contracts["Fishmonger"].methods.filletPrice().call()
+    //console.log("Fishmonger charges ",filletPrice," for fillets")
+    //
+    //let mainX = await contracts["Land"].methods.mainX().call();
+    //let mainY = await contracts["Land"].methods.mainY().call();
+    //buildTile(uint16 _x, uint16 _y,uint8 _tile,uint16 _newTileType)
+    contracts["Village"].methods.createCitizen().send({
+      from: accounts[0],
+      gas:920000,
+      gasPrice:this.state.GWEI * 1000000000
+    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+      console.log("RESULT:",receipt)
+      if(this.state.modalHeight>=0){
+        //click screen is up for modal
+        this.setState({modalHeight:-600,clickScreenTop:-5000,clickScreenOpacity:0})
+      }
+    })
+  }
   async buildTile(tileIndex,newTileType){
     console.log("buildTile",tileIndex,newTileType)
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
@@ -787,7 +825,7 @@ class App extends Component {
     console.log(contracts["Land"]._address,copper,"0x01"+xHex+yHex+iHex)
     contracts["Copper"].methods.transferAndCall(contracts["Land"]._address,copper,"0x01"+xHex+yHex+iHex).send({
       from: accounts[0],
-      gas:120000,
+      gas:220000,
       gasPrice:this.state.GWEI * 1000000000
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
@@ -1220,12 +1258,27 @@ class App extends Component {
       if(contracts[name].methods.getBalance) modalObject.balance = await contracts[name].methods.getBalance().call();
       modalObject.copperBalance = await contracts["Copper"].methods.balanceOf(contracts[name]._address).call();
       modalObject.filletBalance = await contracts["Fillet"].methods.balanceOf(contracts[name]._address).call();
+      modalObject.timberBalance = await contracts["Timber"].methods.balanceOf(contracts[name]._address).call();
 
       console.log("copperBalance",contracts["Copper"]._address,name,contracts[name]._address,modalObject.copperBalance)
 
     }
 
 
+    this.setState({
+      modalObject:modalObject,
+      modalHeight:180,
+      clickScreenTop:0,
+      clickScreenOpacity:0.33
+    })
+  }
+  async invClick(name,contract) {
+    console.log("INV CLICK",name,contract)
+    let modalObject = {
+      name:name,
+      contract:contract._address,
+      token:true
+    }
     this.setState({
       modalObject:modalObject,
       modalHeight:180,
@@ -1577,6 +1630,7 @@ let menu = (
 let inventory = (
   <div style={{position:"fixed",right:0,top:75,width:200,border:"0px solid #a0aab5",color:"#DDDDDD",zIndex:99}} >
   <Inventory
+  invClick={this.invClick.bind(this)}
   inventory={this.state.inventory}
   Ships={this.state.Ships}
   sellFish={this.sellFish.bind(this)}
@@ -1610,7 +1664,7 @@ let sea = (
 
 let land = (
   <div style={{position:"absolute",left:0,top:horizon-60,width:width}} >
-  <Land land={this.state.land} landOwners={this.state.landOwners} Blockies={Blockies} tileClick={this.tileClick.bind(this)}/>
+  <Land land={this.state.land} landOwners={this.state.landOwners} Blockies={Blockies} web3={web3} tileClick={this.tileClick.bind(this)}/>
   </div>
 )
 
@@ -2164,6 +2218,13 @@ return (
           </span>
         )
       }
+      if(this.state.modalObject.timberBalance>0){
+        inventoryItems.push(
+          <span style={modalInvStyle}><img style={{maxHeight:invHeight}} src="timber.png" />
+          <Writing string={this.state.modalObject.timberBalance} size={invHeight+2}/>
+          </span>
+        )
+      }
       content.push(
         <div style={{position:'absolute',left:20,bottom:50}}>
         {inventoryItems}
@@ -2219,6 +2280,15 @@ return (
         )
       }
 
+      if(OWNS_TILE && this.state.modalObject.name == "Village"){
+        let tileIndex = this.state.modalObject.index;
+        content.push(
+          <div>
+            <CreateTable clickFn={this.createCitizen.bind(this)}/>
+          </div>
+        )
+      }
+
 
 
       //  <div>Price: {this.state.modalObject.price}</div>
@@ -2249,23 +2319,46 @@ return (
         )
       }
 
-      return (
-        <div style={{zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
-        <div style={{position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
-        <img src="exit.png" />
-        </div>
-        <div style={{position:'absolute',left:24,top:24,border:"3px solid #777777"}}>
-        <img style={{maxWidth:83}} src={image}/>
-        </div>
-        <div style={{position:'absolute',left:118,top:24,textAlign:"left"}}>
-        <div><Writing style={{opacity:0.9}} string={this.state.modalObject.name} size={28}/>  -  {this.state.modalObject.index} @ ({this.state.landX},{this.state.landY})</div>
-        <div>Contract: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.contract}>{this.state.modalObject.contract}</a></div>
-        <div>Owner: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.owner}>{this.state.modalObject.owner}</a></div>
-        {tilePriceAndPurchase}
-        </div>
-        {content}
-        </div>
-      )
+      if(this.state.modalObject.token){
+        return (
+          <div style={{zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
+          <div style={{position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
+          <img src="exit.png" />
+          </div>
+          <div style={{position:'absolute',left:24,top:24,border:"3px solid #777777"}}>
+          <img style={{maxWidth:83}} src={image}/>
+          </div>
+          <div style={{position:'absolute',left:118,top:24,textAlign:"left"}}>
+          <div><Writing style={{opacity:0.9}} string={this.state.modalObject.name} size={28}/>  -  {this.state.modalObject.index} @ ({this.state.landX},{this.state.landY})</div>
+          <div>Contract: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.contract}>{this.state.modalObject.contract}</a></div>
+
+          </div>
+          <div style={{marginTop:100}}>
+            <SendToken modalObject={this.state.modalObject} sendToken={this.sendToken.bind(this)} />
+          </div>
+          </div>
+        )
+      }else{
+        return (
+          <div style={{zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
+          <div style={{position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
+          <img src="exit.png" />
+          </div>
+          <div style={{position:'absolute',left:24,top:24,border:"3px solid #777777"}}>
+          <img style={{maxWidth:83}} src={image}/>
+          </div>
+          <div style={{position:'absolute',left:118,top:24,textAlign:"left"}}>
+          <div><Writing style={{opacity:0.9}} string={this.state.modalObject.name} size={28}/>  -  {this.state.modalObject.index} @ ({this.state.landX},{this.state.landY})</div>
+          <div>Contract: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.contract}>{this.state.modalObject.contract}</a></div>
+          <div>Owner: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.owner}>{this.state.modalObject.owner}</a></div>
+          {tilePriceAndPurchase}
+          </div>
+          {content}
+          </div>
+        )
+      }
+
+
     }
 
 

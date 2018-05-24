@@ -36,9 +36,28 @@ contract Citizens is Galleasset, NFT {
     }
 
     //a citizen is created when food is provided to a village
-    function createCitizen(address food1, address food2, address food3, address food4, address food5, address food6) public returns (uint){
-      
+    function createCitizen(address owner, bytes32 food1, bytes32 food2, bytes32 food3) public isGalleasset("Citizens") returns (uint){
+      require(hasPermission(msg.sender,"createCitizens"));
+
+      //eventually you will want to be able to use a standard contract interface
+      //instead of just grabbing 3 fillets
+      require( getTokens(msg.sender,"Fillet",3) ); // NOT SURE IF THIS SHOULD PULL FROM THE VILLAGE OR THE USER YET
+      /*require( getTokens(msg.sender,food1,1) );
+      require( getTokens(msg.sender,food2,1) );
+      require( getTokens(msg.sender,food3,1) );*/
+
+      //for now there are only fillets, eventually a complex funtion will take in the food and output the characteristics
+      bytes32 characteristics = 0x01010101010101010101010101010101;
+
+      //genes will at first be random but then maybe they will be mixed... like you might need
+      //to not only have food, but a couple citizens in the village too and you would use
+      //their existing genes to mix for the new genes
+      bytes32 genes = 0x00000000000000000000000000000000;
+
+      Create(msg.sender,owner,characteristics,genes);
     }
+    event Create(address _sender,address _owner, bytes32 _characteristics, bytes32 _genes);
+
 
     function _createCitizen(address _owner, bytes32 _genes, bytes32 _characteristics) internal returns (uint){
         Citizen memory _citizen = Citizen({
@@ -50,7 +69,7 @@ contract Citizens is Galleasset, NFT {
         _transfer(0, _owner, newCitizenId);
         return newCitizenId;
     }
-    //no need for Birth even just look for 0x0 transfers
+    //no need for Birth event just look for 0x0 transfers
     //event Birth
 
     function getCitizen(uint256 _id) public view returns (address,bytes32,bytes32,uint64) {

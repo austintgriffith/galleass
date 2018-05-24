@@ -23,11 +23,14 @@ class Inventory extends Component {
     if(item!="Ether"){
       let contractOfItem = this.props.contracts[item]
       console.log(contractOfItem)
-      url = this.props.etherscan+"address/"+contractOfItem._address
+      //url = this.props.etherscan+"address/"+contractOfItem._address
+      console.log("open token send modal")
+      this.props.invClick(item,contractOfItem)
     }else{
       url = "https://wallet.ethereum.org/";
+      window.open(url)
     }
-    window.open(url)
+
   }
   render(){
     let {inventory} = this.props

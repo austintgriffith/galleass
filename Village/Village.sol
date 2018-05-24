@@ -13,7 +13,10 @@ import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
 contract Village is Galleasset, Ownable {
 
-  address landOwner;
+  //uint16 landx;
+  //uint16 landy;
+  //uint8 landtile;
+  address public landowner;
 
   function Village(address _galleass) public Galleasset(_galleass) { }
   function () public {revert();}
@@ -27,10 +30,20 @@ contract Village is Galleasset, Ownable {
   }
   event TokenTransfer(address token,address sender,uint amount,bytes data);
 
-  function createCitizen(address food1,address food2,address food3,address food4,address food5) returns (bool) {
-    
+  //standard tile interface
+  //called when tile is purchased from Land contract
+  function onPurchase(uint16 _x,uint16 _y,uint8 _tile,address _owner,uint _amount) public returns (bool) {
+    //landx=_x;
+    //landy=_y;
+    //landtile=_tile;
+    landowner=_owner;
   }
 
+  function createCitizen() public returns (uint) {
+    require(msg.sender==landowner);
+    Citizens citizensConract = Citizens(getContract("Citizens"));
+    return citizensConract.createCitizen(msg.sender,"Fillet","Fillet","Fillet");
+  }
 
   function withdraw(uint256 _amount) public onlyOwner isBuilding returns (bool) {
     require(this.balance >= _amount);
@@ -42,6 +55,10 @@ contract Village is Galleasset, Ownable {
     token.transfer(msg.sender,_amount);
     return true;
   }
+}
+
+contract Citizens {
+  function createCitizen(address owner, bytes32 food1, bytes32 food2, bytes32 food3) returns (uint){ }
 }
 
 contract StandardToken {

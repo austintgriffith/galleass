@@ -70,6 +70,9 @@ galleass.setContract("Ipfs",0)
 
 galleass.deploy("Village",0)
 galleass.setContract("Village",0)
+galleass.setPermission("Village",0,"createCitizens","true")
+
 
 galleass.deploy("Citizens",0)
 galleass.setContract("Citizens",0)
+galleass.setPermission("Citizens",0,"transferFood","true")

@@ -35,7 +35,7 @@ end tell'
 #tell application "Chrome"
 #	open location "http://localhost:8000"
 #end tell'
-clevis test full
+clevis test fastdeploy
 
 ## you also need to pull in repos like zep
 ##
