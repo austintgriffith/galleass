@@ -883,28 +883,29 @@ module.exports = {
     describe('#transfer() ', function() {
       it('should give metamask account some ether', async function() {
         this.timeout(600000)
-        await clevis("sendTo","0.1","0","0x34aA3F359A9D614239015126635CE7732c18fDF3")
-        await clevis("sendTo","0.1","0","0xB2ac59aE04d0f7310dC3519573BF70387b3b6E3a")
-        await clevis("sendTo","0.1","0","0xfdE139e04963094650bAAD2686ca65A0cF04373C")
-        await clevis("sendTo","0.1","0","0x1D1B2B691Aaf5E5490864ED91c818B200C0fA0E2")
-        await clevis("sendTo","0.1","0","0x9921d057a7931b1ee5040ff82a3722dd3decb6cd")
+        //await clevis("sendTo","0.1","0","0x34aA3F359A9D614239015126635CE7732c18fDF3")
+        //await clevis("sendTo","0.1","0","0xB2ac59aE04d0f7310dC3519573BF70387b3b6E3a")
+        //await clevis("sendTo","0.1","0","0xfdE139e04963094650bAAD2686ca65A0cF04373C")
+        //await clevis("sendTo","0.1","0","0x1D1B2B691Aaf5E5490864ED91c818B200C0fA0E2")
+        //await clevis("sendTo","0.1","0","0x9921d057a7931b1ee5040ff82a3722dd3decb6cd")
 
         await clevis("sendTo","0.1","0","0x2a906694D15Df38F59e76ED3a5735f8AAbccE9cb")
         await clevis("sendTo","0.1","0","0x9319Bbb4e2652411bE15BB74f339b7F6218b2508")
-        await clevis("sendTo","0.1","0","0xE68b423E49e13C704d2E403014a9C90d7961B98c")
-        await clevis("sendTo","0.1","0","0x841b8C25Ce434B9Ca3ff12492a5468321e933A5b")
+        //await clevis("sendTo","0.1","0","0xE68b423E49e13C704d2E403014a9C90d7961B98c")
+        //await clevis("sendTo","0.1","0","0x841b8C25Ce434B9Ca3ff12492a5468321e933A5b")
 
         //these accounts are loose from ganache -- watch out on public networks!
-        await clevis("sendTo","0.1","0","0x627306090abab3a6e1400e9345bc60c78a8bef57")
-        await clevis("sendTo","0.1","0","0xf17f52151ebef6c7334fad080c5704d77216b732")
+        //await clevis("sendTo","0.1","0","0x627306090abab3a6e1400e9345bc60c78a8bef57")
+        //await clevis("sendTo","0.1","0","0xf17f52151ebef6c7334fad080c5704d77216b732")
 
         //firefox
         await clevis("sendTo","0.1","0","0x5f19cEfc9C9D1BC63f9e4d4780493ff5577D238B")
         await clevis("sendTo","0.1","0","0xF11b9dCa0972e95b292891b027F5d8102e2cB8a5")
 
-
-
-
+        module.exports.mintTo("Redbass",0,"0x2a906694d15df38f59e76ed3a5735f8aabcce9cb",5)
+        module.exports.mintTo("Timber",0,"0x2a906694d15df38f59e76ed3a5735f8aabcce9cb",50)
+        module.exports.mintTo("Copper",0,"0x2a906694d15df38f59e76ed3a5735f8aabcce9cb",50)
+        module.exports.mintTo("Fillet",0,"0x2a906694d15df38f59e76ed3a5735f8aabcce9cb",50)
       });
     });
   },
@@ -970,6 +971,13 @@ module.exports = {
         assert(result==0,"publish ERRORS")
       });
     });
+    describe(bigHeader('METAMASK'), function() {
+      it('should give metamask users some fake ether', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","metamask")
+        assert(result==0,"metamask ERRORS")
+      });
+    });
     describe(bigHeader('MINT FISH AND STOCK'), function() {
       it('should mintCatfishAndStockSea', async function() {
         this.timeout(6000000)
@@ -999,13 +1007,7 @@ module.exports = {
         assert(result==0,"mintTimberBuildShips ERRORS")
       });
     });
-    describe(bigHeader('METAMASK'), function() {
-      it('should give metamask users some fake ether', async function() {
-        this.timeout(6000000)
-        const result = await clevis("test","metamask")
-        assert(result==0,"metamask ERRORS")
-      });
-    });
+
     describe(bigHeader('BUY/SELL SHIPS'), function() {
       it('should buyAndSellShips', async function() {
         this.timeout(6000000)
@@ -1018,6 +1020,21 @@ module.exports = {
         this.timeout(6000000)
         const result = await clevis("test","embarkAndGoFishing")
         assert(result==0,"embarkAndGoFishing ERRORS")
+      });
+    });
+    describe(bigHeader('FINISHING TOUCHES'), function() {
+      it('should finishingTouches', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","finishingTouches")
+        assert(result==0,"finishingTouches ERRORS")
+      });
+    });
+
+    describe(bigHeader('PUBLISH'), function() {
+      it('should publish conract address to app', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","publish")
+        assert(result==0,"publish ERRORS")
       });
     });
 

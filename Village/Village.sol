@@ -13,6 +13,15 @@ import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
 contract Village is Galleasset, Ownable {
 
+  /* right now the village contract represents all of the villages but
+    it has a single land owner and inventory
+    it could easily have an array to track who is the land owner where,
+    but it might be trickier to have and inventory of every village
+    maybe not, maybe it's just 677ed in, you transfer the Fillet and
+    then call a function on the village that increments the inventory
+    for a specific village
+  */
+
   //uint16 landx;
   //uint16 landy;
   //uint8 landtile;

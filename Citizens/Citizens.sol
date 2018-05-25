@@ -41,19 +41,28 @@ contract Citizens is Galleasset, NFT {
 
       //eventually you will want to be able to use a standard contract interface
       //instead of just grabbing 3 fillets
-      require( getTokens(msg.sender,"Fillet",3) ); // NOT SURE IF THIS SHOULD PULL FROM THE VILLAGE OR THE USER YET
+
+      /*
+      i went back and forth for a while trying to decide if you send the fillet to the village
+      then, this contract pulls from there. It's really cool to see the village contract "inventory"
+      BUT, if there is a contract for every village then it would need to be deployed as a new one is built
+      this deployment would have to come from the builder and you would have to trust it...
+      ...maybe that is okay? Maybe the bytecode could be compared or something...
+      */
+      require( getGalleassTokens(owner,"Fillet",3) );
       /*require( getTokens(msg.sender,food1,1) );
       require( getTokens(msg.sender,food2,1) );
       require( getTokens(msg.sender,food3,1) );*/
 
       //for now there are only fillets, eventually a complex funtion will take in the food and output the characteristics
-      bytes32 characteristics = 0x01010101010101010101010101010101;
+      bytes32 characteristics = 0x0101010101010101010101010101010101010101010101010101010101010101;
 
       //genes will at first be random but then maybe they will be mixed... like you might need
       //to not only have food, but a couple citizens in the village too and you would use
       //their existing genes to mix for the new genes
-      bytes32 genes = 0x00000000000000000000000000000000;
+      bytes32 genes = 0x0000000000000000000000000000000000000000000000000000000000000000;
 
+      _createCitizen(owner,genes,characteristics);
       Create(msg.sender,owner,characteristics,genes);
     }
     event Create(address _sender,address _owner, bytes32 _characteristics, bytes32 _genes);

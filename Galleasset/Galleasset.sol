@@ -22,6 +22,10 @@ contract Galleasset {
     return StandardTokenInterface(getContract(_name)).approve(_to,_amount);
   }
 
+  function getGalleassTokens(address _from,bytes32 _name,uint256 _amount) internal returns (bool) {
+    return StandardTokenInterface(getContract(_name)).galleassTransferFrom(_from,address(this),_amount);
+  }
+
   function getContract(bytes32 _name) public view returns (address){
     Galleass galleassContract = Galleass(galleass);
     return galleassContract.getContract(_name);
@@ -34,7 +38,7 @@ contract Galleasset {
 
   //this prevents old contracts from remaining active
   //if you want to disable functions after the contract is retired,
-  //add this as a modifier 
+  //add this as a modifier
   modifier isGalleasset(bytes32 _name) {
     Galleass galleassContract = Galleass(galleass);
     require(address(this) == galleassContract.getContract(_name));
@@ -59,6 +63,7 @@ contract Galleass {
 
 contract StandardTokenInterface {
   function transferFrom(address _from, address _to, uint256 _value) public returns (bool) { }
+  function galleassTransferFrom(address _from, address _to, uint256 _value) public returns (bool) { }
   function transfer(address _to, uint256 _value) public returns (bool) { }
   function approve(address _spender, uint256 _value) public returns (bool) { }
 }

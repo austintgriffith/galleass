@@ -18,6 +18,7 @@ import BuySellTable from './modal/BuySellTable.js'
 import BuildTable from './modal/BuildTable.js'
 import CreateTable from './modal/CreateTable.js'
 import SendToken from './modal/SendToken.js'
+import axios from 'axios'
 /*
 assuming that galleassBlockNumber is the oldest block for all contracts
 that means if you redeploy the galleass contract you have to redeploy ALL
@@ -72,6 +73,7 @@ let loadContracts = [
 ]
 
 let inventoryTokens = [
+  "Citizens",
   "Dogger",
   "Copper",
   "Timber",
@@ -84,8 +86,8 @@ let inventoryTokens = [
 ]
 
 const MINGWEI = 0.1
-const MAXGWEI = 151
-const STARTINGGWEI = 51;
+const MAXGWEI = 51
+const STARTINGGWEI = 21;
 
 const GAS = 100000;
 const FISHINGBOAT = 0;
@@ -204,6 +206,21 @@ class App extends Component {
     }
 
     this.handleKeyPress = this.handleKeyPress.bind(this);
+
+    setInterval(this.getGasPrice.bind(this),45000)
+    this.getGasPrice()
+  }
+  getGasPrice(){
+    axios.get("https://ethgasstation.info/json/ethgasAPI.json")
+		.then((response)=>{
+			console.log("GAS",response.data)
+			if(response.data.average>0&&response.data.average<200){
+				response.data.average=response.data.average+2
+				let setMainGasTo = response.data.average/10
+        console.log("SET GAS ",setMainGasTo)
+				this.setState({GWEI:setMainGasTo})
+			}
+		})
   }
 
   async updateDimensions() {
@@ -286,7 +303,7 @@ class App extends Component {
       this.setState({
         modalObject:{
           simpleMessage:"Galleass.io is undergoing a contract upgrade",
-          simpleMessage2:"we will back online soon.",
+          simpleMessage2:"we will be back online soon",
           simpleMessage3:"Thanks",
         },
         modalHeight:180,
@@ -1277,6 +1294,7 @@ class App extends Component {
     let modalObject = {
       name:name,
       contract:contract._address,
+      balance: await contracts[name].methods.balanceOf(this.state.account).call(),
       token:true
     }
     this.setState({
@@ -1317,7 +1335,7 @@ class App extends Component {
   }
   handleWhiskeyDrag(mouse,obj){
     let currentPercent = obj.x + (STARTINGGWEI/MAXGWEI*100);
-    let actualGWEI = Math.round(currentPercent/100 * MAXGWEI,1);
+    let actualGWEI = Math.round(currentPercent/100 * MAXGWEI*10,1)/10;
     if(actualGWEI<MINGWEI) actualGWEI=MINGWEI;
     if(actualGWEI>MAXGWEI) actualGWEI=MAXGWEI;
     this.setState({GWEI:actualGWEI})
@@ -2167,19 +2185,8 @@ return (
       )
     }else{
 
-
       let image = this.state.modalObject.name.toLowerCase()+".png"
-      if(this.state.modalObject.name.indexOf("Resource")>=0){
-        image = this.state.modalObject.name.split("Resource").join("");
-        image = image.split(" ").join("");
-        if(image) image = image.toLowerCase()+"tile.png"
-      }else if(this.state.modalObject.name.indexOf("Stream")>=0){
-        image = "blank_stream.png"
-      }else if(this.state.modalObject.name.indexOf("Grass")>=0){
-        image = "blank_hills.png"
-      }else if(this.state.modalObject.name.indexOf("Hills")>=0){
-        image = "blank_grass.png"
-      }
+
 
       let content = []
 
@@ -2188,136 +2195,6 @@ return (
         </div>
       )
 
-      const OWNS_TILE = (this.state.account && this.state.modalObject.owner && this.state.account.toLowerCase()==this.state.modalObject.owner.toLowerCase())
-
-      const invHeight = 20
-
-      const modalInvStyle = {
-        marginRight:invHeight
-      }
-
-      let inventoryItems = []
-      if(this.state.modalObject.balance>0){
-        inventoryItems.push(
-          <span style={modalInvStyle}><img style={{maxHeight:invHeight}} src="ether.png" />
-          <Writing string={Math.round(web3.utils.fromWei(this.state.modalObject.balance,'ether')*10000)/10000} size={invHeight+2}/>
-          </span>
-        )
-      }
-      if(this.state.modalObject.copperBalance>0){
-        inventoryItems.push(
-          <span style={modalInvStyle}><img style={{maxHeight:invHeight}} src="copper.png" />
-          <Writing string={this.state.modalObject.copperBalance} size={invHeight+2}/>
-          </span>
-        )
-      }
-      if(this.state.modalObject.filletBalance>0){
-        inventoryItems.push(
-          <span style={modalInvStyle}><img style={{maxHeight:invHeight}} src="fillet.png" />
-          <Writing string={this.state.modalObject.filletBalance} size={invHeight+2}/>
-          </span>
-        )
-      }
-      if(this.state.modalObject.timberBalance>0){
-        inventoryItems.push(
-          <span style={modalInvStyle}><img style={{maxHeight:invHeight}} src="timber.png" />
-          <Writing string={this.state.modalObject.timberBalance} size={invHeight+2}/>
-          </span>
-        )
-      }
-      content.push(
-        <div style={{position:'absolute',left:20,bottom:50}}>
-        {inventoryItems}
-        </div>
-      )
-
-      if(OWNS_TILE && this.state.modalObject.name == "Grass"){
-        let tileIndex = this.state.modalObject.index;
-        content.push(
-          <div>
-            <BuildTable tileIndex={tileIndex} clickFn={this.buildTile.bind(this)}/>
-          </div>
-        )
-      }
-
-
-      if(this.state.modalObject.name == "Harbor"){
-        let buyArray = [{
-          amount: "1",
-          balance: this.state.modalObject.doggers,
-          first:"dogger",
-          price: web3.utils.fromWei(this.state.modalObject.doggerPrice,'ether'),
-          second:"ether",
-          clickFn: this.buyShip.bind(this),
-        }]
-        let sellArray = []
-        content.push(
-          <BuySellTable buyArray={buyArray} sellArray={sellArray}/>
-        )
-      }
-      if(this.state.modalObject.name == "Fishmonger"){
-        let buyArray = [{
-          amount: "1",
-          balance: this.state.modalObject.filletBalance,
-          first:"fillet",
-          price: this.state.modalObject.filletPrice,
-          second:"copper",
-          clickFn: this.buyFillet.bind(this),
-        }]
-        let sellArray = []
-        for(let f in this.state.modalObject.fish){
-          sellArray[f] = {
-            amount:"1",
-            balance:false,
-            first:this.state.modalObject.fish[f],
-            price:this.state.modalObject.prices[this.state.modalObject.fish[f]],
-            second:"copper",
-            clickFn: this.sellFish.bind(this,this.state.modalObject.fish[f]),
-          }
-        }
-        content.push(
-          <BuySellTable buyArray={buyArray} sellArray={sellArray}/>
-        )
-      }
-
-      if(OWNS_TILE && this.state.modalObject.name == "Village"){
-        let tileIndex = this.state.modalObject.index;
-        content.push(
-          <div>
-            <CreateTable clickFn={this.createCitizen.bind(this)}/>
-          </div>
-        )
-      }
-
-
-
-      //  <div>Price: {this.state.modalObject.price}</div>
-      //
-      let tilePriceAndPurchase = ""
-      if(OWNS_TILE){
-        tilePriceAndPurchase = (
-          <div style={{float:'right',padding:10}}>
-          <Writing style={{verticalAlign:'middle',opacity:0.9}} string={"Land Price: "} size={20}/>
-          <input style={{textAlign:'right',width:40,marginRight:3,maxHeight:20,padding:5,border:'2px solid #ccc',borderRadius:5}} type="text" name="landPurchasePrice" value={this.state.modalObject.price} onFocus={this.handleFocus} onChange={this.handleModalInput.bind(this)}/>
-          <img  style={{verticalAlign:'middle',maxHeight:20}} src="copper.png" />
-          <img data-rh={"Offer to sell land for "+this.state.modalObject.price+" Copper"} data-rh-at="right"
-          src="metamasksign.png"
-          style={{verticalAlign:'middle',maxHeight:20,marginLeft:10,cursor:"pointer"}} onClick={this.setLandPrice.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,this.state.modalObject.price)}
-          />
-          </div>
-        )
-      }else if(this.state.modalObject.price>0){
-        tilePriceAndPurchase = (
-          <div style={{float:'right',padding:10}}>
-          <Writing style={{opacity:0.9}} string={"Purchase Land: "+this.state.modalObject.price+" "} size={20}/>
-          <img  style={{maxHeight:20}} src="copper.png" />
-          <img data-rh={"Purchase land for  "+this.state.modalObject.price+" Copper"} data-rh-at="right"
-          src="metamasksign.png"
-          style={{maxHeight:20,marginLeft:10,cursor:"pointer"}} onClick={this.buyLand.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,this.state.modalObject.price)}
-          />
-          </div>
-        )
-      }
 
       if(this.state.modalObject.token){
         return (
@@ -2326,10 +2203,10 @@ return (
           <img src="exit.png" />
           </div>
           <div style={{position:'absolute',left:24,top:24,border:"3px solid #777777"}}>
-          <img style={{maxWidth:83}} src={image}/>
+          <img style={{maxWidth:83,maxHeight:83}} src={image}/>
           </div>
           <div style={{position:'absolute',left:118,top:24,textAlign:"left"}}>
-          <div><Writing style={{opacity:0.9}} string={this.state.modalObject.name} size={28}/>  -  {this.state.modalObject.index} @ ({this.state.landX},{this.state.landY})</div>
+          <div> <Writing style={{opacity:0.9}} string={this.state.modalObject.balance+" "+this.state.modalObject.name} size={28}/></div>
           <div>Contract: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.contract}>{this.state.modalObject.contract}</a></div>
 
           </div>
@@ -2339,6 +2216,149 @@ return (
           </div>
         )
       }else{
+
+        if(this.state.modalObject.name.indexOf("Resource")>=0){
+          image = this.state.modalObject.name.split("Resource").join("");
+          image = image.split(" ").join("");
+          if(image) image = image.toLowerCase()+"tile.png"
+        }else if(this.state.modalObject.name.indexOf("Stream")>=0){
+          image = "blank_stream.png"
+        }else if(this.state.modalObject.name.indexOf("Grass")>=0){
+          image = "blank_hills.png"
+        }else if(this.state.modalObject.name.indexOf("Hills")>=0){
+          image = "blank_grass.png"
+        }
+
+        const OWNS_TILE = (this.state.account && this.state.modalObject.owner && this.state.account.toLowerCase()==this.state.modalObject.owner.toLowerCase())
+
+        const invHeight = 20
+
+        const modalInvStyle = {
+          marginRight:invHeight
+        }
+
+        let inventoryItems = []
+        if(this.state.modalObject.balance>0){
+          inventoryItems.push(
+            <span style={modalInvStyle}><img style={{maxHeight:invHeight}} src="ether.png" />
+            <Writing string={Math.round(web3.utils.fromWei(this.state.modalObject.balance,'ether')*10000)/10000} size={invHeight+2}/>
+            </span>
+          )
+        }
+        if(this.state.modalObject.copperBalance>0){
+          inventoryItems.push(
+            <span style={modalInvStyle}><img style={{maxHeight:invHeight}} src="copper.png" />
+            <Writing string={this.state.modalObject.copperBalance} size={invHeight+2}/>
+            </span>
+          )
+        }
+        if(this.state.modalObject.filletBalance>0){
+          inventoryItems.push(
+            <span style={modalInvStyle}><img style={{maxHeight:invHeight}} src="fillet.png" />
+            <Writing string={this.state.modalObject.filletBalance} size={invHeight+2}/>
+            </span>
+          )
+        }
+        if(this.state.modalObject.timberBalance>0){
+          inventoryItems.push(
+            <span style={modalInvStyle}><img style={{maxHeight:invHeight}} src="timber.png" />
+            <Writing string={this.state.modalObject.timberBalance} size={invHeight+2}/>
+            </span>
+          )
+        }
+        content.push(
+          <div style={{position:'absolute',left:20,bottom:50}}>
+          {inventoryItems}
+          </div>
+        )
+
+        if(OWNS_TILE && this.state.modalObject.name == "Grass"){
+          let tileIndex = this.state.modalObject.index;
+          content.push(
+            <div>
+              <BuildTable tileIndex={tileIndex} clickFn={this.buildTile.bind(this)}/>
+            </div>
+          )
+        }
+
+        if(this.state.modalObject.name == "Harbor"){
+          let buyArray = [{
+            amount: "1",
+            balance: this.state.modalObject.doggers,
+            first:"dogger",
+            price: web3.utils.fromWei(this.state.modalObject.doggerPrice,'ether'),
+            second:"ether",
+            clickFn: this.buyShip.bind(this),
+          }]
+          let sellArray = []
+          content.push(
+            <BuySellTable buyArray={buyArray} sellArray={sellArray}/>
+          )
+        }
+        if(this.state.modalObject.name == "Fishmonger"){
+          let buyArray = [{
+            amount: "1",
+            balance: this.state.modalObject.filletBalance,
+            first:"fillet",
+            price: this.state.modalObject.filletPrice,
+            second:"copper",
+            clickFn: this.buyFillet.bind(this),
+          }]
+          let sellArray = []
+          for(let f in this.state.modalObject.fish){
+            sellArray[f] = {
+              amount:"1",
+              balance:false,
+              first:this.state.modalObject.fish[f],
+              price:this.state.modalObject.prices[this.state.modalObject.fish[f]],
+              second:"copper",
+              clickFn: this.sellFish.bind(this,this.state.modalObject.fish[f]),
+            }
+          }
+          content.push(
+            <BuySellTable buyArray={buyArray} sellArray={sellArray}/>
+          )
+        }
+
+        if(OWNS_TILE && this.state.modalObject.name == "Village"){
+          let tileIndex = this.state.modalObject.index;
+          content.push(
+            <div>
+              <CreateTable clickFn={this.createCitizen.bind(this)}/>
+            </div>
+          )
+        }
+
+
+
+        //  <div>Price: {this.state.modalObject.price}</div>
+        //
+        let tilePriceAndPurchase = ""
+        if(OWNS_TILE){
+          tilePriceAndPurchase = (
+            <div style={{float:'right',padding:10}}>
+            <Writing style={{verticalAlign:'middle',opacity:0.9}} string={"Land Price: "} size={20}/>
+            <input style={{textAlign:'right',width:40,marginRight:3,maxHeight:20,padding:5,border:'2px solid #ccc',borderRadius:5}} type="text" name="landPurchasePrice" value={this.state.modalObject.price} onFocus={this.handleFocus} onChange={this.handleModalInput.bind(this)}/>
+            <img  style={{verticalAlign:'middle',maxHeight:20}} src="copper.png" />
+            <img data-rh={"Offer to sell land for "+this.state.modalObject.price+" Copper"} data-rh-at="right"
+            src="metamasksign.png"
+            style={{verticalAlign:'middle',maxHeight:20,marginLeft:10,cursor:"pointer"}} onClick={this.setLandPrice.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,this.state.modalObject.price)}
+            />
+            </div>
+          )
+        }else if(this.state.modalObject.price>0){
+          tilePriceAndPurchase = (
+            <div style={{float:'right',padding:10}}>
+            <Writing style={{opacity:0.9}} string={"Purchase Land: "+this.state.modalObject.price+" "} size={20}/>
+            <img  style={{maxHeight:20}} src="copper.png" />
+            <img data-rh={"Purchase land for  "+this.state.modalObject.price+" Copper"} data-rh-at="right"
+            src="metamasksign.png"
+            style={{maxHeight:20,marginLeft:10,cursor:"pointer"}} onClick={this.buyLand.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,this.state.modalObject.price)}
+            />
+            </div>
+          )
+        }
+
         return (
           <div style={{zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
           <div style={{position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
