@@ -22,10 +22,8 @@ contract Village is Galleasset, Ownable {
     for a specific village
   */
 
-  //uint16 landx;
-  //uint16 landy;
-  //uint8 landtile;
-  address public landowner;
+  //      land x            land y          land tile
+  mapping(uint16 => mapping(uint16 => mapping(uint8 => address))) landOwners;
 
   function Village(address _galleass) public Galleasset(_galleass) { }
   function () public {revert();}
@@ -42,16 +40,13 @@ contract Village is Galleasset, Ownable {
   //standard tile interface
   //called when tile is purchased from Land contract
   function onPurchase(uint16 _x,uint16 _y,uint8 _tile,address _owner,uint _amount) public returns (bool) {
-    //landx=_x;
-    //landy=_y;
-    //landtile=_tile;
-    landowner=_owner;
+    landOwners[_x][_y][_tile] = _owner;
   }
 
-  function createCitizen() public returns (uint) {
-    require(msg.sender==landowner);
-    Citizens citizensConract = Citizens(getContract("Citizens"));
-    return citizensConract.createCitizen(msg.sender,"Fillet","Fillet","Fillet");
+  function createCitizen(uint16 _x,uint16 _y,uint8 _tile) public returns (uint) {
+    require(msg.sender==landOwners[_x][_y][_tile]);
+    Citizens citizensContract = Citizens(getContract("Citizens"));
+    return citizensContract.createCitizen(msg.sender,"Fillet","Fillet","Fillet",_x,_y,_tile);
   }
 
   function withdraw(uint256 _amount) public onlyOwner isBuilding returns (bool) {
@@ -67,7 +62,7 @@ contract Village is Galleasset, Ownable {
 }
 
 contract Citizens {
-  function createCitizen(address owner, bytes32 food1, bytes32 food2, bytes32 food3) returns (uint){ }
+  function createCitizen(address owner, bytes32 food1, bytes32 food2, bytes32 food3, uint16 _x, uint16 _y, uint8 _tile) returns (uint){ }
 }
 
 contract StandardToken {

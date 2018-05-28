@@ -75,7 +75,11 @@ contract Dogger is Galleasset, NFT {
         return newId;
     }
 
-    function getToken(uint256 _id) public view returns (address,uint16,uint16,uint8,uint64) {
+    function totalSupply() public view returns (uint) {
+        return items.length - 1;
+    }
+
+    function getToken(uint256 _id) public view returns (address owner,uint16 strength,uint16 speed,uint8 luck,uint64 birth) {
       return (
         tokenIndexToOwner[_id],
         items[_id].strength,
@@ -83,10 +87,6 @@ contract Dogger is Galleasset, NFT {
         items[_id].luck,
         items[_id].birth
         );
-    }
-
-    function totalSupply() public view returns (uint) {
-        return items.length - 1;
     }
 
     function tokensOfOwner(address _owner) external view returns(uint256[]) {

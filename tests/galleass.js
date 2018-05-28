@@ -104,6 +104,17 @@ module.exports = {
       });
     });
   },
+  setLibrary:(contract,accountindex)=>{
+    describe('#setLibrary() '+contract.magenta, function() {
+      it('should setLibrary with main contract', async function() {
+        this.timeout(120000)
+        let contractAddress = localContractAddress(contract)
+        console.log(tab,"Setting "+contract+" in Galleass to "+contractAddress)
+        const setResult = await clevis("contract","setContract","Galleass",accountindex,web3.utils.fromAscii(contract),contractAddress)
+        printTxResult(setResult)
+      });
+    });
+  },
   setPermission:(contract,accountindex,permission,value)=>{
     describe('#setPermission() '+contract.magenta, function() {
       it('should setPermission with main contract', async function() {
@@ -842,6 +853,7 @@ module.exports = {
       });
     });
   },*/
+
   publish:()=>{
     describe('#publish() ', function() {
       it('should inject contract address and abi into web app', async function() {

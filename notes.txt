@@ -1,5 +1,18 @@
---Creating a new Contract, you'll need to add it to:
+### Creating a new Contract, you'll need to add it to:
+```
 tests/compile.js
 tests/deploy.js
 tests/galleass.js publish()
 tests/publish.js
+app/App.js?
+```
+
+
+
+### Exporting all layers to files (the alphabet/citizen from psd)
+```
+File -> Scripts -> Browse
+~/Photoshop something something/something.jsx
+run
+(script comes from https://github.com/jwa107/Photoshop-Export-Layers-as-Images)
+```

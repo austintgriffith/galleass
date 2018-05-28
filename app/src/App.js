@@ -14,10 +14,16 @@ import './App.css';
 import galleassAddress from './Address.js'
 import galleassBlockNumber from './blockNumber.js'
 import Writing from './Writing.js'
+
+// -- tokens --- //
+import Citizen from './tokens/Citizen.js'
+
+// -- modals --- //
 import BuySellTable from './modal/BuySellTable.js'
 import BuildTable from './modal/BuildTable.js'
 import CreateTable from './modal/CreateTable.js'
 import SendToken from './modal/SendToken.js'
+
 import axios from 'axios'
 /*
 assuming that galleassBlockNumber is the oldest block for all contracts
@@ -163,6 +169,7 @@ class App extends Component {
       blockieTop:10,
       blockieSize:6,
       isEmbarking:false,
+      previousModalObject:{name:"Loading..."},
     }
 
     let timeoutLoader = 8000
@@ -278,7 +285,7 @@ class App extends Component {
       if(this.state.mapUp){
         this.titleClick()
       }else{
-        this.setState({modalHeight:-600,clickScreenTop:-5000,clickScreenOpacity:0})
+        this.closeModal()
       }
     }
   }
@@ -300,15 +307,10 @@ class App extends Component {
     console.log("Init "+account+"...")
     if(UPGRADING){
       console.log("Displaying upgrade screen...")
-      this.setState({
-        modalObject:{
-          simpleMessage:"Galleass.io is undergoing a contract upgrade",
-          simpleMessage2:"we will be back online soon",
-          simpleMessage3:"Thanks",
-        },
-        modalHeight:180,
-        clickScreenTop:0,
-        clickScreenOpacity:0.33
+      this.openModal({
+        simpleMessage:"Galleass.io is undergoing a contract upgrade",
+        simpleMessage2:"we will be back online soon",
+        simpleMessage3:"Thanks",
       })
     }else{
       this.setState({account:account})
@@ -424,6 +426,14 @@ class App extends Component {
       if(DEBUG_SYNCFISH) console.log("SETSTATE storedFish",storedFish)
       this.setState({fish:storedFish})
     }
+  }
+  async doSyncCitizens(from,to){
+    let DEBUG_SYNCCITIZENS = true;
+    if(DEBUG_SYNCCITIZENS) console.log("Sync Citizens")
+
+    //COPY FROM SHIPS, CLEARING FOR NOW BECAUSE A BIG SHIFT IN CODE HAD TO HAPPEN TO MAKE EVENTS EVEN WORK
+    //COING BACK TO FIX THAT STUFF FIRST
+
   }
   async doSyncShips(from,to) {
     let DEBUG_SYNCSHIPS = false;
@@ -744,8 +754,7 @@ class App extends Component {
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
-        //click screen is up for modal
-        this.setState({modalHeight:-600,clickScreenTop:-5000,clickScreenOpacity:0})
+        this.closeModal()
       }
     })
   }
@@ -762,8 +771,7 @@ class App extends Component {
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
-        //click screen is up for modal
-        this.setState({modalHeight:-600,clickScreenTop:-5000,clickScreenOpacity:0})
+        this.closeModal()
       }
     })
   }
@@ -777,29 +785,36 @@ class App extends Component {
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
-        //click screen is up for modal
-        this.setState({modalHeight:-600,clickScreenTop:-5000,clickScreenOpacity:0})
+        this.closeModal()
       }
     })
   }
-  async createCitizen(){
-    console.log("createCitizen")
+  async setCitizenPrice(id,price){
+    let wei = web3.utils.toWei(""+price,'ether')
+    console.log("setCitizenPrice",id,price,wei)
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
-    //let filletPrice = await contracts["Fishmonger"].methods.filletPrice().call()
-    //console.log("Fishmonger charges ",filletPrice," for fillets")
-    //
-    //let mainX = await contracts["Land"].methods.mainX().call();
-    //let mainY = await contracts["Land"].methods.mainY().call();
-    //buildTile(uint16 _x, uint16 _y,uint8 _tile,uint16 _newTileType)
-    contracts["Village"].methods.createCitizen().send({
+    contracts["Citizens"].methods.setPrice(id,wei).send({
       from: accounts[0],
-      gas:920000,
+      gas:300000,
       gasPrice:this.state.GWEI * 1000000000
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
-        //click screen is up for modal
-        this.setState({modalHeight:-600,clickScreenTop:-5000,clickScreenOpacity:0})
+        this.closeModal()
+      }
+    })
+  }
+  async createCitizen(x,y,tile){
+    console.log("createCitizen")
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+    contracts["Village"].methods.createCitizen(x,y,tile).send({
+      from: accounts[0],
+      gas:300000,
+      gasPrice:this.state.GWEI * 1000000000
+    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+      console.log("RESULT:",receipt)
+      if(this.state.modalHeight>=0){
+        this.closeModal()
       }
     })
   }
@@ -819,8 +834,7 @@ class App extends Component {
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
-        //click screen is up for modal
-        this.setState({modalHeight:-600,clickScreenTop:-5000,clickScreenOpacity:0})
+        this.closeModal()
       }
     })
   }
@@ -847,8 +861,7 @@ class App extends Component {
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
-        //click screen is up for modal
-        this.setState({modalHeight:-600,clickScreenTop:-5000,clickScreenOpacity:0})
+        this.closeModal()
       }
     })
   }
@@ -871,8 +884,7 @@ class App extends Component {
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
-        //click screen is up for modal
-        this.setState({modalHeight:-600,clickScreenTop:-5000,clickScreenOpacity:0})
+        this.closeModal()
       }
     })
   }
@@ -1175,9 +1187,10 @@ class App extends Component {
 
     setInterval(this.syncMyShip.bind(this),1381)
     setInterval(this.syncInventory.bind(this),2273)
-    setInterval(this.syncLand.bind(this),30103)
+    setInterval(this.syncLand.bind(this),5103)
     this.sync("Fish",this.doSyncFish.bind(this),127,FISHEVENTSYNCLIVEINTERVAL);
     this.sync("Ships",this.doSyncShips.bind(this),198,SHIPSEVENTSYNCLIVEINTERVAL);
+    this.sync("Citizens",this.doSyncCitizens.bind(this),198,SHIPSEVENTSYNCLIVEINTERVAL);
     this.sync("Clouds",this.doSyncClouds.bind(this),151,CLOUDEVENTSYNCLIVEINTERVAL);
     this.syncEverythingOnce()
   }
@@ -1188,6 +1201,7 @@ class App extends Component {
     this.syncLand()
     this.doSyncFish(this.state.blockNumber-2,'latest')
     this.doSyncShips(this.state.blockNumber-2,'latest')
+    this.doSyncCitizens(this.state.blockNumber-2,'latest')
     this.doSyncClouds(this.state.blockNumber-2,'latest')
   }
   bumpableButton(name,buttonsTop,fn){
@@ -1206,6 +1220,36 @@ class App extends Component {
       {fn}
       </Motion>
     )
+  }
+  openModal(modalObject){
+    this.setState({
+      //loaderOpacity:0,
+      modalObject:modalObject,
+      previousModalObject:this.state.modalObject,//this let's your layer up two modals
+      modalHeight:50,
+      clickScreenTop:0,
+      clickScreenOpacity:0.9
+    })
+  }
+  closeModal(){
+    //I setup previousModalObject so there could be one modal and then another
+    //and you could return to the first one, but I haven't used it yet
+    let modalObject = this.state.previousModalObject
+    if(modalObject.name!="Loading..."){
+      this.setState({
+        modalObject:modalObject,
+        previousModalObject:{"name":"Loading..."}
+      })
+    }else{
+      this.setState({
+        //loaderOpacity:1,
+        modalHeight:-600,
+        clickScreenTop:-5000,
+        clickScreenOpacity:0,
+        previousModalObject:{"name":"Loading..."},
+        modalObject:{"name":"Loading..."}
+      })
+    }
   }
   titleClick(){
     console.log("Clicked Title")
@@ -1281,13 +1325,7 @@ class App extends Component {
 
     }
 
-
-    this.setState({
-      modalObject:modalObject,
-      modalHeight:180,
-      clickScreenTop:0,
-      clickScreenOpacity:0.33
-    })
+    this.openModal(modalObject)
   }
   async invClick(name,contract) {
     console.log("INV CLICK",name,contract)
@@ -1297,12 +1335,24 @@ class App extends Component {
       balance: await contracts[name].methods.balanceOf(this.state.account).call(),
       token:true
     }
-    this.setState({
-      modalObject:modalObject,
-      modalHeight:180,
-      clickScreenTop:0,
-      clickScreenOpacity:0.33
-    })
+    if(typeof contracts[name].methods.tokensOfOwner == "function"){
+      //erc721
+      modalObject.tokensOfOwner = await contracts[name].methods.tokensOfOwner(this.state.account).call()
+      modalObject.tokens = {}
+      for(let tokenId in modalObject.tokensOfOwner){
+         modalObject.tokens[modalObject.tokensOfOwner[tokenId]] = await contracts[name].methods.getToken(modalObject.tokensOfOwner[tokenId]).call()
+         console.log("GOT TOKEN DATA",modalObject.tokens[modalObject.tokensOfOwner[tokenId]])
+         //load specific functions for specific tokens
+         if(modalObject.tokens[modalObject.tokensOfOwner[tokenId]].genes){
+           modalObject.tokens[modalObject.tokensOfOwner[tokenId]].geneObject = await contracts[name].methods.getCitizenGenes(modalObject.tokensOfOwner[tokenId]).call()
+           //modalObject.tokens[modalObject.tokensOfOwner[tokenId]].statusObject = await contracts[name].methods.getCitizenStatus(modalObject.tokensOfOwner[tokenId]).call()
+           modalObject.tokens[modalObject.tokensOfOwner[tokenId]].characteristicsObject = await contracts[name].methods.getCitizenBaseCharacteristics(modalObject.tokensOfOwner[tokenId]).call()
+         }
+      }
+    }else{
+      //erc20
+    }
+    this.openModal(modalObject)
   }
   setHintMode(num){
     //1 means take them to metamask install
@@ -1311,7 +1361,6 @@ class App extends Component {
   }
   clickScreenClick(event){
     var userAgent = window.navigator.userAgent;
-
     let clickXRatio = event.clientX/this.state.clickScreenWidth;
     let clickYRatio = event.clientY/this.state.clickScreenHeight;
     console.log("CLICK SCREEN CLICKED",clickXRatio,clickYRatio,userAgent)
@@ -1321,8 +1370,7 @@ class App extends Component {
     }
 
     if(this.state.modalHeight>=0){
-      //click screen is up for modal
-      this.setState({modalHeight:-600,clickScreenTop:-5000,clickScreenOpacity:0})
+      this.closeModal()
     }else{
       this.metamaskHint()
     }
@@ -1749,12 +1797,11 @@ let clickScreen = (
     return (
       <div style={{cursor:'pointer',width:this.state.clickScreenWidth,height:this.state.clickScreenHeight,opacity:currentStyles.opacity,backgroundColor:"#0a1727",position:"fixed",left:0,top:this.state.clickScreenTop,zIndex:899}} onClick={this.clickScreenClick.bind(this)}>
       <img style={{
-        opacity:this.state.loaderOpacity,
         position:"absolute",
         zIndex:-99,
         left:"47%",
         top:"47%",
-        opacity:0.8,
+        opacity:this.state.loaderOpacity,
       }} src="loading3.gif" />
       </div>
     )
@@ -2173,7 +2220,7 @@ return (
     if(this.state.modalObject.simpleMessage){
       return (
         <div style={{zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
-        <div style={{position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
+        <div style={{cursor:'pointer',position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
         <img src="exit.png" />
         </div>
         <div style={{paddingBottom:100}}></div>
@@ -2197,9 +2244,56 @@ return (
 
 
       if(this.state.modalObject.token){
+
+        let body
+        if(this.state.modalObject.tokensOfOwner){
+
+          //console.log("TOKENSOFOWNER",this.state.modalObject.tokensOfOwner,this.state.modalObject.tokens)
+          let allTokens
+
+          if(this.state.modalObject.name=="Citizens"){
+            allTokens = this.state.modalObject.tokensOfOwner.map((id)=>{
+              //"head":"341","hair":"54678","eyes":"11577","nose":"47392","mouth":
+              return (
+                <div>
+                  <Citizen size={50} id={id} web3={web3} setCitizenPrice={this.setCitizenPrice.bind(this)}
+                    genes={this.state.modalObject.tokens[id].geneObject}
+                    status={this.state.modalObject.tokens[id].status}
+                    data={this.state.modalObject.tokens[id].data}
+                    x={this.state.modalObject.tokens[id].x}
+                    y={this.state.modalObject.tokens[id].y}
+                    tile={this.state.modalObject.tokens[id].tile}
+                    characteristics={this.state.modalObject.tokens[id].characteristicsObject}
+                  />
+                </div>
+              )
+            })
+          }else{
+            allTokens = this.state.modalObject.tokensOfOwner.map((token)=>{
+              return (
+                <div>
+                  other NFT token stuff
+                </div>
+              )
+            })
+          }
+
+          body = (
+            <div style={{marginTop:100}}>
+              {allTokens}
+            </div>
+          )
+        }else{
+          body = (
+            <div style={{marginTop:100}}>
+              <SendToken modalObject={this.state.modalObject} sendToken={this.sendToken.bind(this)} />
+            </div>
+          )
+        }
+
         return (
           <div style={{zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
-          <div style={{position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
+          <div style={{cursor:'pointer',position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
           <img src="exit.png" />
           </div>
           <div style={{position:'absolute',left:24,top:24,border:"3px solid #777777"}}>
@@ -2208,11 +2302,8 @@ return (
           <div style={{position:'absolute',left:118,top:24,textAlign:"left"}}>
           <div> <Writing style={{opacity:0.9}} string={this.state.modalObject.balance+" "+this.state.modalObject.name} size={28}/></div>
           <div>Contract: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.contract}>{this.state.modalObject.contract}</a></div>
-
           </div>
-          <div style={{marginTop:100}}>
-            <SendToken modalObject={this.state.modalObject} sendToken={this.sendToken.bind(this)} />
-          </div>
+          {body}
           </div>
         )
       }else{
@@ -2324,7 +2415,7 @@ return (
           let tileIndex = this.state.modalObject.index;
           content.push(
             <div>
-              <CreateTable clickFn={this.createCitizen.bind(this)}/>
+              <CreateTable clickFn={this.createCitizen.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index)}/>
             </div>
           )
         }
@@ -2337,7 +2428,7 @@ return (
         if(OWNS_TILE){
           tilePriceAndPurchase = (
             <div style={{float:'right',padding:10}}>
-            <Writing style={{verticalAlign:'middle',opacity:0.9}} string={"Land Price: "} size={20}/>
+            <Writing style={{verticalAlign:'middle',opacity:0.9}} string={"Sale Price: "} size={20}/>
             <input style={{textAlign:'right',width:40,marginRight:3,maxHeight:20,padding:5,border:'2px solid #ccc',borderRadius:5}} type="text" name="landPurchasePrice" value={this.state.modalObject.price} onFocus={this.handleFocus} onChange={this.handleModalInput.bind(this)}/>
             <img  style={{verticalAlign:'middle',maxHeight:20}} src="copper.png" />
             <img data-rh={"Offer to sell land for "+this.state.modalObject.price+" Copper"} data-rh-at="right"
@@ -2361,7 +2452,7 @@ return (
 
         return (
           <div style={{zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
-          <div style={{position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
+          <div style={{cursor:'pointer',position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
           <img src="exit.png" />
           </div>
           <div style={{position:'absolute',left:24,top:24,border:"3px solid #777777"}}>

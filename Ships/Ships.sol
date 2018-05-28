@@ -87,7 +87,7 @@ contract Ships is Galleasset, NFT {
         return ships.length - 1;
     }
 
-    function shipsOfOwner(address _owner) external view returns(uint256[]) {
+    function tokensOfOwner(address _owner) external view returns(uint256[]) {
         uint256 tokenCount = balanceOf(_owner);
         if (tokenCount == 0) {
             return new uint256[](0);
