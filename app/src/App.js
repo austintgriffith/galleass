@@ -136,6 +136,7 @@ class App extends Component {
       inventoryDetail:[],
       fish:[],
       ships:[],
+      citizens:[],
       clouds:[],
       blockNumber:0,
       offlineCounter:0,
@@ -428,11 +429,45 @@ class App extends Component {
     }
   }
   async doSyncCitizens(from,to){
-    let DEBUG_SYNCCITIZENS = true;
-    if(DEBUG_SYNCCITIZENS) console.log("Sync Citizens")
+    let DEBUG_SYNCCITIZENS = false;
+    let filter = {x:this.state.landX,y:this.state.landY}
+    if(DEBUG_SYNCCITIZENS) console.log("Sync Citizens With Filter ",filter)
+    if(from<1) from=1
+    let CitizenUpdate = await contracts["Citizens"].getPastEvents('CitizenUpdate', {
+      filter: filter,
+      fromBlock: from,
+      toBlock: to
+    })
+    if(DEBUG_SYNCCITIZENS) console.log("citizen...",CitizenUpdate)
+    let storedCitizens = [];
+    let updated = false;
+    for(let c in CitizenUpdate){
+      let id = CitizenUpdate[c].returnValues.id
+      if(DEBUG_SYNCCITIZENS) console.log("CITIZEN UPDATE",CitizenUpdate[c])
+      let blockNumber = CitizenUpdate[c].blockNumber
+      if(!storedCitizens[id]||storedCitizens[id].blockNumber < blockNumber){
+        if(DEBUG_SYNCCITIZENS) console.log(CitizenUpdate[c].returnValues)
+        storedCitizens[id]={
+          blockNumber:blockNumber,
+          id:CitizenUpdate[c].returnValues.id,
+          x:CitizenUpdate[c].returnValues.x,
+          y:CitizenUpdate[c].returnValues.y,
+          tile:CitizenUpdate[c].returnValues.tile,
+          owner:CitizenUpdate[c].returnValues.owner,
+          status:CitizenUpdate[c].returnValues.status,
+          data:CitizenUpdate[c].returnValues.data,
+          genes:CitizenUpdate[c].returnValues.genes,
+          characteristics:CitizenUpdate[c].returnValues.characteristics
+        };
+      }
+    }
+    if(hasElements(storedCitizens)){
+      storedCitizens = mergeByBlockNumber(storedCitizens,this.state.citizens)
+      if(DEBUG_SYNCCITIZENS) console.log("SETSTATE storedCitizens",storedCitizens)
+      this.setState({citizens:storedCitizens})
+    }
+    //event CitizenUpdate(uint indexed id,uint16 indexed x, uint16 indexed y,uint8 tile,address owner,uint8 status,uint data,bytes32 genes,bytes32 characteristics);
 
-    //COPY FROM SHIPS, CLEARING FOR NOW BECAUSE A BIG SHIFT IN CODE HAD TO HAPPEN TO MAKE EVENTS EVEN WORK
-    //COING BACK TO FIX THAT STUFF FIRST
 
   }
   async doSyncShips(from,to) {
@@ -2531,10 +2566,26 @@ function waitForAllContracts(){
   }
 }
 
+
+
+function mergeByBlockNumber(a,b) {
+  for(let i in a) {
+    if(a[i]&&b[i]&& a[i].blockNumber && b[i].blockNumber){
+      if(a[i].blockNumber>b[i].blockNumber){
+        b[i] = a[i];
+      }else{
+        a[i] = b[i];
+      }
+    }else{
+      b[i] = a[i];
+    }
+  }
+  return b;
+}
 function mergeByTimestamp(a,b) {
   for(let i in a) {
-    if(a[i]&&b[i]&& a[i].timestamp && b[i].timestamp){
-      if(a[i].timestamp>b[i].timestamp){
+    if(a[i]&&b[i]&& a[i].blockNumber && b[i].blockNumber){
+      if(a[i].blockNumber>b[i].blockNumber){
         b[i] = a[i];
       }else{
         a[i] = b[i];

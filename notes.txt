@@ -16,3 +16,11 @@ File -> Scripts -> Browse
 run
 (script comes from https://github.com/jwa107/Photoshop-Export-Layers-as-Images)
 ```
+
+
+
+### Events Parsing
+```
+Set DEBUG_SYNCCITIZENS to true to see how bad it is
+I have a new event parser built and I should integrate it into Galleass
+```
