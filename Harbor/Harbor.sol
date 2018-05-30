@@ -25,9 +25,10 @@ contract Harbor is Galleasset, Ownable {
   }
   function () public {revert();}
 
-  function onTokenTransfer(address _sender, uint _value, bytes _data) {
+  function onTokenTransfer(address _sender, uint _value, bytes _data) isGalleasset("Harbor") returns (bool) {
     if( msg.sender == getContract("Timber") ){
       TokensIncoming("Timber",_sender,_value,_data);
+      return true;
     }else{
       revert();
     }

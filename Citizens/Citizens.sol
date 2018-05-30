@@ -64,28 +64,50 @@ contract Citizens is Galleasset, NFT {
         _transfer(_from, _to, _tokenId);
     }
 
+    //citzens should be bought and sold for ether
     function setPrice(uint _id,uint _price) public isGalleasset("Citizens") returns (bool){
-
       //you must own the citizen to set its sale price
       require(tokenIndexToOwner[_id]==msg.sender);
-
+      //create object for smaller local stack
       Citizen c = citizens[_id];
-
       //the citizen must be idle to go on sale
-      require( c.status==1 || c.status==2 );
-
+      require(c.status==1||c.status==2);
       if(_price==0){
         //setting the price to 0 means not for sale any more
         c.status = 1;
-
       }else{
         //set status to 2 (for sale)
         c.status = 2;
       }
       c.data = _price;
+      emit CitizenUpdate(_id,c.x,c.y,c.tile,tokenIndexToOwner[_id],c.status,c.data,c.genes,c.characteristics);
+      return true;
+    }
+
+    function moveCitizen(uint _id,uint8 _tile) public isGalleasset("Citizens") returns (bool) {
+      //you must own the citizen to move them
+      require(tokenIndexToOwner[_id]==msg.sender);
+      //create object for smaller local stack
+      Citizen c = citizens[_id];
+      //the citizen must be idle to move
+      require(c.status==1);
+      //you must own all the land between the current location and the destination
+      //(bascially they will walk at the speed of light at first, but eventually
+      // there should probably be some sort of transportation per island and it
+      // takes a varying amount of time to move from tile to tile)
+      Land landContract = Land(getContract("Land"));
+      //first let's just make sure they own the dest and build the other stuff in
+      //maybe it's fine for them to move anywhere on local islands at first idk
+      //destination can't be water
+      require(landContract.tileTypeAt(c.x,c.y,_tile)>0);
+      //must own destination
+      require(landContract.ownerAt(c.x,c.y,_tile)==msg.sender);
+      //you can't already be at the destination
+      require(c.tile!=_tile);
+
+      c.tile=_tile;
 
       emit CitizenUpdate(_id,c.x,c.y,c.tile,tokenIndexToOwner[_id],c.status,c.data,c.genes,c.characteristics);
-
       return true;
     }
 
@@ -218,4 +240,12 @@ contract Citizens is Galleasset, NFT {
 
 contract CitizensLib{
   function addPlease() public returns (uint) { }
+}
+
+contract Land {
+  mapping (uint16 => mapping (uint16 => uint16[18])) public tileTypeAt;
+  mapping (uint16 => mapping (uint16 => address[18])) public contractAt;
+  mapping (uint16 => mapping (uint16 => address[18])) public ownerAt;
+  mapping (uint16 => mapping (uint16 => uint256[18])) public priceAt;
+  //function getTile(uint16 _x,uint16 _y,uint8 _index) public constant returns (uint16 _tile,address _contract,address _owner,uint256 _price) { }
 }

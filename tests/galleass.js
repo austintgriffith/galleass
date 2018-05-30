@@ -884,6 +884,7 @@ module.exports = {
         loadAbi("Copper")
         loadAbi("Fishmonger")
         loadAbi("Fillet")
+        loadAbi("LandLib")
         loadAbi("Land")
         loadAbi("Ipfs")
         loadAbi("Village")

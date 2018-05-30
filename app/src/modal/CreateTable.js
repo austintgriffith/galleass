@@ -5,7 +5,7 @@ class CreateTable extends Component {
   render(){
     return (
       <div onClick={this.props.clickFn.bind(this)}>
-        <img src="/createCitizen.png" style={{cursor:"pointer"}}/>
+        <img src={this.props.image+".png"} style={{cursor:"pointer"}}/>
       </div>
     )
   }

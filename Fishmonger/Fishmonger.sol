@@ -61,11 +61,11 @@ contract Fishmonger is Galleasset, HasNoEther {
     experienceContract.update(_player,3,true);//milestone 3: Sell Fish for Copper
   }
 
-  function onTokenTransfer(address _sender, uint _amount, bytes _data) isGalleasset("Fishmonger") {
+  function onTokenTransfer(address _sender, uint _amount, bytes _data) isGalleasset("Fishmonger") returns (bool){
     TokenTransfer(msg.sender,_sender,_amount,_data);
     uint8 action = uint8(_data[0]);
     if(action==1){
-      buyFillet(_sender,_amount,_data);
+      return buyFillet(_sender,_amount,_data);
     } else if(action==2){
       //sellFish
     } else {
@@ -74,7 +74,7 @@ contract Fishmonger is Galleasset, HasNoEther {
   }
   event TokenTransfer(address token,address sender,uint amount,bytes data);
 
-  function buyFillet(address _sender, uint _amount, bytes _data) internal {
+  function buyFillet(address _sender, uint _amount, bytes _data) internal returns (bool) {
     require(msg.sender == getContract("Copper"),"Requires copper");
 
     address filletAddress = getContract("Fillet");
@@ -88,6 +88,7 @@ contract Fishmonger is Galleasset, HasNoEther {
     StandardToken filletContract = StandardToken(filletAddress);
     require(filletAmount <= filletContract.balanceOf(address(this)), "Fishmonger does not have enough fillets");
     require(filletContract.transfer(_sender,filletAmount), "Failed to transfer fillets");
+    return true;
   }
 
   function withdrawToken(address _token,uint256 _amount) public onlyOwner isBuilding returns (bool) {

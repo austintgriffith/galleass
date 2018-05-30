@@ -366,6 +366,13 @@ class Land extends Component {
                 )
               )
               currentPixelLocation+=120
+            }else if(islands[i][t].tile==150){
+              tiles.push(
+                this.wrapLandTileWithLink("Timber Camp",islands[i][t].index,currentPixelLocation,
+                  this.landTile(currentPixelLocation,islands[i][t].owner,"timbercamp")
+                )
+              )
+              currentPixelLocation+=87
             }else if(islands[i][t].tile==2000){
               //console.log("VILLAGE:",islands[i][t])
               tiles.push(

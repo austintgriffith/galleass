@@ -30,6 +30,7 @@ let loadContracts = [
   "Ipfs",
   "Galleasset",
   "Staged",
+  "LandLib",
 ]
 
 contractsHtml = "<table cellspacing='0' cellpadding='10' border='0'>"

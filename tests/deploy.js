@@ -11,6 +11,8 @@ galleass.setContract("Sea",0)
 galleass.setPermission("Sea",0,"transferDogger","true")
 galleass.setPermission("Sea",0,"updateExperience","true")
 
+galleass.deploy("LandLib",0)
+galleass.setContract("LandLib",0)
 galleass.deploy("Land",0)
 galleass.setContract("Land",0)
 galleass.setPermission("Land",0,"transferTimber","true")

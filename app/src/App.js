@@ -17,6 +17,7 @@ import Writing from './Writing.js'
 
 // -- tokens --- //
 import Citizen from './tokens/Citizen.js'
+import CitizenFace from './tokens/CitizenFace.js'
 
 // -- modals --- //
 import BuySellTable from './modal/BuySellTable.js'
@@ -71,6 +72,7 @@ let loadContracts = [
   "Fishmonger",
   "Copper",
   "Land",
+  "LandLib",
   "Experience",
   "Fillet",
   "Ipfs",
@@ -839,6 +841,20 @@ class App extends Component {
       }
     })
   }
+  async moveCitizen(id,tile){
+    console.log("moveCitizen",id,tile)
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+    contracts["Citizens"].methods.moveCitizen(id,tile).send({
+      from: accounts[0],
+      gas:300000,
+      gasPrice:this.state.GWEI * 1000000000
+    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+      console.log("RESULT:",receipt)
+      if(this.state.modalHeight>=0){
+        this.closeModal()
+      }
+    })
+  }
   async createCitizen(x,y,tile){
     console.log("createCitizen")
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
@@ -872,6 +888,35 @@ class App extends Component {
         this.closeModal()
       }
     })
+  }
+  async buildTimberCamp(x,y,i){
+    let copper = 6
+    let action = "0x02"
+    console.log("BUILD TIMBER CAMP ",x,y,i,copper)
+
+    let xHex = parseInt(x).toString(16)
+    while(xHex.length<4) xHex="0"+xHex;
+    let yHex = parseInt(y).toString(16)
+    while(yHex.length<4) yHex="0"+yHex;
+    let iHex = parseInt(i).toString(16)
+    while(iHex.length<2) iHex="0"+iHex;
+
+    console.log("hex:",xHex,yHex,iHex)
+
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+
+    console.log("Building timber camp at  x:"+xHex+" y:"+yHex+" i:"+iHex+" for "+copper+" copper")
+    contracts["Copper"].methods.transferAndCall(contracts["LandLib"]._address,copper,action+xHex+yHex+iHex).send({
+      from: accounts[0],
+      gas:620000,
+      gasPrice:this.state.GWEI * 1000000000
+    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+      console.log("RESULT:",receipt)
+      if(this.state.modalHeight>=0){
+        this.closeModal()
+      }
+    })
+
   }
   async buyLand(x,y,i,copper){
     console.log("BUY LAND ",x,y,i,copper)
@@ -1326,8 +1371,22 @@ class App extends Component {
       owner:tile._owner,
       price:tile._price,
       index:index,
-      px:px
+      px:px,
+      citizens:[],
     }
+    for(let c in this.state.citizens){
+      if( this.state.citizens[c].x==this.state.landX && this.state.citizens[c].y==this.state.landY && this.state.citizens[c].tile==index ){
+        let citizenObject = {
+          id:this.state.citizens[c].id,
+          owner:this.state.citizens[c].owner,
+          status:this.state.citizens[c].status,
+          data:this.state.citizens[c].data,
+          geneObject: await contracts["Citizens"].methods.getCitizenGenes(this.state.citizens[c].id).call()
+        };
+        modalObject.citizens.push(citizenObject)
+      }
+    }
+
 
     if(contracts[name]){
       if(name=="Harbor"){
@@ -1350,6 +1409,8 @@ class App extends Component {
         modalObject.filletPrice = await contracts["Fishmonger"].methods.filletPrice().call();
         modalObject.filletBalance = await contracts["Fillet"].methods.balanceOf(contracts["Fishmonger"]._address).call();
       }
+
+
 
       if(contracts[name].methods.getBalance) modalObject.balance = await contracts[name].methods.getBalance().call();
       modalObject.copperBalance = await contracts["Copper"].methods.balanceOf(contracts[name]._address).call();
@@ -2291,7 +2352,9 @@ return (
               //"head":"341","hair":"54678","eyes":"11577","nose":"47392","mouth":
               return (
                 <div>
-                  <Citizen size={50} id={id} web3={web3} setCitizenPrice={this.setCitizenPrice.bind(this)}
+                  <Citizen size={50} id={id} web3={web3}
+                    setCitizenPrice={this.setCitizenPrice.bind(this)}
+                    moveCitizen={this.moveCitizen.bind(this)}
                     genes={this.state.modalObject.tokens[id].geneObject}
                     status={this.state.modalObject.tokens[id].status}
                     data={this.state.modalObject.tokens[id].data}
@@ -2362,6 +2425,21 @@ return (
         const modalInvStyle = {
           marginRight:invHeight
         }
+
+        let citizensHere = []
+        if(this.state.modalObject.citizens){
+          let count = 0
+          citizensHere = this.state.modalObject.citizens.map((c)=>{
+            return (
+              <CitizenFace size={35} offset={count++} padding={6} genes={c.geneObject} owner={c.owner}/>
+            )
+          })
+        }
+        content.push(
+          <div style={{position:'absolute',left:20,bottom:100}}>
+          {citizensHere}
+          </div>
+        )
 
         let inventoryItems = []
         if(this.state.modalObject.balance>0){
@@ -2450,10 +2528,18 @@ return (
           let tileIndex = this.state.modalObject.index;
           content.push(
             <div>
-              <CreateTable clickFn={this.createCitizen.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index)}/>
+              <CreateTable image={"createCitizen"} clickFn={this.createCitizen.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index)}/>
+            </div>
+          )
+        }else if(OWNS_TILE && this.state.modalObject.name == "Forest Resource"){
+          let tileIndex = this.state.modalObject.index;
+          content.push(
+            <div>
+              <CreateTable image={"buildTimberCamp"} clickFn={this.buildTimberCamp.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index)}/>
             </div>
           )
         }
+
 
 
 

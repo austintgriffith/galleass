@@ -28,7 +28,7 @@ contract Village is Galleasset, Ownable {
   function Village(address _galleass) public Galleasset(_galleass) { }
   function () public {revert();}
 
-  function onTokenTransfer(address _sender, uint _amount, bytes _data) {
+  function onTokenTransfer(address _sender, uint _amount, bytes _data) isGalleasset("Village") returns (bool){
     /*if( msg.sender == getContract("Timber") ){
       TokenTransfer(msg.sender,_sender,_amount,_data);
     }else{

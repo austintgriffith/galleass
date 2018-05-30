@@ -30,7 +30,7 @@ class CreateTable extends Component {
         />
          {this.props.modalObject.name} to
          <input
-           style={{textAlign:'right',width:280,margin:6,maxHeight:20,padding:5,border:'2px solid #ccc',borderRadius:5}}
+           style={{textAlign:'right',width:295,margin:6,maxHeight:20,padding:5,border:'2px solid #ccc',borderRadius:5}}
            type="text" name="toAddress" value={this.state.toAddress} onFocus={this.handleFocus} onChange={this.handleModalInputToAddress.bind(this)}
          />
          <img data-rh={"Send "+this.state.amount+" "+this.props.modalObject.name+" to "+this.state.toAddress} data-rh-at="right" src="metamasksign.png"

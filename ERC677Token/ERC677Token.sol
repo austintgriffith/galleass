@@ -26,7 +26,7 @@ contract ERC677Token is StandardToken {
     private
   {
     ERC677Receiver receiver = ERC677Receiver(_to);
-    receiver.onTokenTransfer(msg.sender, _value, _data);
+    require(receiver.onTokenTransfer(msg.sender, _value, _data));
   }
 
   function isContract(address _addr)
@@ -48,5 +48,5 @@ contract ERC677Token is StandardToken {
 }
 
 contract ERC677Receiver {
-  function onTokenTransfer(address _sender, uint _value, bytes _data) {}
+  function onTokenTransfer(address _sender, uint _value, bytes _data) returns (bool){}
 }
