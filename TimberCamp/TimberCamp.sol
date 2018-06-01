@@ -25,7 +25,7 @@ contract TimberCamp is Galleasset, Ownable {
   bytes2 public min = 0x0001;
   bytes2 public max = 0x7FFF;
 
-  uint8 maxCollect = 8;
+  uint8 public maxCollect = 8;
   bytes32 public resource = "Timber";
 
   //      land x            land y          land tile

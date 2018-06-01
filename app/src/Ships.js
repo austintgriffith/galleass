@@ -11,7 +11,6 @@ class Ships extends Component {
     for(let f=0;f<14;f++){
       fillerShips["0x"+sha3_224(""+f+Math.random())]=this.createRandomFakeShipForLoading(f)
     }
-
     this.state = {
       fillerShips:fillerShips
     }
@@ -31,8 +30,6 @@ class Ships extends Component {
   render(){
     let {ships,web3,blockNumber,shipSpeed,width,height,horizon} = this.props
     let renderedShips = []
-
-
 
     var thereAreShips = false
     for(var f in ships) {
@@ -64,13 +61,12 @@ class Ships extends Component {
         {
           translatedX+=(width);
         }
-
       }else if(ships[b].fishing){
           image+="fishing";
-          translatedX = width*(ships[b].location/65535);
+          translatedX = width*(ships[b].location/65535)-(shipwidth/2);
       }else{
         image+="floating";
-        translatedX = width*(ships[b].location/65535);
+        translatedX = width*(ships[b].location/65535)-(shipwidth/2);
       }
       let flagleft = 2;
       if(ships[b].direction){
@@ -122,7 +118,7 @@ class Ships extends Component {
             style={{
               zIndex:20+idTopOffset+extraZ,
               position:'absolute',
-              left:translatedX+idLeftOffset-(shipwidth/2),
+              left:translatedX+idLeftOffset,
               top:horizon-28+idTopOffset,
               opacity:0.9,
               height:75,

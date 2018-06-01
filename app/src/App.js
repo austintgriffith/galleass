@@ -23,6 +23,7 @@ import CitizenFace from './tokens/CitizenFace.js'
 import BuySellTable from './modal/BuySellTable.js'
 import BuildTable from './modal/BuildTable.js'
 import CreateTable from './modal/CreateTable.js'
+import ResourceTable from './modal/ResourceTable.js'
 import SendToken from './modal/SendToken.js'
 
 import axios from 'axios'
@@ -652,7 +653,6 @@ class App extends Component {
             //console.log("timberToCollect:",timberToCollect)
             if(timberToCollect>0){
               resourcesHere["Timber"]=timberToCollect
-              console.log("RESOURCES!",resourcesHere)
             }
           }
         }
@@ -853,7 +853,7 @@ class App extends Component {
     //  collect(uint16 _x,uint16 _y,uint8 _tile)
     contracts[name].methods.collect(this.state.landX,this.state.landY,tile).send({
       from: accounts[0],
-      gas:1000000,
+      gas:120000,
       gasPrice:this.state.GWEI * 1000000000
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
@@ -1423,37 +1423,43 @@ class App extends Component {
     }
 
 
-    if(contracts[name]){
-      if(name=="Harbor"){
-        modalObject.doggers = await contracts["Harbor"].methods.countShips(web3.utils.asciiToHex("Dogger")).call();
-        modalObject.doggerPrice = await contracts["Harbor"].methods.currentPrice(web3.utils.asciiToHex("Dogger")).call();
+
+
+    if(name=="Harbor"){
+      modalObject.doggers = await contracts["Harbor"].methods.countShips(web3.utils.asciiToHex("Dogger")).call();
+      modalObject.doggerPrice = await contracts["Harbor"].methods.currentPrice(web3.utils.asciiToHex("Dogger")).call();
+    }
+
+    if(name=="Fishmonger"){
+      modalObject.fish = [
+        "Pinner",
+        "Redbass",
+        "Catfish",
+        "Snark",
+        "Dangler",
+      ]
+      modalObject.prices = []
+      for(let f in modalObject.fish){
+        modalObject.prices[modalObject.fish[f]] = await contracts["Fishmonger"].methods.price(contracts[modalObject.fish[f]]._address).call();
       }
+      modalObject.filletPrice = await contracts["Fishmonger"].methods.filletPrice().call();
+      modalObject.filletBalance = await contracts["Fillet"].methods.balanceOf(contracts["Fishmonger"]._address).call();
+    }
 
-      if(name=="Fishmonger"){
-        modalObject.fish = [
-          "Pinner",
-          "Redbass",
-          "Catfish",
-          "Snark",
-          "Dangler",
-        ]
-        modalObject.prices = []
-        for(let f in modalObject.fish){
-          modalObject.prices[modalObject.fish[f]] = await contracts["Fishmonger"].methods.price(contracts[modalObject.fish[f]]._address).call();
-        }
-        modalObject.filletPrice = await contracts["Fishmonger"].methods.filletPrice().call();
-        modalObject.filletBalance = await contracts["Fillet"].methods.balanceOf(contracts["Fishmonger"]._address).call();
-      }
+    if(name=="Timber Camp"){
+      modalObject.resourceMin = (await contracts["TimberCamp"].methods.min().call()).replace(/[^a-z0-9]/gmi, "")
+      modalObject.resourceMax = (await contracts["TimberCamp"].methods.max().call()).replace(/[^a-z0-9]/gmi, "")
+      modalObject.resourceType = (web3.utils.hexToAscii(await contracts["TimberCamp"].methods.resource().call())).replace(/[^a-z0-9A-Z ]/gmi, "")
+    }
 
-
-
-      if(contracts[name].methods.getBalance) modalObject.balance = await contracts[name].methods.getBalance().call();
-      modalObject.copperBalance = await contracts["Copper"].methods.balanceOf(contracts[name]._address).call();
-      modalObject.filletBalance = await contracts["Fillet"].methods.balanceOf(contracts[name]._address).call();
-      modalObject.timberBalance = await contracts["Timber"].methods.balanceOf(contracts[name]._address).call();
-
-      console.log("copperBalance",contracts["Copper"]._address,name,contracts[name]._address,modalObject.copperBalance)
-
+    //if we have a contract for this tile, check the balance and display tokens that the contract owns
+    let cleanName = name.replace(" ","");
+    if(contracts[cleanName]){
+      if(contracts[cleanName].methods.getBalance) modalObject.balance = await contracts[cleanName].methods.getBalance().call();
+      modalObject.copperBalance = await contracts["Copper"].methods.balanceOf(contracts[cleanName]._address).call();
+      modalObject.filletBalance = await contracts["Fillet"].methods.balanceOf(contracts[cleanName]._address).call();
+      modalObject.timberBalance = await contracts["Timber"].methods.balanceOf(contracts[cleanName]._address).call();
+      console.log("copperBalance",contracts["Copper"]._address,cleanName,contracts[cleanName]._address,modalObject.copperBalance)
     }
 
     this.openModal(modalObject)
@@ -2573,6 +2579,18 @@ return (
           content.push(
             <div>
               <CreateTable image={"buildTimberCamp"} clickFn={this.buildTimberCamp.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index)}/>
+            </div>
+          )
+        }else if(OWNS_TILE && this.state.modalObject.name == "Timber Camp"){
+          let tileIndex = this.state.modalObject.index;
+          content.push(
+            <div>
+              <ResourceTable collect={(e)=>{
+                this.collect("TimberCamp",this.state.modalObject.index)
+                e.preventDefault()
+                e.stopPropagation()
+                return false
+              }} {...this.state.modalObject} web3={web3} blockNumber={this.state.blockNumber}/>
             </div>
           )
         }

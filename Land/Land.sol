@@ -140,6 +140,8 @@ contract Land is Galleasset, Ownable {
   function onTokenTransfer(address _sender, uint _amount, bytes _data) public isGalleasset("Land") returns (bool) {
     TokenTransfer(msg.sender,_sender,_amount,_data);
     //THIS HAS MOVED TO LANDLIB FOR FASTER DEV LOOP/UPGRADABILITY
+    //LandLib landLib = LandLib(getContract("LandLib"));
+    //landLib.onTokenTransfer(_sender,_amount,_data)
     return false;
   }
   event TokenTransfer(address token,address sender,uint amount,bytes data);
