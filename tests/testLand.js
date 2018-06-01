@@ -1,10 +1,15 @@
 const galleass = require("./galleass.js")
 
 //---------------- vvvvv ----------------- happens in deploy ------- //
+//---------------- //----------------
+galleass.compile("TimberCamp")
+galleass.deploy("TimberCamp",0)
+galleass.setContract("TimberCamp",0)
 //----------------
-galleass.compile("LandLib")
-galleass.deploy("LandLib",0)
-galleass.setContract("LandLib",0)
+//----------------
+// galleass.compile("LandLib")
+// galleass.deploy("LandLib",0)
+// galleass.setContract("LandLib",0)
 //----------------
 // galleass.compile("Citizens")
 // galleass.deploy("Citizens",0)

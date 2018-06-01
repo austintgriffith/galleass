@@ -48,67 +48,75 @@ contract LandLib is Galleasset, Ownable {
 
   //erc677 receiver
   function onTokenTransfer(address _sender, uint _amount, bytes _data) public isGalleasset("LandLib") returns (bool) {
-    Land landContract = Land(getContract("Land"));
     TokenTransfer(msg.sender,_sender,_amount,_data);
     uint8 action = uint8(_data[0]);
-    /*
-
     if(action==1){
-      //buy tile
-      address copperContractAddress = getContract("Copper");
-      require(msg.sender == copperContractAddress);
-      uint16 _x = uint16(_data[1]) << 8 | uint16(_data[2]);
-      uint16 _y = uint16(_data[3]) << 8 | uint16(_data[4]);
-      uint8 _tile = uint8(_data[5]);
-      require(priceAt[_x][_y][_tile]>0);//must be for sale
-      require(_amount>=priceAt[_x][_y][_tile]);
-      StandardToken copperContract = StandardToken(copperContractAddress);
-      require(copperContract.transfer(ownerAt[_x][_y][_tile],_amount));
-      ownerAt[_x][_y][_tile]=_sender;
-      //when a piece of land is purchased, an "onPurchase" function is called
-      // on the contract to help the inner contract track events and owners etc
-      if(contractAt[_x][_y][_tile]!=address(0)){
-         StandardTile tileContract = StandardTile(contractAt[_x][_y][_tile]);
-         tileContract.onPurchase(_x,_y,_tile,ownerAt[_x][_y][_tile],priceAt[_x][_y][_tile]);
-      }
-      BuyTile(_x,_y,_tile,ownerAt[_x][_y][_tile],priceAt[_x][_y][_tile],contractAt[_x][_y][_tile]);
-      priceAt[_x][_y][_tile]=0;
-      return true;
-    } else */
-    if(action==2){
-      //build timber camp
-      address copperContractAddress = getContract("Copper");
-      require(msg.sender == copperContractAddress);
-      uint16 _x = uint16(_data[1]) << 8 | uint16(_data[2]);
-      uint16 _y = uint16(_data[3]) << 8 | uint16(_data[4]);
-      uint8 _tile = uint8(_data[5]);
-
-      //they must own the tile
-      require(landContract.ownerAt(_x,_y,_tile)==_sender);
-      //they must send in 6 copper
-      require(_amount>=6);
-      StandardToken copperContract = StandardToken(copperContractAddress);
-      require(copperContract.transfer(getContract("Land"),_amount));
-      //must be built on a forest tile
-      require(landContract.tileTypeAt(_x,_y,_tile)==tileTypes["Forest"]);
-      //set new tile type
-      landContract.setTileTypeAt(_x,_y,_tile,tileTypes["TimberCamp"]);
-
-      //you also need to make sure that this address owns a citizen at this location with strength >2 or something
-
-      //set contract to timber camp
-      //contractAt[_x][_y][_tile] = getContract("TimberCamp");
-      //trigger the on purchase
-      //if(contractAt[_x][_y][_tile]!=address(0)){
-      //   StandardTile tileContract = StandardTile(contractAt[_x][_y][_tile]);
-      //   tileContract.onPurchase(_x,_y,_tile,ownerAt[_x][_y][_tile],priceAt[_x][_y][_tile]);
-      //}
-      Debug(_x,_y,_tile,tileTypes["TimberCamp"]);
-      return true;
+      return buyTile(_sender,_amount,_data);
+    } else if(action==2){
+      return buildTimberCamp(_sender,_amount,_data);
     }
+    return false;
   }
-  event Debug(uint16 _x,uint16 _y,uint8 _tile,uint16 _type);
   event TokenTransfer(address token,address sender,uint amount,bytes data);
+
+  function buyTile(address _sender, uint _amount, bytes _data) internal returns (bool) {
+    Land landContract = Land(getContract("Land"));
+    address copperContractAddress = getContract("Copper");
+    require(msg.sender == copperContractAddress);
+    uint16 _x = uint16(_data[1]) << 8 | uint16(_data[2]);
+    uint16 _y = uint16(_data[3]) << 8 | uint16(_data[4]);
+    uint8 _tile = uint8(_data[5]);
+    //must be for sale
+    require(landContract.priceAt(_x,_y,_tile)>0);
+    //must send at least enough as the price
+    require(_amount>=landContract.priceAt(_x,_y,_tile));
+    //transfer the copper to the Land Owner
+    StandardToken copperContract = StandardToken(copperContractAddress);
+    require(copperContract.transfer(landContract.ownerAt(_x,_y,_tile),_amount));
+    //set the new owner to the sender
+    landContract.setOwnerAt(_x,_y,_tile,_sender);
+    //when a piece of land is purchased, an "onPurchase" function is called
+    // on the contract to help the inner contract track events and owners etc
+    if(landContract.contractAt(_x,_y,_tile)!=address(0)){
+       StandardTile tileContract = StandardTile(landContract.contractAt(_x,_y,_tile));
+       if(tileContract!=address(0)){
+         tileContract.onPurchase(_x,_y,_tile,landContract.ownerAt(_x,_y,_tile),landContract.priceAt(_x,_y,_tile));
+       }
+    }
+    landContract.setPriceAt(_x,_y,_tile,0);
+    return true;
+  }
+
+  function buildTimberCamp(address _sender, uint _amount, bytes _data) internal returns (bool) {
+    Land landContract = Land(getContract("Land"));
+    //build timber camp
+    address copperContractAddress = getContract("Copper");
+    require(msg.sender == copperContractAddress);
+    uint16 _x = uint16(_data[1]) << 8 | uint16(_data[2]);
+    uint16 _y = uint16(_data[3]) << 8 | uint16(_data[4]);
+    uint8 _tile = uint8(_data[5]);
+
+    //they must own the tile
+    require(landContract.ownerAt(_x,_y,_tile)==_sender);
+    //they must send in 6 copper
+    require(_amount>=6);
+    //move that copper to the Land contract
+    StandardToken copperContract = StandardToken(copperContractAddress);
+    require(copperContract.transfer(getContract("Land"),_amount));
+    //must be built on a forest tile
+    require(landContract.tileTypeAt(_x,_y,_tile)==tileTypes["Forest"]);
+    //set new tile type
+    landContract.setTileTypeAt(_x,_y,_tile,tileTypes["TimberCamp"]);
+
+    //you also need to make sure that this address owns a citizen at this location with strength >2 or something
+
+    //set contract to timber camp
+    landContract.setContractAt(_x,_y,_tile,getContract("TimberCamp"));
+    StandardTile tileContract = StandardTile(landContract.contractAt(_x,_y,_tile));
+    tileContract.onPurchase(_x,_y,_tile,landContract.ownerAt(_x,_y,_tile),landContract.priceAt(_x,_y,_tile));
+
+    return true;
+  }
 
   function translateTileToWidth(uint16 _tileType) public constant returns (uint16) {
     if(_tileType==tileTypes["Water"]){
@@ -161,6 +169,9 @@ contract Land {
   mapping (uint16 => mapping (uint16 => uint256[18])) public priceAt;
   mapping (uint16 => mapping (uint16 => uint16)) public totalWidth;
   function setTileTypeAt(uint16 _x, uint16 _y, uint8 _tile,uint16 _type) public returns (bool) { }
+  function setContractAt(uint16 _x, uint16 _y, uint8 _tile,address _address) public returns (bool) { }
+  function setOwnerAt(uint16 _x, uint16 _y, uint8 _tile,address _owner) public returns (bool) { }
+  function setPriceAt(uint16 _x, uint16 _y, uint8 _tile,uint _price) public returns (bool) { }
 }
 
 contract StandardToken {

@@ -77,7 +77,8 @@ let loadContracts = [
   "Fillet",
   "Ipfs",
   "Village",
-  "Citizens"
+  "Citizens",
+  "TimberCamp"
 ]
 
 let inventoryTokens = [
@@ -140,6 +141,7 @@ class App extends Component {
       ships:[],
       citizens:[],
       clouds:[],
+      resources:[],
       blockNumber:0,
       offlineCounter:0,
       avgBlockTime:15000,
@@ -632,13 +634,31 @@ class App extends Component {
     }else{
       let land = this.state.land;
       let landOwners = this.state.landOwners;
+      let resources = this.state.resources;
       if(!land) land=[]
       if(!landOwners) landOwners=[]
+      if(!resources) resources=[]
       for(let l=0;l<18;l++){
-        let currentTileHere = await contracts["Land"].methods.tileTypeAt(this.state.landX,this.state.landY,l).call();
-        let ownerOfTileHere = await contracts["Land"].methods.ownerAt(this.state.landX,this.state.landY,l).call();
+        let currentTileHere = await contracts["Land"].methods.tileTypeAt(this.state.landX,this.state.landY,l).call()
+        let ownerOfTileHere = await contracts["Land"].methods.ownerAt(this.state.landX,this.state.landY,l).call()
+        let contractOfTileHere = await contracts["Land"].methods.contractAt(this.state.landX,this.state.landY,l).call()
+        let resourcesHere = {}
+        //console.log("CONTRACT HERE",contractOfTileHere,currentTileHere,ownerOfTileHere,this.state.account)
+        if(contractOfTileHere!="0x0000000000000000000000000000000000000000" && ownerOfTileHere && this.state.account && ownerOfTileHere.toLowerCase()==this.state.account.toLowerCase()){
+          if(currentTileHere==150){
+            //timber camp
+            //console.log("Checking on timber...")
+            let timberToCollect = await contracts["TimberCamp"].methods.canCollect(this.state.landX,this.state.landY,l).call()
+            //console.log("timberToCollect:",timberToCollect)
+            if(timberToCollect>0){
+              resourcesHere["Timber"]=timberToCollect
+              console.log("RESOURCES!",resourcesHere)
+            }
+          }
+        }
         land[l]=currentTileHere
         landOwners[l]=ownerOfTileHere
+        resources[l]=resourcesHere
       }
       if(land!=this.state.land || landOwners!=this.state.landOwners){
         console.log("LAND UPDATE",land,landOwners)
@@ -812,12 +832,28 @@ class App extends Component {
       }
     })
   }
+
   async sendToken(name,amount,toAddress){
     console.log("sendToken",name,amount,toAddress)
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
     contracts[name].methods.transfer(toAddress,amount).send({
       from: accounts[0],
       gas:120000,
+      gasPrice:this.state.GWEI * 1000000000
+    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+      console.log("RESULT:",receipt)
+      if(this.state.modalHeight>=0){
+        this.closeModal()
+      }
+    })
+  }
+  async collect(name,tile){
+    console.log("collect",name,tile,this.state.landX,this.state.landY)
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+    //  collect(uint16 _x,uint16 _y,uint8 _tile)
+    contracts[name].methods.collect(this.state.landX,this.state.landY,tile).send({
+      from: accounts[0],
+      gas:1000000,
       gasPrice:this.state.GWEI * 1000000000
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
@@ -908,7 +944,7 @@ class App extends Component {
     console.log("Building timber camp at  x:"+xHex+" y:"+yHex+" i:"+iHex+" for "+copper+" copper")
     contracts["Copper"].methods.transferAndCall(contracts["LandLib"]._address,copper,action+xHex+yHex+iHex).send({
       from: accounts[0],
-      gas:620000,
+      gas:500000,
       gasPrice:this.state.GWEI * 1000000000
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
@@ -933,10 +969,9 @@ class App extends Component {
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
 
     console.log("Purchasing land x:"+xHex+" y:"+yHex+" i:"+iHex+" for "+copper+" copper")
-    console.log(contracts["Land"]._address,copper,"0x01"+xHex+yHex+iHex)
-    contracts["Copper"].methods.transferAndCall(contracts["Land"]._address,copper,"0x01"+xHex+yHex+iHex).send({
+    contracts["Copper"].methods.transferAndCall(contracts["LandLib"]._address,copper,"0x01"+xHex+yHex+iHex).send({
       from: accounts[0],
-      gas:220000,
+      gas:320000,
       gasPrice:this.state.GWEI * 1000000000
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
@@ -1826,7 +1861,7 @@ let sea = (
 
 let land = (
   <div style={{position:"absolute",left:0,top:horizon-60,width:width}} >
-  <Land land={this.state.land} landOwners={this.state.landOwners} Blockies={Blockies} web3={web3} tileClick={this.tileClick.bind(this)}/>
+  <Land collect={this.collect.bind(this)} land={this.state.land} landOwners={this.state.landOwners} resources={this.state.resources} Blockies={Blockies} web3={web3} tileClick={this.tileClick.bind(this)}/>
   </div>
 )
 
@@ -2416,6 +2451,8 @@ return (
           image = "blank_hills.png"
         }else if(this.state.modalObject.name.indexOf("Hills")>=0){
           image = "blank_grass.png"
+        }else if(this.state.modalObject.name.indexOf("Timber Camp")>=0){
+          image = "timbercamptile.png"
         }
 
         const OWNS_TILE = (this.state.account && this.state.modalObject.owner && this.state.account.toLowerCase()==this.state.modalObject.owner.toLowerCase())

@@ -25,7 +25,7 @@ class Land extends Component {
       </div>
     )
   }
-  landTile(location,owner,type){
+  landTile(location,owner,type,buttons){
 
     let blockieOpacity = 0.1
     if(this.state.account&&owner.toLowerCase()==this.state.account.toLowerCase()){
@@ -45,6 +45,9 @@ class Land extends Component {
           seed={owner.toLowerCase()}
           scale={2}
         />
+      </div>
+      <div style={{position:"relative",marginLeft:87/2-20,marginTop:-40}}>
+        {buttons}
       </div>
       </div>
     )
@@ -248,6 +251,8 @@ class Land extends Component {
       let tempIsland = [];
       let buildingIsland = false;
 
+
+
       for(let l=0;l<this.props.land.length;l++)
       {
         let thisTile = this.props.land[l]
@@ -274,102 +279,136 @@ class Land extends Component {
       let currentPixelLocation = 0
       let renderedIslands = []
 
-      let tiles = [];
+      let tiles = []
+
+
+      let tileCount = 0
 
       for(let i in islands){
-      //  console.log("islands[i]",islands[i])
 
         if(typeof islands[i] == "number"){
           //ocean
           if(DEBUGLANDRENDER) console.log("(WATER)")
           currentPixelLocation+=95
+          tileCount++
         }else{
           if(DEBUGLANDRENDER) console.log("LEFT EDGE")
           tiles.push(this.edgeTile(currentPixelLocation,"left"))
           currentPixelLocation+=114
           for(let t in islands[i]){
+
+            let buttons = []
+
+            let buttonCount = 0
+            for(let r in this.props.resources[tileCount]){
+
+              let amount = parseInt(this.props.resources[tileCount][r])
+              for(let c=0;c<amount;c++){
+                let offset = (10*c)-(10*amount)
+                //console.log("offset",offset)
+                let thisTileCount = tileCount
+                buttons.push(
+                  <div key={"Button"+t+"_"+r+"_"+c} style={{
+                    width:40,
+                    height:40,
+                    position:'absolute',
+                    left:0,
+                    top:offset+15,
+                  }} onClick={(e)=>{
+                    this.props.collect("TimberCamp",thisTileCount)
+                    e.preventDefault()
+                    e.stopPropagation()
+                    return false
+                  }}>
+                    <img src="collectTimber.png" style={{maxWidth:40,maxHeight:40}} />
+                  </div>
+                )
+              }
+            }
+            tileCount++
+
             if(DEBUGLANDRENDER) console.log("ADD TILE",islands[i][t])
             if(islands[i][t].tile==1){
               tiles.push(
                 this.wrapLandTileWithLink("Grass",islands[i][t].index,currentPixelLocation,
-                  this.hillsMain(currentPixelLocation,islands[i][t].owner)
+                  this.hillsMain(currentPixelLocation,islands[i][t].owner,buttons)
                 )
               )
               currentPixelLocation+=120
             }else if(islands[i][t].tile==2){
               tiles.push(
                 this.wrapLandTileWithLink("Grass",islands[i][t].index,currentPixelLocation,
-                  this.grassMain(currentPixelLocation,islands[i][t].owner)
+                  this.grassMain(currentPixelLocation,islands[i][t].owner,buttons)
                 )
               )
               currentPixelLocation+=120
             }else if(islands[i][t].tile==3){
               tiles.push(
                 this.wrapLandTileWithLink("Stream",islands[i][t].index,currentPixelLocation,
-                  this.streamMain(currentPixelLocation,islands[i][t].owner)
+                  this.streamMain(currentPixelLocation,islands[i][t].owner,buttons)
                 )
               )
               currentPixelLocation+=120
             }else if(islands[i][t].tile==50){
               tiles.push(
                 this.wrapLandTileWithLink("Grass Resource",islands[i][t].index,currentPixelLocation,
-                  this.landTile(currentPixelLocation,islands[i][t].owner,"grass")
+                  this.landTile(currentPixelLocation,islands[i][t].owner,"grass",buttons)
                 )
               )
               currentPixelLocation+=87
             }else if(islands[i][t].tile==51){
               tiles.push(
                 this.wrapLandTileWithLink("Forest Resource",islands[i][t].index,currentPixelLocation,
-                  this.landTile(currentPixelLocation,islands[i][t].owner,"forest")
+                  this.landTile(currentPixelLocation,islands[i][t].owner,"forest",buttons)
                 )
               )
               currentPixelLocation+=87
             }else if(islands[i][t].tile==52){
               tiles.push(
                 this.wrapLandTileWithLink("Mountain Resource",islands[i][t].index,currentPixelLocation,
-                  this.landTile(currentPixelLocation,islands[i][t].owner,"mountain")
+                  this.landTile(currentPixelLocation,islands[i][t].owner,"mountain",buttons)
                 )
               )
               currentPixelLocation+=87
             }else if(islands[i][t].tile==53){
               tiles.push(
                 this.wrapLandTileWithLink("Copper Mountain Resource",islands[i][t].index,currentPixelLocation,
-                  this.landTile(currentPixelLocation,islands[i][t].owner,"coppermountain")
+                  this.landTile(currentPixelLocation,islands[i][t].owner,"coppermountain",buttons)
                 )
               )
               currentPixelLocation+=87
             }else if(islands[i][t].tile==54){
               tiles.push(
                 this.wrapLandTileWithLink("Silver Mountain Resource",islands[i][t].index,currentPixelLocation,
-                  this.landTile(currentPixelLocation,islands[i][t].owner,"silvermountain")
+                  this.landTile(currentPixelLocation,islands[i][t].owner,"silvermountain",buttons)
                 )
               )
               currentPixelLocation+=87
             }else if(islands[i][t].tile==100){
               tiles.push(
                 this.wrapLandTileWithLink("Harbor",islands[i][t].index,currentPixelLocation,
-                  this.harborTile(currentPixelLocation,islands[i][t].owner)
+                  this.harborTile(currentPixelLocation,islands[i][t].owner,buttons)
                 )
               )
               currentPixelLocation+=120
             }else if(islands[i][t].tile==101){
               tiles.push(
                 this.wrapLandTileWithLink("Fishmonger",islands[i][t].index,currentPixelLocation,
-                  this.fishMongerTile(currentPixelLocation,islands[i][t].owner)
+                  this.fishMongerTile(currentPixelLocation,islands[i][t].owner,buttons)
                 )
               )
               currentPixelLocation+=120
             }else if(islands[i][t].tile==102){
               tiles.push(
                 this.wrapLandTileWithLink("Castle",islands[i][t].index,currentPixelLocation,
-                  this.castleTile(currentPixelLocation,islands[i][t].owner)
+                  this.castleTile(currentPixelLocation,islands[i][t].owner,buttons)
                 )
               )
               currentPixelLocation+=120
             }else if(islands[i][t].tile==150){
               tiles.push(
                 this.wrapLandTileWithLink("Timber Camp",islands[i][t].index,currentPixelLocation,
-                  this.landTile(currentPixelLocation,islands[i][t].owner,"timbercamp")
+                  this.landTile(currentPixelLocation,islands[i][t].owner,"timbercamp",buttons)
                 )
               )
               currentPixelLocation+=87
@@ -377,7 +416,7 @@ class Land extends Component {
               //console.log("VILLAGE:",islands[i][t])
               tiles.push(
                 this.wrapLandTileWithLink("Village",islands[i][t].index,currentPixelLocation,
-                  this.villageTile(currentPixelLocation,islands[i][t].owner)
+                  this.villageTile(currentPixelLocation,islands[i][t].owner,buttons)
                 )
               )
               currentPixelLocation+=120

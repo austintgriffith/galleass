@@ -31,6 +31,7 @@ let loadContracts = [
   "Galleasset",
   "Staged",
   "LandLib",
+  "TimberCamp"
 ]
 
 contractsHtml = "<table cellspacing='0' cellpadding='10' border='0'>"
