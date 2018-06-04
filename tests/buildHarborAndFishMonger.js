@@ -33,10 +33,13 @@ galleass.buyFirstLandTile(0)
 //create buildings in the middle...
 galleass.editMiddleTile(0,"Harbor",100)
 galleass.editMiddleTile(0,"Fishmonger",101)
-galleass.editMiddleTile(0,"Village",2000)//,"0x34aa3f359a9d614239015126635ce7732c18fdf3")
+galleass.editMiddleTile(0,"Village",102)
 
-//put the village up for sale
-galleass.setPriceOfFirstTileOfType(0,2000,6)
+// no need for this now until you go 667// galleass.approveContract("Timber",0,"Land",6)
+//find a spot searching left to right for  (main hills or main grass =) and build a 2000 (village)
+// galleass.buildTileOnFirstTileOfTypes(0,[1,2],2000)
+// //put the village up for sale
+// galleass.setPriceOfFirstTileOfType(0,2000,6)
 
 //put all open land tiles up for sale
 galleass.setPriceOfAllOpemLandTiles(0,3)
@@ -44,6 +47,3 @@ galleass.setPriceOfAllOpemLandTiles(0,3)
 //mint 6 timber to account 0
 galleass.testMint("Timber",0,0,6)
 //approve the land contract to take timber from account 0
-// no need for this now until you go 667// galleass.approveContract("Timber",0,"Land",6)
-//find a spot searching left to right for  (main hills or main grass =) and build a 2000 (village)
-galleass.buildTileOnFirstTileOfTypes(0,[1,2],2000)

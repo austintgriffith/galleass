@@ -229,7 +229,7 @@ class App extends Component {
 			console.log("GAS",response.data)
 			if(response.data.average>0&&response.data.average<200){
 				response.data.average=response.data.average+2
-				let setMainGasTo = response.data.average/10
+				let setMainGasTo = Math.round(response.data.average)/10
         console.log("SET GAS ",setMainGasTo)
 				this.setState({GWEI:setMainGasTo})
 			}
@@ -733,7 +733,7 @@ class App extends Component {
             value: currentPrice,
             from: accounts[0],
             gas:130000,
-            gasPrice:this.state.GWEI * 1000000000
+            gasPrice:Math.round(this.state.GWEI * 1000000000)
           },(error,hash)=>{
             console.log("CALLBACK!",error,hash)
             this.setState({currentTx:hash});
@@ -764,7 +764,7 @@ class App extends Component {
     contracts["Sea"].methods.disembark(this.state.ships[this.state.account].id).send({
       from: accounts[0],
       gas:200000,
-      gasPrice:this.state.GWEI * 1000000000
+      gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
       this.setState({currentTx:hash});
@@ -785,7 +785,7 @@ class App extends Component {
     contracts["Sea"].methods.embark(this.state.inventoryDetail['Dogger'][0]).send({
       from: accounts[0],
       gas:200000,
-      gasPrice:this.state.GWEI * 1000000000
+      gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
       this.setState({currentTx:hash});
@@ -807,7 +807,7 @@ class App extends Component {
     contracts["Fishmonger"].methods.sellFish(fishContract._address,1).send({
       from: accounts[0],
       gas:330000,
-      gasPrice:this.state.GWEI * 1000000000
+      gasPrice:Math.round(this.state.GWEI * 1000000000)
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
@@ -824,7 +824,7 @@ class App extends Component {
     contracts["Copper"].methods.transferAndCall(contracts["Fishmonger"]._address,filletPrice*buyAmount,"0x01").send({
       from: accounts[0],
       gas:120000,
-      gasPrice:this.state.GWEI * 1000000000
+      gasPrice:Math.round(this.state.GWEI * 1000000000)
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
@@ -839,7 +839,7 @@ class App extends Component {
     contracts[name].methods.transfer(toAddress,amount).send({
       from: accounts[0],
       gas:120000,
-      gasPrice:this.state.GWEI * 1000000000
+      gasPrice:Math.round(this.state.GWEI * 1000000000)
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
@@ -854,7 +854,7 @@ class App extends Component {
     contracts[name].methods.collect(this.state.landX,this.state.landY,tile).send({
       from: accounts[0],
       gas:120000,
-      gasPrice:this.state.GWEI * 1000000000
+      gasPrice:Math.round(this.state.GWEI * 1000000000)
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
@@ -869,7 +869,7 @@ class App extends Component {
     contracts["Citizens"].methods.setPrice(id,wei).send({
       from: accounts[0],
       gas:300000,
-      gasPrice:this.state.GWEI * 1000000000
+      gasPrice:Math.round(this.state.GWEI * 1000000000)
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
@@ -883,7 +883,7 @@ class App extends Component {
     contracts["Citizens"].methods.moveCitizen(id,tile).send({
       from: accounts[0],
       gas:300000,
-      gasPrice:this.state.GWEI * 1000000000
+      gasPrice:Math.round(this.state.GWEI * 1000000000)
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
@@ -897,7 +897,7 @@ class App extends Component {
     contracts["Village"].methods.createCitizen(x,y,tile).send({
       from: accounts[0],
       gas:300000,
-      gasPrice:this.state.GWEI * 1000000000
+      gasPrice:Math.round(this.state.GWEI * 1000000000)
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
@@ -917,7 +917,7 @@ class App extends Component {
     contracts["Land"].methods.buildTile(mainX,mainY,tileIndex,newTileType).send({
       from: accounts[0],
       gas:220000,
-      gasPrice:this.state.GWEI * 1000000000
+      gasPrice:Math.round(this.state.GWEI * 1000000000)
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
@@ -925,7 +925,7 @@ class App extends Component {
       }
     })
   }
-  async buildTimberCamp(x,y,i){
+  async buildTimberCamp(x,y,i,citizenId){
     let copper = 6
     let action = "0x02"
     console.log("BUILD TIMBER CAMP ",x,y,i,copper)
@@ -937,15 +937,23 @@ class App extends Component {
     let iHex = parseInt(i).toString(16)
     while(iHex.length<2) iHex="0"+iHex;
 
-    console.log("hex:",xHex,yHex,iHex)
+    let citizenHex = web3.utils.toHex(""+citizenId)
+
+    console.log("hex:",xHex,yHex,iHex,citizenHex)
 
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
 
-    console.log("Building timber camp at  x:"+xHex+" y:"+yHex+" i:"+iHex+" for "+copper+" copper")
-    contracts["Copper"].methods.transferAndCall(contracts["LandLib"]._address,copper,action+xHex+yHex+iHex).send({
+    console.log("Building timber camp at  x:"+xHex+" y:"+yHex+" i:"+iHex+" for "+copper+" copper with citizen "+citizenHex)
+    citizenHex = citizenHex.replace("0x","")
+    if(citizenHex.length%2==1){
+      citizenHex="0"+citizenHex;
+    }
+    let finalHex = action+xHex+yHex+iHex+citizenHex
+    console.log("finalHex:",finalHex)
+    contracts["Copper"].methods.transferAndCall(contracts["LandLib"]._address,copper,finalHex).send({
       from: accounts[0],
-      gas:500000,
-      gasPrice:this.state.GWEI * 1000000000
+      gas:300000,
+      gasPrice:Math.round(this.state.GWEI * 1000000000)
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
@@ -972,7 +980,7 @@ class App extends Component {
     contracts["Copper"].methods.transferAndCall(contracts["LandLib"]._address,copper,"0x01"+xHex+yHex+iHex).send({
       from: accounts[0],
       gas:320000,
-      gasPrice:this.state.GWEI * 1000000000
+      gasPrice:Math.round(this.state.GWEI * 1000000000)
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
@@ -995,7 +1003,7 @@ class App extends Component {
     contracts["Land"].methods.setPrice(x,y,i,copper).send({
       from: accounts[0],
       gas:120000,
-      gasPrice:this.state.GWEI * 1000000000
+      gasPrice:Math.round(this.state.GWEI * 1000000000)
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
@@ -1013,7 +1021,7 @@ class App extends Component {
       contracts["Sea"].methods.setSail(direction).send({
         from: _accounts[0],
         gas:40000,
-        gasPrice:this.state.GWEI * 1000000000
+        gasPrice:Math.round(this.state.GWEI * 1000000000)
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
         this.setState({currentTx:hash});
@@ -1034,7 +1042,7 @@ class App extends Component {
       contracts["Sea"].methods.dropAnchor().send({
         from: _accounts[0],
         gas:40000,
-        gasPrice:this.state.GWEI * 1000000000
+        gasPrice:Math.round(this.state.GWEI * 1000000000)
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
         this.setState({currentTx:hash});
@@ -1057,7 +1065,7 @@ class App extends Component {
       contracts["Sea"].methods.castLine(baitHash).send({
         from: _accounts[0],
         gas:60000,
-        gasPrice:this.state.GWEI * 1000000000
+        gasPrice:Math.round(this.state.GWEI * 1000000000)
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
         this.setState({currentTx:hash});
@@ -1128,7 +1136,7 @@ class App extends Component {
       contracts["Sea"].methods.reelIn(bestId,baitToUse).send({
         from: _accounts[0],
         gas:200000,
-        gasPrice:this.state.GWEI * 1000000000
+        gasPrice:Math.round(this.state.GWEI * 1000000000)
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
         this.setState({currentTx:hash});
@@ -1444,6 +1452,11 @@ class App extends Component {
       }
       modalObject.filletPrice = await contracts["Fishmonger"].methods.filletPrice().call();
       modalObject.filletBalance = await contracts["Fillet"].methods.balanceOf(contracts["Fishmonger"]._address).call();
+    }
+
+    if(name=="Market"){
+      modalObject.timberPrice = await contracts["Market"].methods.price(web3.utils.asciiToHex("Timber")).call();
+      modalObject.filletBalance = await contracts["Market"].methods.balanceOf(contracts["Fishmonger"]._address).call();
     }
 
     if(name=="Timber Camp"){
@@ -2567,6 +2580,29 @@ return (
           )
         }
 
+        if(this.state.modalObject.name == "Market"){
+          let buyArray = [{
+            amount: "1",
+            balance: this.state.modalObject.timberBalance,
+            first:"timber",
+            price: this.state.modalObject.timberPrice,
+            second:"copper",
+            clickFn: this.buyFillet.bind(this),
+          }]
+          let sellArray = [{
+              amount:"1",
+              balance:false,
+              first:"timber",
+              price:this.state.modalObject.timberPrice,
+              second:"copper",
+              clickFn: this.sellFish.bind(this,this.state.modalObject.fish[f]),
+            }]
+          }
+          content.push(
+            <BuySellTable buyArray={buyArray} sellArray={sellArray}/>
+          )
+        }
+
         if(OWNS_TILE && this.state.modalObject.name == "Village"){
           let tileIndex = this.state.modalObject.index;
           content.push(
@@ -2576,11 +2612,19 @@ return (
           )
         }else if(OWNS_TILE && this.state.modalObject.name == "Forest Resource"){
           let tileIndex = this.state.modalObject.index;
-          content.push(
-            <div>
-              <CreateTable image={"buildTimberCamp"} clickFn={this.buildTimberCamp.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index)}/>
-            </div>
-          )
+          if(!this.state.modalObject.citizens||!this.state.modalObject.citizens[0]||!this.state.modalObject.citizens[0].id){
+            content.push(
+              <div style={{marginTop:80}}>
+                <Writing style={{verticalAlign:'middle',opacity:0.9}} string={"Move a citizen here (tile "+this.state.modalObject.index+") to build a Timber Camp"} size={20}/>
+              </div>
+            )
+          }else{
+            content.push(
+              <div style={{marginTop:60}}>
+                <CreateTable image={"buildTimberCamp"} clickFn={this.buildTimberCamp.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,this.state.modalObject.citizens[0].id)}/>
+              </div>
+            )
+          }
         }else if(OWNS_TILE && this.state.modalObject.name == "Timber Camp"){
           let tileIndex = this.state.modalObject.index;
           content.push(

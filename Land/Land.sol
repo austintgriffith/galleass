@@ -127,6 +127,7 @@ contract Land is Galleasset, Ownable {
         require( timberContract.galleassTransferFrom(msg.sender,address(this),6) ); //charge 6 timber
         tileTypeAt[_x][_y][_tile] = _newTileType;
         contractAt[_x][_y][_tile] = getContract("Village");
+        StandardTile(contractAt[_x][_y][_tile]).onPurchase(_x,_y,_tile,msg.sender,0);
         return true;
       }else{
         return false;

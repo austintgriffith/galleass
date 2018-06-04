@@ -24,3 +24,11 @@ run
 Set DEBUG_SYNCCITIZENS to true to see how bad it is
 I have a new event parser built and I should integrate it into Galleass
 ```
+
+
+
+### Possible Changes
+```
+Citizen chars are uint16 but you could have more if you use uint8
+Citizen status should probably be uint16 
+```

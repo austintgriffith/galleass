@@ -131,7 +131,7 @@ contract Citizens is Galleasset, NFT {
       require( getTokens(msg.sender,food3,1) );*/
 
       //for now there are only fillets, eventually a complex funtion will take in the food and output the characteristics
-      bytes32 characteristics = 0x0101010000000000000000000000000000000000000000000000000000000000;
+      bytes32 characteristics = 0x0005000500000000000000000000000000000000000000000000000000000000;
 
       //genes will at first be random but then maybe they will be mixed... like you might need
       //to not only have food, but a couple citizens in the village too and you would use
@@ -141,17 +141,13 @@ contract Citizens is Galleasset, NFT {
       _createCitizen(owner,1,0,_x,_y,_tile,genes,characteristics);
     }
 
-    /*
-    function formatStatus(uint8 _status,uint16 _x,uint16 _y,uint8 _tile,uint _data) internal returns (bytes32){
-      bytes32 status = 0x0000000000000000000000000000000000000000000000000000000000000000;
-      status = status | (bytes32(_status) << 8*31);
-      status = status | (bytes32(_x) << 8*29);
-      status = status | (bytes32(_y) << 8*27);
-      status = status | (bytes32(_tile) << 8*26);
-      status = status | (bytes32(_data) & statusMask);
-      return status;
+    function setStatus(uint _id,uint8 _status) public isGalleasset("Citizens") returns (bool){
+      require(hasPermission(msg.sender,"useCitizens"));
+      Citizen c = citizens[_id];
+      c.status = _status;
+      emit CitizenUpdate(_id,c.x,c.y,c.tile,tokenIndexToOwner[_id],c.status,c.data,c.genes,c.characteristics);
+      return true;
     }
-    */
 
     function _createCitizen(address _owner,uint8 _status,uint _data,uint16 _x,uint16 _y, uint8 _tile, bytes32 _genes, bytes32 _characteristics) internal returns (uint){
         Citizen memory _citizen = Citizen({

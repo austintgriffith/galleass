@@ -4,7 +4,7 @@ import Writing from '../Writing.js'
 class BuildTable extends Component {
   render(){
     return (
-      <div onClick={this.props.clickFn.bind(this,this.props.tileIndex,2000)}>
+      <div onClick={this.props.clickFn.bind(this,this.props.tileIndex,2000)} style={{cursor:"pointer"}}>
         <img src="/buyvillage.png" />
       </div>
     )

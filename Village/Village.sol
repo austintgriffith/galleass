@@ -23,7 +23,7 @@ contract Village is Galleasset, Ownable {
   */
 
   //      land x            land y          land tile
-  mapping(uint16 => mapping(uint16 => mapping(uint8 => address))) landOwners;
+  mapping(uint16 => mapping(uint16 => mapping(uint8 => address))) public landOwners;
 
   function Village(address _galleass) public Galleasset(_galleass) { }
   function () public {revert();}

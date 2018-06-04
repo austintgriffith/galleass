@@ -35,6 +35,7 @@ contract LandLib is Galleasset, Ownable {
 
     tileTypes["Harbor"]=100;
     tileTypes["Fishmonger"]=101;
+    tileTypes["Market"]=102;
 
     tileTypes["TimberCamp"]=150;
 
@@ -83,6 +84,7 @@ contract LandLib is Galleasset, Ownable {
          tileContract.onPurchase(_x,_y,_tile,landContract.ownerAt(_x,_y,_tile),landContract.priceAt(_x,_y,_tile));
        }
     }
+    //clear the price so it isn't for sale anymore
     landContract.setPriceAt(_x,_y,_tile,0);
     return true;
   }
@@ -105,17 +107,65 @@ contract LandLib is Galleasset, Ownable {
     require(copperContract.transfer(getContract("Land"),_amount));
     //must be built on a forest tile
     require(landContract.tileTypeAt(_x,_y,_tile)==tileTypes["Forest"]);
+
+
+    //assuming the we used the fist 6 bytes of the data for action,x,y,tile we will use the rest as the id of
+    // the citizen that will be building the timber camp
+    uint citizenId = uint(getRemainingBytes(6,_data));
+    //make sure that this address owns a citizen at this location with strength and stamina > 1
+    // if everything is right, set the status to timber camp
+    require(useCitizenAsLumberjack(_sender,_x,_y,_tile,citizenId));
+
     //set new tile type
     landContract.setTileTypeAt(_x,_y,_tile,tileTypes["TimberCamp"]);
 
-    //you also need to make sure that this address owns a citizen at this location with strength >2 or something
-
+    //Debug(getContract("TimberCamp"));
     //set contract to timber camp
     landContract.setContractAt(_x,_y,_tile,getContract("TimberCamp"));
     StandardTile tileContract = StandardTile(landContract.contractAt(_x,_y,_tile));
     tileContract.onPurchase(_x,_y,_tile,landContract.ownerAt(_x,_y,_tile),landContract.priceAt(_x,_y,_tile));
 
     return true;
+  }
+  //event Debug(bytes32 citizenBytes,uint8 b,uint8 d, bytes32 thisByte);
+  event Debug(address TimberCamp);
+
+  function useCitizenAsLumberjack(address _sender, uint16 _x, uint16 _y, uint8 _tile,uint _citizen) internal constant returns (bool){
+    Citizens citizensContract = Citizens(getContract("Citizens"));
+    address owner;
+    uint8 status;
+    uint16 x;
+    uint16 y;
+    uint8 tile;
+    bytes32 characteristics;
+    (owner,status,,x,y,tile,,characteristics,) = citizensContract.getToken(_citizen);
+    //sender must own citizen
+    require(owner==_sender);
+    //citizen must be idle
+    require(status==1);
+    //citizen must be at location
+    require(_x==x);
+    require(_y==y);
+    require(_tile==tile);
+    //citizen must have enough strength and stamina to be a lumberjack
+    uint16 strength;
+    uint16 stamina;
+    (strength,stamina,,,,,) = citizensContract.getCitizenBaseCharacteristics(_citizen);
+    require(strength>1);
+    require(stamina>1);
+    //set citizen status to TimberCamp tile type (lumberjack!)
+    require(citizensContract.setStatus(_citizen,uint8(tileTypes["TimberCamp"])));
+    return true;
+  }
+
+
+  function getRemainingBytes(uint8 _offset, bytes _data) internal constant returns (bytes32 newBytes){
+    uint8 b = 31;
+    uint8 d = uint8(_data.length-1);
+    while(d>_offset-1){
+      newBytes |= bytes32(_data[d--] & 0xFF) >> (b-- * 8);
+    }
+    return newBytes;
   }
 
   function translateTileToWidth(uint16 _tileType) public constant returns (uint16) {
@@ -156,6 +206,12 @@ contract LandLib is Galleasset, Ownable {
     }
   }
 
+}
+
+contract Citizens {
+  function setStatus(uint _id,uint8 _status) returns (bool) { }
+  function getCitizenBaseCharacteristics(uint256 _id) public view returns (uint16 strength,uint16 stamina,uint16 dexterity,uint16 intelligence,uint16 ambition,uint16 rigorous,uint16 industrious) { }
+  function getToken(uint256 _id) public view returns (address owner,uint8 status,uint data,uint16 x,uint16 y,uint8 tile, bytes32 genes,bytes32 characteristics,uint64 birth) { }
 }
 
 contract Land {

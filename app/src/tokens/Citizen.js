@@ -18,6 +18,8 @@ class Citizen extends Component {
       return "idle"
     }else if(statusInt==2){
       return "for sale ("+this.props.web3.utils.fromWei(""+data,"ether")+")"
+    }else if(statusInt==150){
+      return "lumberjack"
     }else{
       return "unknown"
     }

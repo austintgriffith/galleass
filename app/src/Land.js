@@ -167,6 +167,22 @@ class Land extends Component {
       </div>
     )
   }
+  marketTile(location,owner){
+    let mainWidth = 120
+    let mainHeight = 125
+    return (
+      <div key={"Land"+location} style={{
+        position:'absolute',
+        left:location,
+        backgroundImage:'url("blank_grass.png")',
+        backgroundRepeat:'no-repeat',
+        width:mainWidth,
+        height:mainHeight
+      }}>
+        <img style={{position:'absolute',top:3,left:20}} src="market.png" />
+      </div>
+    )
+  }
   click(e){
     console.log(e.target)
   }
@@ -398,7 +414,14 @@ class Land extends Component {
                 )
               )
               currentPixelLocation+=120
-            }else if(islands[i][t].tile==102){
+            } else if(islands[i][t].tile==102){
+                tiles.push(
+                  this.wrapLandTileWithLink("Market",islands[i][t].index,currentPixelLocation,
+                    this.marketTile(currentPixelLocation,islands[i][t].owner,buttons)
+                  )
+                )
+                currentPixelLocation+=120
+              }else if(islands[i][t].tile==102){
               tiles.push(
                 this.wrapLandTileWithLink("Castle",islands[i][t].index,currentPixelLocation,
                   this.castleTile(currentPixelLocation,islands[i][t].owner,buttons)
