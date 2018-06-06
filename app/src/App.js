@@ -25,8 +25,8 @@ import BuildTable from './modal/BuildTable.js'
 import CreateTable from './modal/CreateTable.js'
 import ResourceTable from './modal/ResourceTable.js'
 import SendToken from './modal/SendToken.js'
+import BuySellOwner from './modal/BuySellOwner.js'
 
-import axios from 'axios'
 /*
 assuming that galleassBlockNumber is the oldest block for all contracts
 that means if you redeploy the galleass contract you have to redeploy ALL
@@ -34,12 +34,14 @@ of the other ones or rebuild this logic (maybe just always use the original)
 this is used for event look back
 */
 import galleassAbi from './Galleass.abi.js'
-import Blockies from 'react-blockies';
 import Fish from './Fish.js'
 import Land from './Land.js'
 import Ships from './Ships.js'
 import Clouds from './Clouds.js'
 import Inventory from './Inventory.js'
+
+import axios from 'axios'
+import Blockies from 'react-blockies';
 import Metamask from './Metamask.js'
 import {Motion, spring, presets} from 'react-motion';
 const ReactHint = ReactHintFactory(React)
@@ -79,7 +81,8 @@ let loadContracts = [
   "Ipfs",
   "Village",
   "Citizens",
-  "TimberCamp"
+  "TimberCamp",
+  "Market"
 ]
 
 let inventoryTokens = [
@@ -832,7 +835,64 @@ class App extends Component {
       }
     })
   }
+  async testMarket(x,y,i){
+    console.log("TEST MARKET")
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
 
+    let xHex = parseInt(x).toString(16)
+    while(xHex.length<4) xHex="0"+xHex;
+    let yHex = parseInt(y).toString(16)
+    while(yHex.length<4) yHex="0"+yHex;
+    let iHex = parseInt(i).toString(16)
+    while(iHex.length<2) iHex="0"+iHex;
+
+    let addressHex = contracts["Timber"]._address
+    addressHex = addressHex.replace("0x","")
+    if(addressHex.length%2==1){
+      addressHex="0"+addressHex;
+    }
+
+    let amountToBuy = web3.utils.toHex(257)
+    amountToBuy = amountToBuy.replace("0x","")
+    if(amountToBuy.length%2==1){
+      amountToBuy="0"+amountToBuy;
+    }
+
+    let amountOfCopper = 1
+
+    let action = "0x01"
+
+    let finalHex = action+xHex+yHex+iHex+addressHex+amountToBuy
+
+    console.log("Test market at  x:"+xHex+" y:"+yHex+" i:"+iHex+" for "+amountOfCopper+" copper with finalHex: "+finalHex)
+
+    contracts["Copper"].methods.transferAndCall(contracts["Market"]._address,amountOfCopper,finalHex).send({
+      from: accounts[0],
+      gas:500000,
+      gasPrice:Math.round(this.state.GWEI * 1000000000)
+    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+      console.log("RESULT:",receipt)
+      if(this.state.modalHeight>=0){
+        this.closeModal()
+      }
+    })
+  }
+  async setSellPrice(x,y,tile,tokenAddress,price){
+    console.log("setSellPrice",x,y,tile,tokenAddress,price)
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+    //setSellPrice(uint16 _x,uint16 _y,uint8 _tile,address _token,uint _price
+    console.log("setSellPrice.....")
+    contracts["Market"].methods.setSellPrice(x,y,tile,tokenAddress,price).send({
+      from: accounts[0],
+      gas:250000,
+      gasPrice:Math.round(this.state.GWEI * 1000000000)
+    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+      console.log("RESULT:",receipt)
+      if(this.state.modalHeight>=0){
+        this.closeModal()
+      }
+    })
+  }
   async sendToken(name,amount,toAddress){
     console.log("sendToken",name,amount,toAddress)
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
@@ -976,7 +1036,7 @@ class App extends Component {
 
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
 
-    console.log("Purchasing land x:"+xHex+" y:"+yHex+" i:"+iHex+" for "+copper+" copper")
+    console.log("Purchasing land for account ("+accounts[0]+") x:"+xHex+" y:"+yHex+" i:"+iHex+" for "+copper+" copper")
     contracts["Copper"].methods.transferAndCall(contracts["LandLib"]._address,copper,"0x01"+xHex+yHex+iHex).send({
       from: accounts[0],
       gas:320000,
@@ -1455,8 +1515,8 @@ class App extends Component {
     }
 
     if(name=="Market"){
-      modalObject.timberPrice = await contracts["Market"].methods.price(web3.utils.asciiToHex("Timber")).call();
-      modalObject.filletBalance = await contracts["Market"].methods.balanceOf(contracts["Fishmonger"]._address).call();
+      //modalObject.timberPrice = await contracts["Market"].methods.price(web3.utils.asciiToHex("Timber")).call();
+      //modalObject.filletBalance = await contracts["Market"].methods.balanceOf(contracts["Fishmonger"]._address).call();
     }
 
     if(name=="Timber Camp"){
@@ -1583,6 +1643,7 @@ class App extends Component {
     //console.log("ACCOUNT",this.state.account)
     //console.log("SHIPS:",this.state.ships)
     let buttonsTop = horizon-260;
+    let buttonPushDown = 30
     let buttonsLeft = -1000;
     let loadingBar = ""
 
@@ -1637,7 +1698,7 @@ class App extends Component {
               return (<div></div>)
             }else{
               return (
-                <div key={"buyship"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:theLeft,top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
+                <div key={"buyship"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:theLeft,top:animated.top+buttonPushDown,opacity:buttonOpacity}} onClick={clickFn}>
                 <img src="buyship.png" style={{maxWidth:150-(extraWidth)}}/>
                 </div>
               )
@@ -1654,7 +1715,7 @@ class App extends Component {
             if(animated.top>50) animated.top=50
             let extraWidth = animated.top - buttonsTop
             return (
-              <div key={"approveAndEmbark"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
+              <div key={"approveAndEmbark"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top+buttonPushDown,opacity:buttonOpacity}} onClick={clickFn}>
               <img src="approveAndEmbark.png" style={{maxWidth:150-(extraWidth)}}/>
               </div>
             )
@@ -1680,7 +1741,7 @@ class App extends Component {
           return (<div></div>)
         }else{
           return (
-            <div key={"buyshipHolder"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:theLeft,top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
+            <div key={"buyshipHolder"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:theLeft,top:animated.top+buttonPushDown,opacity:buttonOpacity}} onClick={clickFn}>
             <img src="buyship.png" style={{maxWidth:150-(extraWidth)}}/>
             </div>
           )
@@ -1700,7 +1761,7 @@ class App extends Component {
       if(animated.top>50) animated.top=50
       let extraWidth = animated.top - buttonsTop
       return (
-        <div key={"dropanchor"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn}>
+        <div key={"dropanchor"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top+buttonPushDown,opacity:buttonOpacity}} onClick={clickFn}>
         <img src="dropanchor.png" style={{maxWidth:150-(extraWidth)}}/>
         </div>
       )
@@ -1718,7 +1779,7 @@ class App extends Component {
       if(animated.top>50) animated.top=50
       let extraWidth = animated.top - buttonsTop
       return (
-        <div key={"reelin"} style={{cursor:"pointer",zIndex:700,position:'absolute',top:animated.top,left:buttonsLeft-75+((extraWidth)/2),opacity:buttonOpacity}} onClick={clickFn}>
+        <div key={"reelin"} style={{cursor:"pointer",zIndex:700,position:'absolute',top:animated.top+buttonPushDown,left:buttonsLeft-75+((extraWidth)/2),opacity:buttonOpacity}} onClick={clickFn}>
         <img src="reelin.png" style={{maxWidth:150-(extraWidth)}}/>
         </div>
       )
@@ -1733,7 +1794,7 @@ class App extends Component {
       if(animated.top>50) animated.top=50
       let extraWidth = animated.top - buttonsTop
       return (
-        <div key={"saileast"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:buttonsLeft+180-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn1}>
+        <div key={"saileast"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:buttonsLeft+180-75+((extraWidth)/2),top:animated.top+buttonPushDown,opacity:buttonOpacity}} onClick={clickFn1}>
         <img src="saileast.png" style={{maxWidth:150-(extraWidth)}}/>
         </div>
       )
@@ -1747,7 +1808,7 @@ buttons.push(
     if(animated.top>50) animated.top=50
     let extraWidth = animated.top - buttonsTop
     return (
-      <div key={"castLine"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn2}>
+      <div key={"castLine"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top+buttonPushDown,opacity:buttonOpacity}} onClick={clickFn2}>
       <img src="castLine.png" style={{maxWidth:150-(extraWidth)}}/>
       </div>
     )
@@ -1762,7 +1823,7 @@ buttons.push(
     if(animated.top>50) animated.top=50
     let extraWidth = animated.top - buttonsTop
     return (
-      <div key={"sailwest"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:buttonsLeft-180-75+((extraWidth)/2),top:animated.top,opacity:buttonOpacity}} onClick={clickFn3}>
+      <div key={"sailwest"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:buttonsLeft-180-75+((extraWidth)/2),top:animated.top+buttonPushDown,opacity:buttonOpacity}} onClick={clickFn3}>
       <img src="sailwest.png" style={{maxWidth:150-(extraWidth)}}/>
       </div>
     )
@@ -1800,7 +1861,7 @@ buttons.push(
 )
 }
 buttons.push(
-  <div style={{zIndex:701,position:'absolute',left:buttonsLeft-50,top:buttonsTop+50,opacity:0.7}}>
+  <div style={{zIndex:701,position:'absolute',left:buttonsLeft-50,top:buttonsTop+50+buttonPushDown/2,opacity:0.7}}>
   {loadingBar}
   </div>
 )
@@ -2581,7 +2642,7 @@ return (
         }
 
         if(this.state.modalObject.name == "Market"){
-          let buyArray = [{
+          /*let buyArray = [{
             amount: "1",
             balance: this.state.modalObject.timberBalance,
             first:"timber",
@@ -2598,8 +2659,14 @@ return (
               clickFn: this.sellFish.bind(this,this.state.modalObject.fish[f]),
             }]
           }
+          */
           content.push(
-            <BuySellTable buyArray={buyArray} sellArray={sellArray}/>
+            <BuySellOwner setSellPrice={this.setSellPrice.bind(this)} landX={this.state.landX} landY={this.state.landY} {...this.state.modalObject}/*buyArray={buyArray} sellArray={sellArray}*//>
+          )
+          content.push(
+            <div style={{marginTop:60}}>
+              <CreateTable image={"buildTimberCamp"} clickFn={this.testMarket.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index)}/>
+            </div>
           )
         }
 

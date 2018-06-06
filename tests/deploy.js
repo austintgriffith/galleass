@@ -83,3 +83,8 @@ galleass.setPermission("Village",0,"createCitizens","true")
 galleass.deploy("Citizens",0)
 galleass.setContract("Citizens",0)
 galleass.setPermission("Citizens",0,"transferFood","true")
+
+
+galleass.deploy("Market",0)
+galleass.setContract("Market",0)
+galleass.setPermission("Market",0,"transferTimber","true")

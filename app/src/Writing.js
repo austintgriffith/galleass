@@ -49,11 +49,14 @@ class Writing extends Component {
           image = image+character+"_.png"
         }
       }
+      let finalStyle = {maxHeight:size,marginRight:letterSpacing+extraKern(character,letterSpacing+extraSpace)}
+      if(this.props.verticalAlign) finalStyle.verticalAlign=this.props.verticalAlign
       word.push(
-        <img key={"w"+i} style={{maxHeight:size,marginRight:letterSpacing+extraKern(character,letterSpacing+extraSpace)}} src={image} />
+        <img key={"w"+i} style={finalStyle} src={image} />
       )
       usedChars.push(character);
     }
+
     return (
       <span style={{paddingRight:this.props.space}}>
         {word}

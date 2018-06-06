@@ -79,10 +79,8 @@ contract LandLib is Galleasset, Ownable {
     //when a piece of land is purchased, an "onPurchase" function is called
     // on the contract to help the inner contract track events and owners etc
     if(landContract.contractAt(_x,_y,_tile)!=address(0)){
-       StandardTile tileContract = StandardTile(landContract.contractAt(_x,_y,_tile));
-       if(tileContract!=address(0)){
-         tileContract.onPurchase(_x,_y,_tile,landContract.ownerAt(_x,_y,_tile),landContract.priceAt(_x,_y,_tile));
-       }
+      StandardTile tileContract = StandardTile(landContract.contractAt(_x,_y,_tile));
+      tileContract.onPurchase(_x,_y,_tile,landContract.ownerAt(_x,_y,_tile),landContract.priceAt(_x,_y,_tile));
     }
     //clear the price so it isn't for sale anymore
     landContract.setPriceAt(_x,_y,_tile,0);

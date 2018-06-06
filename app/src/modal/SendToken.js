@@ -21,14 +21,15 @@ class CreateTable extends Component {
     this.setState({toAddress:e.target.value})
   }
   render(){
+    let fontSize = 24
     return (
       <div>
-        Send
+        <Writing string={"Send"} size={fontSize} verticalAlign={"middle"} space={5}/>
         <input
           style={{textAlign:'right',width:40,margin:6,maxHeight:20,padding:5,border:'2px solid #ccc',borderRadius:5}}
           type="text" name="amount" value={this.state.amount} onFocus={this.handleFocus} onChange={this.handleModalInputAddress.bind(this)}
         />
-         {this.props.modalObject.name} to
+         <Writing string={this.props.modalObject.name+" to"} size={fontSize} verticalAlign={"middle"} space={5}/>
          <input
            style={{textAlign:'right',width:295,margin:6,maxHeight:20,padding:5,border:'2px solid #ccc',borderRadius:5}}
            type="text" name="toAddress" value={this.state.toAddress} onFocus={this.handleFocus} onChange={this.handleModalInputToAddress.bind(this)}

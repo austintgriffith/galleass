@@ -890,6 +890,7 @@ module.exports = {
         loadAbi("Village")
         loadAbi("Citizens")
         loadAbi("TimberCamp")
+        loadAbi("Market")
       });
     });
   },

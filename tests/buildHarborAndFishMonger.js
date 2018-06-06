@@ -33,7 +33,8 @@ galleass.buyFirstLandTile(0)
 //create buildings in the middle...
 galleass.editMiddleTile(0,"Harbor",100)
 galleass.editMiddleTile(0,"Fishmonger",101)
-galleass.editMiddleTile(0,"Village",102)
+galleass.editMiddleTile(0,"Market",102)
+galleass.setPriceOfFirstTileOfType(0,102,20)
 
 // no need for this now until you go 667// galleass.approveContract("Timber",0,"Land",6)
 //find a spot searching left to right for  (main hills or main grass =) and build a 2000 (village)
