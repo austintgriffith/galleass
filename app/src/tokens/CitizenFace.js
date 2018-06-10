@@ -14,11 +14,11 @@ class CitizenFace extends Component {
       top:0,
     }
     let typeCount = {
-      head: 2,
+      head: 4,
       hair: 3,
-      nose: 2,
-      mouth: 2,
-      eyes: 3,
+      nose: 5,
+      mouth: 5,
+      eyes: 6,
     }
     let images = {}
     for(let type in typeCount){
@@ -41,10 +41,11 @@ class CitizenFace extends Component {
       <div style={{position:"relative",marginTop:this.props.size*-1}}>
         {blockie}
         <img style={imageStyle} src={"citizens/head_"+images['head']+".png"} />
+        <img style={imageStyle} src={"citizens/eyes_"+images['eyes']+".png"} />
         <img style={imageStyle} src={"citizens/hair_"+images['hair']+".png"} />
         <img style={imageStyle} src={"citizens/nose_"+images['nose']+".png"} />
         <img style={imageStyle} src={"citizens/mouth_"+images['mouth']+".png"} />
-        <img style={imageStyle} src={"citizens/eyes_"+images['eyes']+".png"} />
+
       </div>
     )
   }

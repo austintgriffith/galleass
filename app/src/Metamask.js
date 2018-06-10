@@ -211,7 +211,7 @@ class Metamask extends Component {
 
               }}>
               <a target="_blank" href={this.props.etherscan+"address/"+this.state.accounts[0]}>
-                <div>
+                <div style={{width:500}}>
                   <Writing string={this.state.accounts.length > 0 ? this.state.accounts[0] : "Loading..."} size={20} space={5}/>
                 </div>
               </a>

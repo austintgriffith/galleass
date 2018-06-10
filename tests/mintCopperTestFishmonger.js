@@ -29,4 +29,4 @@ galleass.testMint("Catfish",0,1,2)
 galleass.sellFish(1,"Catfish",2)
 
 galleass.testMint("Copper",0,1,100)
-galleass.transferAndCall("Copper",1,"Fishmonger",1,"0x01")//buy 1 copper worth of  Fillets
+galleass.transferAndCall("Copper",1,"Fishmonger",2,"0x01")//buy 1 copper worth of  Fillets

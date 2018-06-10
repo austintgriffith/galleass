@@ -67,9 +67,9 @@ galleass.transferTokens("Copper",1,"Fishmonger",10000)
 
 galleass.setFishPrice(0,"Pinner",1)
 galleass.setFishPrice(0,"Redbass",2)
-galleass.setFishPrice(0,"Catfish",3)
-galleass.setFishPrice(0,"Snark",5)
-galleass.setFishPrice(0,"Dangler",7)
+galleass.setFishPrice(0,"Catfish",2)
+galleass.setFishPrice(0,"Snark",3)
+galleass.setFishPrice(0,"Dangler",4)
 
 galleass.deploy("Ipfs",0)
 galleass.setContract("Ipfs",0)

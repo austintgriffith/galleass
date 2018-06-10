@@ -777,8 +777,8 @@ module.exports = {
       });
     });
   },
-  setPriceOfAllOpemLandTiles:(accountindex,price)=>{
-    describe('#setPriceOfAllOpemLandTiles()', function() {
+  setPriceOfAllOpenLandTiles:(accountindex,price)=>{
+    describe('#setPriceOfAllOpenLandTiles()', function() {
       it('should set the price of all open land tiles', async function() {
         this.timeout(120000)
         let mainLand = await getMainLand();

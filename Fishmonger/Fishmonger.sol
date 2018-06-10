@@ -21,7 +21,7 @@ contract Fishmonger is Galleasset, HasNoEther {
   //how much the fishmonger is willing to pay for each species of fish
   mapping (address => uint256) public price;
 
-  uint256 public filletPrice = 1;
+  uint256 public filletPrice = 2;
 
   function setPrice(address _species,uint256 _price) onlyOwner public returns (bool) {
     assert( _species != address(0) );
@@ -43,7 +43,7 @@ contract Fishmonger is Galleasset, HasNoEther {
 
     //CONVERT THE FISH TO FILLETS (THE fishmonger then sells fillets for citizen food in later levels)
     StandardToken filletContract = StandardToken(getContract("Fillet"));
-    require( filletContract.galleassMint(address(this),5) ); //for now just create 4 fillets for every fish but eventually make it dynamic, different fish will butcher different
+    require( filletContract.galleassMint(address(this),1) ); //mint 1 fillet for each fish caught
 
     //SEND THEM price[_species]*_amount COPPER FOR THE FISH
     address copperContractAddress = getContract("Copper");

@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import {Motion, spring} from 'react-motion';
-
-import Writing from './Writing.js'
+import Writing from '../Writing.js'
 
 const config = { stiffness: 100, damping: 7 };
 
@@ -37,11 +36,11 @@ class Inventory extends Component {
 
     let display = [];
 
-    let sellForCopper = (item)=>{
+    /*let sellForCopper = (item)=>{
       return (
         <img onClick={this.sellForCopper.bind(this,item)} style={{maxHeight:25,paddingRight:20}} src={"copper_small.png"} />
       )
-    }
+    }*/
 
 
     for(let pass in [0,1])
@@ -50,7 +49,7 @@ class Inventory extends Component {
         let extra = "";
         let maxWidth = 40
         let maxHeight = 40
-        if(i=="Snark" || i=="Pinner" || i=="Dangler" || i=="Redbass" || i=="Catfish") extra = sellForCopper(i);
+        //if(i=="Snark" || i=="Pinner" || i=="Dangler" || i=="Redbass" || i=="Catfish") extra = sellForCopper(i);
         if(i=="Dogger") maxHeight=40
 
         let extraBottomMargin=0;

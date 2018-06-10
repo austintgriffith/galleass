@@ -27,6 +27,9 @@ import ResourceTable from './modal/ResourceTable.js'
 import SendToken from './modal/SendToken.js'
 import BuySellOwner from './modal/BuySellOwner.js'
 
+// -- hud--- //
+import Inventory from './hud/Inventory.js'
+import BottomBar from './hud/BottomBar.js'
 /*
 assuming that galleassBlockNumber is the oldest block for all contracts
 that means if you redeploy the galleass contract you have to redeploy ALL
@@ -38,7 +41,7 @@ import Fish from './Fish.js'
 import Land from './Land.js'
 import Ships from './Ships.js'
 import Clouds from './Clouds.js'
-import Inventory from './Inventory.js'
+
 
 import axios from 'axios'
 import Blockies from 'react-blockies';
@@ -47,6 +50,7 @@ import {Motion, spring, presets} from 'react-motion';
 const ReactHint = ReactHintFactory(React)
 
 const UPGRADING = false;
+
 
 //last hardcoded ipfs, from here on out we load from an Ipfs contract
 let IPFSADDRESS = "Qmb5fNbSZ6zooVQjKqccEsq33nVX1RaCg9zd2Wm3qhQjrT";
@@ -113,6 +117,8 @@ const CLOUDEVENTSYNCLIVEINTERVAL = 7919
 let eventLoadIndexes = {};
 let bottomBarTimeout;
 
+
+const STARTZOOMAT = 900
 /*
 let textStyle = {
 zIndex:210,
@@ -151,7 +157,7 @@ class App extends Component {
       avgBlockTime:15000,
       metamaskDip:0,
       buttonBumps:[],
-      zoom:"100%",
+      zoom:1.0,
       bottomBar:-80,
       bottomBarSize:20,
       bottomBarMessage:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.:,",
@@ -246,7 +252,17 @@ class App extends Component {
     let mapBottomStart = (clientHeight-80)
     let clickScreenWidth = clientWidth
     let clickScreenHeight = clientHeight
+
+    let zoom = 1.0
+
+    if(clientWidth<STARTZOOMAT){
+      zoom=clientWidth/STARTZOOMAT
+    }
+
+    console.log(zoom)
+
     let update = {
+      zoom: zoom,
       clientWidth: clientWidth,
       clientHeight: clientHeight,
       mapRightStart: mapRightStart,
@@ -588,13 +604,12 @@ class App extends Component {
     if(DEBUG_SYNCMYSHIP) console.log("Getting ship for account "+accounts[0])
     let getMyShip = await contracts["Sea"].methods.getShip(accounts[0]).call();
     if(DEBUG_SYNCMYSHIP) console.log("COMPARE",this.state.ship,getMyShip)
-    let zoom = 150
     //if(JSON.stringify(this.state.ship)!=JSON.stringify(getMyShip)) {
     if(this.state.ship) getMyShip.inRangeToDisembark = this.state.ship.inRangeToDisembark
     let shipHasNotUpdated = isEquivalentAndNotEmpty(this.state.ship,getMyShip)
     if(getMyShip && !shipHasNotUpdated){
 
-      let zoomPercent = 1/(parseInt(this.state.zoom)/100)
+      let zoomPercent = 1/(parseInt(this.state.zoom*100)/100)
       /////console.log("zoomPercent",zoomPercent)
       if(DEBUG_SYNCMYSHIP) console.log("UPDATE MY SHIP",JSON.stringify(this.state.ship),JSON.stringify(getMyShip))
       let myLocation = 2000;
@@ -619,7 +634,7 @@ class App extends Component {
         getMyShip.inRangeToDisembark = await contracts["Sea"].methods.inRangeToDisembark(accounts[0]).call();
         //console.log("getMyShip.inRangeToDisembark",getMyShip.inRangeToDisembark)
       }catch(e){console.log("ERROR checking inRangeToDisembark",e)}
-      this.setState({zoom:"100%",loading:0,ship:getMyShip,waitingForShipUpdate:false,myLocation:myLocation},()=>{
+      this.setState({/*zoom:HARDCODEDSCALE,*/loading:0,ship:getMyShip,waitingForShipUpdate:false,myLocation:myLocation},()=>{
         //if(DEBUG_SYNCMYSHIP)
         //console.log("SET getMyShip",this.state.ship)
       })
@@ -800,16 +815,17 @@ class App extends Component {
       this.startWaiting(receipt.transactionHash)
     })
   }
-  async sellFish(fish){
+  async sellFish(fish,amount){
+    if(!amount) amount=1
     console.log("SELL FISH "+fish)
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
     let fishContract = contracts[fish];
     console.log("fishContractAddress:",fishContract._address)
     let paying = await contracts["Fishmonger"].methods.price(fishContract._address).call()
     console.log("Fishmonger is paying ",paying," for ",fishContract._address)
-    contracts["Fishmonger"].methods.sellFish(fishContract._address,1).send({
+    contracts["Fishmonger"].methods.sellFish(fishContract._address,amount).send({
       from: accounts[0],
-      gas:330000,
+      gas:120000+(amount*60000),
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
@@ -1545,6 +1561,25 @@ class App extends Component {
       balance: await contracts[name].methods.balanceOf(this.state.account).call(),
       token:true
     }
+
+
+    //check if the token is a fish and add in fish monger details
+    let fish = [
+      "Pinner",
+      "Redbass",
+      "Catfish",
+      "Snark",
+      "Dangler",
+    ]
+    console.log("ISNAME ",name,fish)
+    if(fish.indexOf(name)>=0){
+      modalObject.isFish = true
+      modalObject.prices = {}
+      for(let f in fish){
+        modalObject.prices[fish[f]] = await contracts["Fishmonger"].methods.price(contracts[fish[f]]._address).call();
+      }
+    }
+
     if(typeof contracts[name].methods.tokensOfOwner == "function"){
       //erc721
       modalObject.tokensOfOwner = await contracts[name].methods.tokensOfOwner(this.state.account).call()
@@ -1699,7 +1734,7 @@ class App extends Component {
             }else{
               return (
                 <div key={"buyship"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:theLeft,top:animated.top+buttonPushDown,opacity:buttonOpacity}} onClick={clickFn}>
-                <img src="buyship.png" style={{maxWidth:150-(extraWidth)}}/>
+                <img src="buyship.png" style={{zIndex:700,maxWidth:150-(extraWidth)}}/>
                 </div>
               )
             }
@@ -1869,7 +1904,7 @@ buttons.push(
 
 let menuSize = 60;
 let menu = (
-  <div key={"MENU"} style={{position:"fixed",left:0,top:0,width:"100%",height:menuSize,borderBottom:"0px solid #a0aab5",color:"#DDDDDD",zIndex:99}} >
+  <div key={"MENU"} style={{transform:"scale("+this.state.zoom+")",width:"100%",position:"fixed",left:0+((1-this.state.zoom)*180),top:0-((1-this.state.zoom)*30),height:menuSize,borderBottom:"0px solid #a0aab5",color:"#DDDDDD",zIndex:99}} >
   <Motion
   defaultStyle={{
     marginRight:0
@@ -1880,23 +1915,23 @@ let menu = (
   >
   {currentStyles => {
     return (
-      <div style={currentStyles}>
-      <Metamask
-      clickBlockie={this.doBlockieHint.bind(this)}
-      setHintMode={this.setHintMode.bind(this)}
-      account={this.state.account}
-      init={this.init.bind(this)}
-      Blockies={Blockies}
-      blockNumber={this.state.blockNumber}
-      etherscan={this.state.etherscan}
-      setEtherscan={this.setEtherscan.bind(this)}
-      lastBlockWasAt={this.state.lastBlockWasAt}
-      avgBlockTime={this.state.avgBlockTime}
-      blockieRight={this.state.blockieRight}
-      blockieTop={this.state.blockieTop}
-      blockieSize={this.state.blockieSize}
-      />
-      </div>
+        <div style={currentStyles}>
+          <Metamask
+          clickBlockie={this.doBlockieHint.bind(this)}
+          setHintMode={this.setHintMode.bind(this)}
+          account={this.state.account}
+          init={this.init.bind(this)}
+          Blockies={Blockies}
+          blockNumber={this.state.blockNumber}
+          etherscan={this.state.etherscan}
+          setEtherscan={this.setEtherscan.bind(this)}
+          lastBlockWasAt={this.state.lastBlockWasAt}
+          avgBlockTime={this.state.avgBlockTime}
+          blockieRight={this.state.blockieRight}
+          blockieTop={this.state.blockieTop}
+          blockieSize={this.state.blockieSize}
+          />
+        </div>
     )
   }}
   </Motion>
@@ -1904,16 +1939,23 @@ let menu = (
 
   </div>
 )
+//(-1)*this.state.zoom*180/2
+//(-position:"absolute",left:document.scrollingElement.scrollLeft+this.state.clientWidth-100-100*this.state.zoom,
+
+
+let rightOffset = ((1-this.state.zoom)*100)
 let inventory = (
-  <div style={{position:"fixed",right:0,top:75,width:200,border:"0px solid #a0aab5",color:"#DDDDDD",zIndex:99}} >
-  <Inventory
-  invClick={this.invClick.bind(this)}
-  inventory={this.state.inventory}
-  Ships={this.state.Ships}
-  sellFish={this.sellFish.bind(this)}
-  contracts={contracts}
-  etherscan={this.state.etherscan}
-  />
+  <div style={{position:"fixed",right:10-rightOffset,top:75,width:200,border:"0px solid #a0aab5",color:"#DDDDDD",zIndex:99}} >
+    <div style={{transform:"scale("+this.state.zoom+")",marginRight:0}}>
+      <Inventory
+      invClick={this.invClick.bind(this)}
+      inventory={this.state.inventory}
+      Ships={this.state.Ships}
+      sellFish={this.sellFish.bind(this)}
+      contracts={contracts}
+      etherscan={this.state.etherscan}
+      />
+    </div>
   </div>
 )
 let sea = (
@@ -2021,14 +2063,18 @@ let clickScreen = (
 )
 
 return (
-  <div className="App" style={{zoom:this.state.zoom}}>
+  <div className="App">
   <ReactHint events delay={100} />
+
   {menu}
   {clickScreen}
-
   {inventory}
-  {sea}
-  {land}
+
+
+  <div style={{transform:"scale("+this.state.zoom+")"}}>
+    {sea}
+    {land}
+  </div>
 
   <Motion
   defaultStyle={{
@@ -2312,6 +2358,8 @@ return (
       mapZ = 750
     }
 
+
+
     return (
 
       <div style={{
@@ -2320,7 +2368,7 @@ return (
         bottom:currentStyles.bottom,
         width:this.state.clientWidth,
         height:this.state.clientHeight,
-        zIndex:mapZ
+        zIndex:mapZ,
       }}>
 
       <div style={{
@@ -2331,7 +2379,8 @@ return (
       {fullMap}
 
 
-      <div style={{cursor:"pointer",zIndex:2,marginBottom:-20,marginRight:-10,position:'absolute',right:currentStyles.titleRight,bottom:currentStyles.titleBottom}} onClick={this.titleClick.bind(this)}>
+
+      <div style={{width:300,transform:"scale("+this.state.zoom+")",cursor:"pointer",zIndex:2,marginBottom:-20,marginRight:-10,position:'absolute',right:currentStyles.titleRight+((1-this.state.zoom)*120),bottom:currentStyles.titleBottom+((1-this.state.zoom)*54)}} onClick={this.titleClick.bind(this)}>
       <Writing string={"Galleass.io"} size={60} space={5} letterSpacing={29}/>
       </div>
       <div style={{position:'absolute',opacity:this.state.cornerOpacity,left:0,top:0}}>
@@ -2340,30 +2389,45 @@ return (
       <div style={{position:'absolute',opacity:this.state.cornerOpacity,right:0,top:0}}>
       <img style={{maxWidth:(this.state.clientWidth/5)}} src={"toprightcorner.png"} />
       </div>
-      <div style={{cursor:"pointer",zIndex:2,position:'absolute',opacity:this.state.cornerOpacity,right:0,bottom:-4}} onClick={this.titleClick.bind(this)}>
-      <img src={"corner.png"} />
-      </div>
-      <div style={{cursor:"pointer",zIndex:1,position:'fixed',opacity:1-this.state.cornerOpacity,top:currentStyles.titleBottomFaster-20,left:-20}} >
-      <a href="https://github.com/austintgriffith/galleass" target="_blank">
-      <img data-rh="Source" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:25+iconOffset,top:83,opacity:0.8}} src="github.png" />
-      </a>
-      <a href="http://austingriffith.com/portfolio/galleass/" target="_blank">
-      <img data-rh="Info" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:70+iconOffset,top:83,opacity:0.8}} src="moreinfo.png" />
-      </a>
-      <a href="contracts.html" target="_blank">
-      <img data-rh="Contracts" data-rh-at="bottom"  style={{maxHeight:36,position:"absolute",left:115+iconOffset,top:83,opacity:0.8}} src="smartcontract.png" />
-      </a>
-      <a href={decentralizedLink} target="_blank">
-      <img data-rh="IPFS" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:160+iconOffset,top:83,opacity:0.8}} src="ipfs.png" />
-      </a>
 
-      {gasDragger}
-      <img style={{zIndex:2}} src={"mapicon.png"} onClick={this.titleClick.bind(this)}/>
+
+      <div style={{transform:"scale("+this.state.zoom+")",cursor:"pointer",zIndex:2,position:'absolute',opacity:this.state.cornerOpacity,right:0-((1-this.state.zoom)*90),bottom:-4-((1-this.state.zoom)*84)}} onClick={this.titleClick.bind(this)}>
+        <img src={"corner.png"} />
       </div>
-      <div style={{position:'absolute',opacity:this.state.cornerOpacity,left:10,bottom:10}} onClick={this.titleClick.bind(this)}>
-      <img src={"compass.png"} style={{maxWidth:60}} />
+
+
+
+      <div style={{cursor:"pointer",zIndex:1,position:'fixed',opacity:1-this.state.cornerOpacity,top:currentStyles.titleBottomFaster-20,left:-20}} >
+
+
+      <div style={{zIndex:mapZ,transform:"scale("+this.state.zoom+")",marginLeft:-((1-this.state.zoom)*175),marginTop:-((1-this.state.zoom)*60)}}>
+        <a href="https://github.com/austintgriffith/galleass" target="_blank">
+        <img data-rh="Source" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:25+iconOffset,top:83,opacity:0.8}} src="github.png" />
+        </a>
+        <a href="http://austingriffith.com/portfolio/galleass/" target="_blank">
+        <img data-rh="Info" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:70+iconOffset,top:83,opacity:0.8}} src="moreinfo.png" />
+        </a>
+        <a href="contracts.html" target="_blank">
+        <img data-rh="Contracts" data-rh-at="bottom"  style={{maxHeight:36,position:"absolute",left:115+iconOffset,top:83,opacity:0.8}} src="smartcontract.png" />
+        </a>
+        <a href={decentralizedLink} target="_blank">
+        <img data-rh="IPFS" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:160+iconOffset,top:83,opacity:0.8}} src="ipfs.png" />
+        </a>
+        {gasDragger}
+        <img style={{zIndex:2}} src={"mapicon.png"} onClick={this.titleClick.bind(this)}/>
+        </div>
+
+
+        </div>
+        <div style={{position:'absolute',opacity:this.state.cornerOpacity,left:10,bottom:10}} onClick={this.titleClick.bind(this)}>
+        <img src={"compass.png"} style={{maxWidth:60}} />
       </div>
+
+
+
       </div>
+
+
 
       <div style={{zIndex:1,position:'fixed',right:20,bottom:-4,opacity:1-this.state.cornerOpacity}}>
       <a href="https://join.slack.com/t/galleass/shared_invite/enQtMzE0MjQ5MzMyMzQzLTk3MmI2Zjk4Njc2ZmUwYzI5ZjA1ZmRiNzY4MjQ1OTM1OTM0NTM0MmZjNWVhZWEzMWI2ZTk1MzJjNDk4OTIzZmY" target="_blank">
@@ -2394,29 +2458,20 @@ return (
   >
   {currentStyles => {
     //console.log("currentStyles.scrollLeft",currentStyles.scrollLeft)
-    return <WindowScrollSink scrollLeft={currentStyles.scrollLeft} />
+    return <WindowScrollSink scrollLeft={currentStyles.scrollLeft*this.state.zoom} />
 
   }}
   </Motion>
 
-  <Motion
-  defaultStyle={{
-    bottom:-100
-  }}
-  style={{
-    bottom:spring(this.state.bottomBar,{ stiffness: 100, damping: 7 })
-  }}
-  >
-  {currentStyles => {
-    //console.log("currentStyles.scrollLeft",currentStyles.scrollLeft)
-    return (
-      <div style={{zIndex:760,position:'fixed',left:this.state.clientWidth/2-400,paddingTop:30,textAlign:"center",bottom:currentStyles.bottom,opacity:1,backgroundImage:"url('bottomBar.png')",backgroundRepeat:'no-repeat',height:50,width:800}}>
-      <Writing style={{opacity:0.9}} string={this.state.bottomBarMessage} size={this.state.bottomBarSize}/>
-      </div>
-    )
 
-  }}
-  </Motion>
+
+  <BottomBar
+    bottomBar={this.state.bottomBar}
+    zoom={this.state.zoom}
+    clientWidth={this.state.clientWidth}
+    bottomBarMessage={this.state.bottomBarMessage}
+    bottomBarSize={this.state.bottomBarSize}
+  />
 
   <Motion
   defaultStyle={{
@@ -2499,7 +2554,7 @@ return (
         }else{
           body = (
             <div style={{marginTop:100}}>
-              <SendToken modalObject={this.state.modalObject} sendToken={this.sendToken.bind(this)} />
+              <SendToken modalObject={this.state.modalObject} sendToken={this.sendToken.bind(this)} sellFish={this.sellFish.bind(this)}/>
             </div>
           )
         }
@@ -2737,8 +2792,15 @@ return (
           )
         }
 
+        let contractAddress = ""
+        if(this.state.modalObject.contract&&this.state.modalObject.contract!="0x0000000000000000000000000000000000000000"){
+          contractAddress = (
+              <div>Contract: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.contract}>{this.state.modalObject.contract}</a></div>
+          )
+        }
+
         return (
-          <div style={{zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
+          <div style={{transform:"scale("+this.state.zoom+")",zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top-((1-this.state.zoom)*300),textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
           <div style={{cursor:'pointer',position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
           <img src="exit.png" />
           </div>
@@ -2747,7 +2809,7 @@ return (
           </div>
           <div style={{position:'absolute',left:118,top:24,textAlign:"left"}}>
           <div><Writing style={{opacity:0.9}} string={this.state.modalObject.name} size={28}/>  -  {this.state.modalObject.index} @ ({this.state.landX},{this.state.landY})</div>
-          <div>Contract: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.contract}>{this.state.modalObject.contract}</a></div>
+          {contractAddress}
           <div>Owner: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.owner}>{this.state.modalObject.owner}</a></div>
           {tilePriceAndPurchase}
           </div>
@@ -2762,9 +2824,6 @@ return (
 
   }}
   </Motion>
-
-
-
   <img src="maptexturelightfaded.jpg" style={{position:'absolute',width:1,height:1,left:1,top:1}} />
   </div>
 );

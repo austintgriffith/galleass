@@ -78,41 +78,43 @@ class Citizen extends Component {
     }
 
     return (
-      <table cellSpacing={"0"} cellPadding={"5"} border={"0"} width="90%" style={{textAlign:'left',padding:0,marginLeft:30,height:60,borderBottom:"1px solid #777777"}}>
-        <tbody>
-          <tr>
-            <td style={{width:"10%",verticalAlign:"bottom"}}>
-              <CitizenFace {...this.props}/>
-            </td>
-            <td style={{width:"40%",verticalAlign:"bottom"}}>
-              <table cellSpacing={"0"} cellPadding={"2"} border={"0"} width="100%" style={{padding:0}}>
-                <tbody>
-                  <tr>
-                    <td>
-                      #{this.props.id} <span style={{fontWeight:'bold'}}>{this.convertStatus(this.props.status,this.props.data)}</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div style={{position:"relative"}}>
-                        <img src="mapicon.png" style={{maxHeight:26,position:"absolute",left:-9,top:-4,zIndex:-1,opacity:0.2}}/>
-                        <span style={{marginRight:15,opacity:0.7}}>location:</span> {this.props.tile} @ ({this.props.x},{this.props.y})
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-              <div>
-              </div>
-            </td>
-            <td style={{width:"50%",verticalAlign:"bottom"}}>
-              <div>
-                {menu}
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div style={{width:"100%",height:400,overflow:"scroll"}}>
+        <table cellSpacing={"0"} cellPadding={"5"} border={"0"} width="90%" style={{textAlign:'left',padding:0,marginLeft:30,height:60,borderBottom:"1px solid #777777"}}>
+          <tbody>
+            <tr>
+              <td style={{width:"10%",verticalAlign:"bottom"}}>
+                <CitizenFace {...this.props}/>
+              </td>
+              <td style={{width:"40%",verticalAlign:"bottom"}}>
+                <table cellSpacing={"0"} cellPadding={"2"} border={"0"} width="100%" style={{padding:0}}>
+                  <tbody>
+                    <tr>
+                      <td>
+                        #{this.props.id} <span style={{fontWeight:'bold'}}>{this.convertStatus(this.props.status,this.props.data)}</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <div style={{position:"relative"}}>
+                          <img src="mapicon.png" style={{maxHeight:26,position:"absolute",left:-9,top:-4,zIndex:-1,opacity:0.2}}/>
+                          <span style={{marginRight:15,opacity:0.7}}>location:</span> {this.props.tile} @ ({this.props.x},{this.props.y})
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div>
+                </div>
+              </td>
+              <td style={{width:"50%",verticalAlign:"bottom"}}>
+                <div>
+                  {menu}
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     )
   }
 }
