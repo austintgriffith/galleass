@@ -82,7 +82,7 @@ class Clouds extends Component {
       )
     }
     return (
-      <div>
+      <div style={{transform:"scale("+this.props.zoom+")"}}>
         {renderedClouds}
       </div>
     )

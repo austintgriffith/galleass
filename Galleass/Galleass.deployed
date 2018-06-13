@@ -1,0 +1,248 @@
+pragma solidity ^0.4.18;
+
+/*
+
+  https://galleass.io
+  by Austin Thomas Griffith
+
+  The Galleass contract contains a reference to all contracts in the fleet and
+  provides a method of upgrading/replacing old contract versions.
+
+  Galleass follows a Predecessor system where previous deployments of this
+  contract will forward on to their decendants.
+
+  Galleass contains an authentication system where contracts are allowed to do
+  specific actions based on the permissions they are assigned.
+
+  Finally, there is the notion of building, staging, and production modes. Once
+  the contract is set to production, it is fully decentralized and not even the
+  owner account can make changes.
+
+*/
+
+
+
+
+
+/**
+ * @title Ownable
+ * @dev The Ownable contract has an owner address, and provides basic authorization control
+ * functions, this simplifies the implementation of "user permissions".
+ */
+contract Ownable {
+  address public owner;
+
+
+  event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
+
+  /**
+   * @dev The Ownable constructor sets the original `owner` of the contract to the sender
+   * account.
+   */
+  function Ownable() public {
+    owner = msg.sender;
+  }
+
+
+  /**
+   * @dev Throws if called by any account other than the owner.
+   */
+  modifier onlyOwner() {
+    require(msg.sender == owner);
+    _;
+  }
+
+
+  /**
+   * @dev Allows the current owner to transfer control of the contract to a newOwner.
+   * @param newOwner The address to transfer ownership to.
+   */
+  function transferOwnership(address newOwner) public onlyOwner {
+    require(newOwner != address(0));
+    OwnershipTransferred(owner, newOwner);
+    owner = newOwner;
+  }
+
+}
+
+
+/**
+ * @title Contactable token
+ * @dev Basic version of a contactable contract, allowing the owner to provide a string with their
+ * contact information.
+ */
+contract Contactable is Ownable{
+
+    string public contactInformation;
+
+    /**
+     * @dev Allows the owner to set a string with their contact information.
+     * @param info The contact information to attach to the contract.
+     */
+    function setContactInformation(string info) onlyOwner public {
+         contactInformation = info;
+     }
+}
+
+
+
+/**
+ * @title Contracts that should not own Ether
+ * @author Remco Bloemen <remco@2π.com>
+ * @dev This tries to block incoming ether to prevent accidental loss of Ether. Should Ether end up
+ * in the contract, it will allow the owner to reclaim this ether.
+ * @notice Ether can still be send to this contract by:
+ * calling functions labeled `payable`
+ * `selfdestruct(contract_address)`
+ * mining directly to the contract address
+*/
+contract HasNoEther is Ownable {
+
+  /**
+  * @dev Constructor that rejects incoming Ether
+  * @dev The `payable` flag is added so we can access `msg.value` without compiler warning. If we
+  * leave out payable, then Solidity will allow inheriting contracts to implement a payable
+  * constructor. By doing it this way we prevent a payable constructor from working. Alternatively
+  * we could use assembly to access msg.value.
+  */
+  function HasNoEther() public payable {
+    require(msg.value == 0);
+  }
+
+  /**
+   * @dev Disallows direct send by settings a default function without the `payable` flag.
+   */
+  function() external {
+  }
+
+  /**
+   * @dev Transfer all Ether held by the contract to the owner.
+   */
+  function reclaimEther() external onlyOwner {
+    assert(owner.send(this.balance));
+  }
+}
+
+
+contract Staged is Ownable {
+
+  enum StagedMode {
+    PAUSED,
+    BUILD,
+    STAGE,
+    PRODUCTION
+  }
+
+  StagedMode public stagedMode;
+
+  function Staged() public {
+    stagedMode=StagedMode.BUILD;
+  }
+
+  modifier isBuilding() {
+    require(stagedMode == StagedMode.BUILD);
+    _;
+  }
+
+  modifier isStaging() {
+    require(stagedMode == StagedMode.STAGE);
+    _;
+  }
+
+  modifier isNotProduction() {
+    require(stagedMode != StagedMode.PRODUCTION);
+    _;
+  }
+
+  modifier isNotPaused() {
+    require(stagedMode != StagedMode.PAUSED);
+    _;
+  }
+
+  function pause() isNotProduction onlyOwner public returns (bool) {
+    stagedMode=StagedMode.PAUSED;
+  }
+
+  function stage() isNotProduction onlyOwner public returns (bool) {
+    stagedMode=StagedMode.STAGE;
+  }
+
+  function build() isNotProduction onlyOwner public returns (bool) {
+    stagedMode=StagedMode.BUILD;
+  }
+
+  function destruct() isNotProduction onlyOwner public returns (bool) {
+    selfdestruct(owner);
+  }
+
+  function production() isStaging onlyOwner public returns (bool) {
+    stagedMode=StagedMode.PRODUCTION;
+  }
+
+}
+
+
+contract Predecessor is Ownable, Staged{
+    function Predecessor() public {}
+    address public descendant;
+    function setDescendant(address _descendant) onlyOwner isNotProduction public {
+      descendant=_descendant;
+    }
+    modifier hasNoDescendant() {
+      require(descendant == address(0));
+      _;
+    }
+}
+
+
+contract Galleass is Staged, HasNoEther, Contactable, Predecessor{
+
+  event UpgradeContract(address _contractAddress,address _descendant,address _whoDid);
+  event SetContract(bytes32 _name,address _contractAddress,address _whoDid);
+  event SetPermission(address _account,bytes32 _permission,bool _value);
+
+  mapping(bytes32 => address) contracts;
+  mapping(address => mapping(bytes32 => bool)) permission;
+
+  function Galleass(string _contact) public { setContactInformation(_contact); }
+
+  function upgradeContract(address _contract) onlyOwner isBuilding public returns (bool) {
+    Galleasset(_contract).upgradeGalleass(descendant);
+    UpgradeContract(_contract,descendant,msg.sender);
+    return true;
+  }
+
+  function setContract(bytes32 _name,address _contract) onlyOwner isBuilding public returns (bool) {
+    contracts[_name]=_contract;
+    SetContract(_name,_contract,msg.sender);
+    return true;
+  }
+
+  function setPermission(address _contract, bytes32 _permission, bool _value) onlyOwner isBuilding public returns (bool) {
+    permission[_contract][_permission]=_value;
+    SetPermission(_contract,_permission,_value);
+    return true;
+  }
+
+  function getContract(bytes32 _name) public view returns (address) {
+    if(descendant!=address(0)) {
+      return Galleass(descendant).getContract(_name);
+    }else{
+      return contracts[_name];
+    }
+  }
+
+  function hasPermission(address _contract, bytes32 _permission) public view returns (bool) {
+    if(descendant!=address(0)) {
+      return Galleass(descendant).hasPermission(_contract,_permission);
+    }else{
+      return permission[_contract][_permission];
+    }
+  }
+
+}
+
+contract Galleasset {
+  function upgradeGalleass(address _galleass) public returns (bool) { }
+}

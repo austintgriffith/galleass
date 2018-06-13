@@ -77,8 +77,10 @@ class Citizen extends Component {
       )
     }
 
+    //,overflowX:"scroll"
+
     return (
-      <div style={{width:"100%",height:400,overflow:"scroll"}}>
+      <div style={{width:"100%",height:50}}>
         <table cellSpacing={"0"} cellPadding={"5"} border={"0"} width="90%" style={{textAlign:'left',padding:0,marginLeft:30,height:60,borderBottom:"1px solid #777777"}}>
           <tbody>
             <tr>

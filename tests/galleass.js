@@ -712,28 +712,23 @@ module.exports = {
       });
     });
   },
-  /*setContractOfTile:(accountindex,x,y,tileIndex,contract)=>{
+  setContractOfTile:(accountindex,x,y,tileIndex,name)=>{
     describe('#setContractOfTile()', function() {
       it('should set the contract of a tile', async function() {
         this.timeout(120000)
         const accounts = await clevis("accounts")
 
+        const contractAddress = await clevis("contract","getContract","Galleass",web3.utils.fromAscii(name))
+
         const tileType = await clevis("contract","tileTypeAt","Land",x,y,tileIndex)
-        console.log(tab,"Setting contract of tile at index "+tileIndex+" at "+x+","+y+" (type "+tileType+") from account "+accountindex+"("+accounts[accountindex].blue+") to "+(""+contract).cyan+"")
+        console.log(tab,"Setting contract of tile at index "+tileIndex+" at "+x+","+y+" (type "+tileType+") from account "+accountindex+"("+accounts[accountindex].blue+") to "+(""+contractAddress).cyan+"")
 
-        const currentOwnerStart = await clevis("contract","ownerAt","Land",x,y,tileIndex)
-        assert(currentOwnerStart==accounts[accountindex],"Account index "+accountindex+" doesn't own tile "+tileIndex+" at "+x+","+y)
-
-        const result = await clevis("contract","setTileContract","Land",accountindex,x,y,tileIndex,contract)
+        const result = await clevis("contract","editTile","Land",accountindex,x,y,tileIndex,tileType,contractAddress)
         printTxResult(result)
-
-        //const currentContract = await clevis("contract","contractAt","Land",x,y,tileIndex)
-        //assert(currentContract==contract,"Failed to set contract of tile "+tileIndex+" at "+x+","+y+" to "+contract+" (current contract is "+currentContract+")")
-
+        
       });
     });
   },
-  */
   buyTile:(accountindex,x,y,tileIndex)=>{
     describe('#buyTile()', function() {
       it('should buy a tile for copper', async function() {

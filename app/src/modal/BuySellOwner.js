@@ -16,6 +16,13 @@ class BuySellOwner extends Component {
     console.log("focus",e.target.value)
     this.setState({newSellTokenPrice:e.target.value})
   }
+  handleChangeNewBuyTokenAddress(e){
+    this.setState({newBuyTokenAddress:e.target.value})
+  }
+  handleChangeNewBuyTokenPrice(e){
+    console.log("focus",e.target.value)
+    this.setState({newBuyTokenPrice:e.target.value})
+  }
   render(){
 /*
     let buyItems = this.props.buyArray.map((item)=>{
@@ -39,9 +46,6 @@ class BuySellOwner extends Component {
         <tbody>
           <tr>
             <td style={{width:"50%",verticalAlign:"top"}}>
-              <div style={{marginBottom:10}}>
-                <Writing string={"Selling"} size={32}/>
-              </div>
               Address:<input
                 style={{textAlign:'right',width:80,margin:6,maxHeight:20,padding:5,border:'2px solid #ccc',borderRadius:5}}
                 type="text" name="newSellTokenAddress" value={this.state.newSellTokenAddress} onChange={this.handleChangeNewSellTokenAddress.bind(this)}
@@ -55,10 +59,17 @@ class BuySellOwner extends Component {
               style={{maxHeight:42,cursor:"pointer",verticalAlign:'middle'}} onClick={this.props.setSellPrice.bind(this,this.props.landX,this.props.landY,this.props.index,this.state.newSellTokenAddress,this.state.newSellTokenPrice)}/>
             </td>
             <td style={{width:"50%",verticalAlign:"top"}}>
-              <div style={{marginBottom:10}}>
-                <Writing string={"Sell"} size={32}/>
-              </div>
-
+            Address:<input
+              style={{textAlign:'right',width:80,margin:6,maxHeight:20,padding:5,border:'2px solid #ccc',borderRadius:5}}
+              type="text" name="newBuyTokenAddress" value={this.state.newBuyTokenAddress} onChange={this.handleChangeNewBuyTokenAddress.bind(this)}
+            />
+            Price:
+            <input
+              style={{textAlign:'right',width:30,margin:6,maxHeight:20,padding:5,border:'2px solid #ccc',borderRadius:5}}
+              type="text" name="newBuylTokenPrice" value={this.state.newBuylTokenPrice} onChange={this.handleChangeNewBuyTokenPrice.bind(this)}
+            />
+            <img data-rh={"Start buying new token with address "+this.state.newBuyTokenAddress+" for "+this.state.newBuyTokenPrice+" Copper each."} data-rh-at="right" src="metamasksign.png"
+            style={{maxHeight:42,cursor:"pointer",verticalAlign:'middle'}} onClick={this.props.setBuyPrice.bind(this,this.props.landX,this.props.landY,this.props.index,this.state.newBuyTokenAddress,this.state.newBuyTokenPrice)}/>
             </td>
           </tr>
         </tbody>

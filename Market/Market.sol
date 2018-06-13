@@ -57,14 +57,16 @@ contract Market is Galleasset, HasNoEther {
     TokenTransfer(msg.sender,_sender,_amount,_data);
     uint8 action = uint8(_data[0]);
     if(action==1){
-      return buy(_sender,_amount,_data);
-    } else {
+      return buyInternal(_sender,_amount,_data);
+    } else if(action==2){
+      return sellInternal(_sender,_amount,_data);
+    }else {
       revert("unknown action");
     }
   }
   event TokenTransfer(address token,address sender,uint amount,bytes data);
 
-  function buy(address _sender, uint _amount, bytes _data) internal returns (bool) {
+  function buyInternal(address _sender, uint _amount, bytes _data) internal returns (bool) {
     address copperContractAddress = getContract("Copper");
     require(msg.sender == copperContractAddress);
     uint16 _x = uint16(_data[1]) << 8 | uint16(_data[2]);
@@ -74,7 +76,7 @@ contract Market is Galleasset, HasNoEther {
     address _tokenAddress = getAddressFromBytes(6,_data);
     uint _amountToBuy = getRemainingUint(26,_data);
 
-    emit Debug(_x,_y,_tile,_tokenAddress,_amountToBuy);
+    emit BuyInternal(_x,_y,_tile,_tokenAddress,_amountToBuy);
 
     //token must have a sell price
     require(sellPrices[_x][_y][_tile][_tokenAddress]>0);
@@ -82,10 +84,34 @@ contract Market is Galleasset, HasNoEther {
     require(_amount>=sellPrices[_x][_y][_tile][_tokenAddress]*_amountToBuy);
     //send them their new tokens
     StandardToken tokenContract = StandardToken(_tokenAddress);
-    require(tokenContract.transfer(msg.sender,_amount));
+    require(tokenContract.transfer(_sender,_amountToBuy));
     return true;
   }
-  event Debug(uint16 _x,uint16 _y,uint8 _tile,address _tokenAddress,uint _amountToBuy);
+  event BuyInternal(uint16 _x,uint16 _y,uint8 _tile,address _tokenAddress,uint _amountToBuy);
+
+  function sellInternal(address _sender, uint _amount, bytes _data) internal returns (bool) {
+    uint16 _x = uint16(_data[1]) << 8 | uint16(_data[2]);
+    uint16 _y = uint16(_data[3]) << 8 | uint16(_data[4]);
+    uint8 _tile = uint8(_data[5]);
+
+    uint _amountToSell = getRemainingUint(6,_data);
+
+    emit SellInternal(_x,_y,_tile,msg.sender,_amountToSell);
+
+    //token must have a buy price
+    uint buyPrice = buyPrices[_x][_y][_tile][msg.sender];
+    require(buyPrice>0);
+
+    StandardToken copperContract = StandardToken(getContract("Copper"));
+    if(msg.sender==getContract("Timber")){
+      //pay them for what they sent
+      require(copperContract.transfer(_sender,_amountToSell*buyPrice));
+      return true;
+    }else{
+      revert();
+    }
+  }
+  event SellInternal(uint16 _x,uint16 _y,uint8 _tile,address _tokenAddress,uint _amountToBuy);
 
   function getRemainingBytes(uint8 _offset, bytes _data) internal constant returns (bytes32 newBytes){
     uint8 b = 31;

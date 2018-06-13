@@ -30,6 +30,8 @@ import BuySellOwner from './modal/BuySellOwner.js'
 // -- hud--- //
 import Inventory from './hud/Inventory.js'
 import BottomBar from './hud/BottomBar.js'
+import Social from './hud/Social.js'
+
 /*
 assuming that galleassBlockNumber is the oldest block for all contracts
 that means if you redeploy the galleass contract you have to redeploy ALL
@@ -618,7 +620,7 @@ class App extends Component {
         myLocation = 4000 * getMyShip.location / 65535
         if(DEBUG_SYNCMYSHIP) console.log("myLocation",myLocation)
         //console.log("scrolling with zoom ",this.state.zoom)
-        let windowWidthWithZoom = (document.documentElement.clientWidth) * zoomPercent
+        let windowWidthWithZoom = (document.documentElement.clientWidth) //* zoomPercent
         if(veryFirstLoad){
           veryFirstLoad=false;
           setTimeout(()=>{
@@ -854,7 +856,74 @@ class App extends Component {
   async testMarket(x,y,i){
     console.log("TEST MARKET")
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
-
+    let xHex = parseInt(x).toString(16)
+    while(xHex.length<4) xHex="0"+xHex;
+    let yHex = parseInt(y).toString(16)
+    while(yHex.length<4) yHex="0"+yHex;
+    let iHex = parseInt(i).toString(16)
+    while(iHex.length<2) iHex="0"+iHex;
+    let addressHex = contracts["Timber"]._address
+    addressHex = addressHex.replace("0x","")
+    if(addressHex.length%2==1){
+      addressHex="0"+addressHex;
+    }
+    let amountToBuy = web3.utils.toHex(2)
+    amountToBuy = amountToBuy.replace("0x","")
+    if(amountToBuy.length%2==1){
+      amountToBuy="0"+amountToBuy;
+    }
+    let amountOfCopper = 4
+    let action = "0x01"
+    let finalHex = action+xHex+yHex+iHex+addressHex+amountToBuy
+    console.log("Test market at  x:"+xHex+" y:"+yHex+" i:"+iHex+" for "+amountOfCopper+" copper with finalHex: "+finalHex)
+    contracts["Copper"].methods.transferAndCall(contracts["Market"]._address,amountOfCopper,finalHex).send({
+      from: accounts[0],
+      gas:500000,
+      gasPrice:Math.round(this.state.GWEI * 1000000000)
+    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+      console.log("RESULT:",receipt)
+      if(this.state.modalHeight>=0){
+        this.closeModal()
+      }
+    })
+  }
+  async buyFromMarket(x,y,i,tokenName,amountToBuy,copperToSpend){
+    console.log("TEST MARKET")
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+    let xHex = parseInt(x).toString(16)
+    while(xHex.length<4) xHex="0"+xHex;
+    let yHex = parseInt(y).toString(16)
+    while(yHex.length<4) yHex="0"+yHex;
+    let iHex = parseInt(i).toString(16)
+    while(iHex.length<2) iHex="0"+iHex;
+    let addressHex = contracts[tokenName]._address
+    addressHex = addressHex.replace("0x","")
+    if(addressHex.length%2==1){
+      addressHex="0"+addressHex;
+    }
+    amountToBuy = web3.utils.toHex(amountToBuy)
+    amountToBuy = amountToBuy.replace("0x","")
+    if(amountToBuy.length%2==1){
+      amountToBuy="0"+amountToBuy;
+    }
+    let amountOfCopper = copperToSpend
+    let action = "0x01"
+    let finalHex = action+xHex+yHex+iHex+addressHex+amountToBuy
+    console.log("Test market at  x:"+xHex+" y:"+yHex+" i:"+iHex+" for "+amountOfCopper+" copper with finalHex: "+finalHex)
+    contracts["Copper"].methods.transferAndCall(contracts["Market"]._address,amountOfCopper,finalHex).send({
+      from: accounts[0],
+      gas:500000,
+      gasPrice:Math.round(this.state.GWEI * 1000000000)
+    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+      console.log("RESULT:",receipt)
+      if(this.state.modalHeight>=0){
+        this.closeModal()
+      }
+    })
+  }
+  async sellToMarket(x,y,i,tokenName,amountToBuy,amountToSpend){
+    console.log("SELL TO MARKET",x,y,i,tokenName,amountToBuy,amountToSpend)
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
     let xHex = parseInt(x).toString(16)
     while(xHex.length<4) xHex="0"+xHex;
     let yHex = parseInt(y).toString(16)
@@ -862,27 +931,15 @@ class App extends Component {
     let iHex = parseInt(i).toString(16)
     while(iHex.length<2) iHex="0"+iHex;
 
-    let addressHex = contracts["Timber"]._address
-    addressHex = addressHex.replace("0x","")
-    if(addressHex.length%2==1){
-      addressHex="0"+addressHex;
-    }
-
-    let amountToBuy = web3.utils.toHex(257)
+    amountToBuy = web3.utils.toHex(amountToBuy)
     amountToBuy = amountToBuy.replace("0x","")
     if(amountToBuy.length%2==1){
       amountToBuy="0"+amountToBuy;
     }
-
-    let amountOfCopper = 1
-
-    let action = "0x01"
-
-    let finalHex = action+xHex+yHex+iHex+addressHex+amountToBuy
-
-    console.log("Test market at  x:"+xHex+" y:"+yHex+" i:"+iHex+" for "+amountOfCopper+" copper with finalHex: "+finalHex)
-
-    contracts["Copper"].methods.transferAndCall(contracts["Market"]._address,amountOfCopper,finalHex).send({
+    let action = "0x02"
+    let finalHex = action+xHex+yHex+iHex+amountToBuy
+    console.log("Test sell to market at  x:"+xHex+" y:"+yHex+" i:"+iHex+" for "+amountToSpend+" copper with finalHex: "+finalHex)
+    contracts[tokenName].methods.transferAndCall(contracts["Market"]._address,amountToSpend,finalHex).send({
       from: accounts[0],
       gas:500000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
@@ -899,6 +956,22 @@ class App extends Component {
     //setSellPrice(uint16 _x,uint16 _y,uint8 _tile,address _token,uint _price
     console.log("setSellPrice.....")
     contracts["Market"].methods.setSellPrice(x,y,tile,tokenAddress,price).send({
+      from: accounts[0],
+      gas:250000,
+      gasPrice:Math.round(this.state.GWEI * 1000000000)
+    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+      console.log("RESULT:",receipt)
+      if(this.state.modalHeight>=0){
+        this.closeModal()
+      }
+    })
+  }
+  async setBuyPrice(x,y,tile,tokenAddress,price){
+    console.log("setBuyPrice",x,y,tile,tokenAddress,price)
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+    //setSellPrice(uint16 _x,uint16 _y,uint8 _tile,address _token,uint _price
+    console.log("setBuyPrice.....")
+    contracts["Market"].methods.setBuyPrice(x,y,tile,tokenAddress,price).send({
       from: accounts[0],
       gas:250000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
@@ -1425,7 +1498,7 @@ class App extends Component {
       //loaderOpacity:0,
       modalObject:modalObject,
       previousModalObject:this.state.modalObject,//this let's your layer up two modals
-      modalHeight:50,
+      modalHeight:150,
       clickScreenTop:0,
       clickScreenOpacity:0.9
     })
@@ -1531,7 +1604,8 @@ class App extends Component {
     }
 
     if(name=="Market"){
-      //modalObject.timberPrice = await contracts["Market"].methods.price(web3.utils.asciiToHex("Timber")).call();
+      modalObject.sellPricesTimber = await contracts["Market"].methods.sellPrices(this.state.landX,this.state.landY,index,contracts["Timber"]._address).call();
+      modalObject.buyPricesTimber = await contracts["Market"].methods.buyPrices(this.state.landX,this.state.landY,index,contracts["Timber"]._address).call();
       //modalObject.filletBalance = await contracts["Market"].methods.balanceOf(contracts["Fishmonger"]._address).call();
     }
 
@@ -1942,11 +2016,12 @@ let menu = (
 //(-1)*this.state.zoom*180/2
 //(-position:"absolute",left:document.scrollingElement.scrollLeft+this.state.clientWidth-100-100*this.state.zoom,
 
+let adjustedInvZoom = Math.min(1,this.state.zoom * 1.5)
 
-let rightOffset = ((1-this.state.zoom)*100)
+let rightOffset = ((1-adjustedInvZoom)*135)
 let inventory = (
-  <div style={{position:"fixed",right:10-rightOffset,top:75,width:200,border:"0px solid #a0aab5",color:"#DDDDDD",zIndex:99}} >
-    <div style={{transform:"scale("+this.state.zoom+")",marginRight:0}}>
+  <div style={{transform:"scale("+adjustedInvZoom+")",position:"fixed",right:10-rightOffset,top:(100*(adjustedInvZoom))-35,width:200,border:"0px solid #a0aab5",color:"#DDDDDD",zIndex:99}} >
+    <div style={{marginRight:0}}>
       <Inventory
       invClick={this.invClick.bind(this)}
       inventory={this.state.inventory}
@@ -2052,8 +2127,8 @@ let clickScreen = (
       <img style={{
         position:"absolute",
         zIndex:-99,
-        left:"47%",
-        top:"47%",
+        left:"42%",
+        top:"42%",
         opacity:this.state.loaderOpacity,
       }} src="loading3.gif" />
       </div>
@@ -2071,10 +2146,10 @@ return (
   {inventory}
 
 
-  <div style={{transform:"scale("+this.state.zoom+")"}}>
-    {sea}
-    {land}
-  </div>
+
+  {sea}
+  {land}
+
 
   <Motion
   defaultStyle={{
@@ -2429,11 +2504,8 @@ return (
 
 
 
-      <div style={{zIndex:1,position:'fixed',right:20,bottom:-4,opacity:1-this.state.cornerOpacity}}>
-      <a href="https://join.slack.com/t/galleass/shared_invite/enQtMzE0MjQ5MzMyMzQzLTk3MmI2Zjk4Njc2ZmUwYzI5ZjA1ZmRiNzY4MjQ1OTM1OTM0NTM0MmZjNWVhZWEzMWI2ZTk1MzJjNDk4OTIzZmY" target="_blank">
-      <img data-rh="Slack" data-rh-at="top" style={{maxHeight:36,opacity:0.7}} src="slack.png" />
-      </a>
-      </div>
+      <Social cornerOpacity={this.state.cornerOpacity} zoom={this.state.zoom} />
+
 
       <div style={{zIndex:1,position:'fixed',right:60,bottom:-4,opacity:0}} onClick={this.testSomething.bind(this)}>
       <img style={{maxHeight:36,opacity:0.7}} src="moreinfo.png" />
@@ -2458,8 +2530,8 @@ return (
   >
   {currentStyles => {
     //console.log("currentStyles.scrollLeft",currentStyles.scrollLeft)
-    return <WindowScrollSink scrollLeft={currentStyles.scrollLeft*this.state.zoom} />
-
+    return <WindowScrollSink scrollLeft={currentStyles.scrollLeft} />
+    //*this.state.zoom
   }}
   </Motion>
 
@@ -2482,10 +2554,11 @@ return (
   }}
   >
   {currentStyles => {
+    //<div style={{zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
 
     if(this.state.modalObject.simpleMessage){
       return (
-        <div style={{zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
+        <div style={{transform:"scale("+this.state.zoom+")",zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top-((1-this.state.zoom)*300),textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
         <div style={{cursor:'pointer',position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
         <img src="exit.png" />
         </div>
@@ -2559,8 +2632,9 @@ return (
           )
         }
 
+        //<div style={{zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
         return (
-          <div style={{zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
+          <div style={{transform:"scale("+this.state.zoom+")",zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top-((1-this.state.zoom)*300),textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
           <div style={{cursor:'pointer',position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
           <img src="exit.png" />
           </div>
@@ -2697,32 +2771,37 @@ return (
         }
 
         if(this.state.modalObject.name == "Market"){
-          /*let buyArray = [{
+          let buyArray = [{
             amount: "1",
             balance: this.state.modalObject.timberBalance,
             first:"timber",
-            price: this.state.modalObject.timberPrice,
+            price: this.state.modalObject.sellPricesTimber,
             second:"copper",
-            clickFn: this.buyFillet.bind(this),
+            clickFn: this.buyFromMarket.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,"Timber",1,this.state.modalObject.sellPricesTimber),//(x,y,i,tokenName,amountToBuy,copperToSpend)
           }]
           let sellArray = [{
-              amount:"1",
-              balance:false,
-              first:"timber",
-              price:this.state.modalObject.timberPrice,
-              second:"copper",
-              clickFn: this.sellFish.bind(this,this.state.modalObject.fish[f]),
-            }]
-          }
-          */
+            amount:"1",
+            balance:false,
+            first:"timber",
+            price:this.state.modalObject.buyPricesTimber,
+            second:"copper",
+            clickFn: this.sellToMarket.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,"Timber",1,this.state.modalObject.buyPricesTimber),
+          }]
+
+
           content.push(
-            <BuySellOwner setSellPrice={this.setSellPrice.bind(this)} landX={this.state.landX} landY={this.state.landY} {...this.state.modalObject}/*buyArray={buyArray} sellArray={sellArray}*//>
+            <BuySellTable buyArray={buyArray} sellArray={sellArray}/>
           )
-          content.push(
-            <div style={{marginTop:60}}>
-              <CreateTable image={"buildTimberCamp"} clickFn={this.testMarket.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index)}/>
-            </div>
-          )
+         if(OWNS_TILE){
+           content.push(
+             <BuySellOwner setSellPrice={this.setSellPrice.bind(this)} setBuyPrice={this.setBuyPrice.bind(this)} landX={this.state.landX} landY={this.state.landY} {...this.state.modalObject}/*buyArray={buyArray} sellArray={sellArray}*//>
+           )
+           /*content.push(
+             <div style={{marginTop:60}}>
+               <CreateTable image={"buildTimberCamp"} clickFn={this.testMarket.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index)}/>
+             </div>
+           )*/
+         }
         }
 
         if(OWNS_TILE && this.state.modalObject.name == "Village"){

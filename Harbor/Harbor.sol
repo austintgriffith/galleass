@@ -25,6 +25,21 @@ contract Harbor is Galleasset, Ownable {
   }
   function () public {revert();}
 
+
+
+  //      land x            land y          land tile
+  mapping(uint16 => mapping(uint16 => mapping(uint8 => address))) public landOwners;
+  //standard tile interface
+  //called when tile is purchased from Land contract
+  function onPurchase(uint16 _x,uint16 _y,uint8 _tile,address _owner,uint _amount) public returns (bool) {
+    require(msg.sender==getContract("Land") || msg.sender==getContract("LandLib"));
+    landOwners[_x][_y][_tile] = _owner;
+    emit LandOwner(_x,_y,_tile,_owner);
+  }
+  event LandOwner(uint16 _x,uint16 _y,uint8 _tile,address _owner);
+
+
+
   function onTokenTransfer(address _sender, uint _value, bytes _data) isGalleasset("Harbor") returns (bool) {
     if( msg.sender == getContract("Timber") ){
       TokensIncoming("Timber",_sender,_value,_data);

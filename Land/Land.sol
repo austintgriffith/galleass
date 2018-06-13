@@ -96,6 +96,10 @@ contract Land is Galleasset, Ownable {
   function editTile(uint16 _x, uint16 _y,uint8 _tile,uint16 _update,address _contract) onlyOwner isBuilding public returns (bool) {
     tileTypeAt[_x][_y][_tile] = _update;
     contractAt[_x][_y][_tile] = _contract;
+    if(contractAt[_x][_y][_tile]!=address(0)){
+       StandardTile tileContract = StandardTile(contractAt[_x][_y][_tile]);
+       tileContract.onPurchase(_x,_y,_tile,ownerAt[_x][_y][_tile],priceAt[_x][_y][_tile]);
+    }
   }
 
   function buyTile(uint16 _x,uint16 _y,uint8 _tile) public isGalleasset("Land") returns (bool) {

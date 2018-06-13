@@ -15,7 +15,7 @@ class CitizenFace extends Component {
     }
     let typeCount = {
       head: 4,
-      hair: 3,
+      hair: 5,
       nose: 5,
       mouth: 5,
       eyes: 6,
