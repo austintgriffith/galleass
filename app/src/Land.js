@@ -27,7 +27,7 @@ class Land extends Component {
   }
   landTile(location,owner,type,buttons){
 
-    let blockieOpacity = 0.1
+    let blockieOpacity = 0.4
     if(this.state.account&&owner.toLowerCase()==this.state.account.toLowerCase()){
       blockieOpacity = 0.7
     }
@@ -55,7 +55,7 @@ class Land extends Component {
   hillsMain(location,owner){
     let mainWidth = 120
     let mainHeight = 125
-    let blockieOpacity = 0.1
+    let blockieOpacity = 0.4
     if(this.state.account&&owner.toLowerCase()==this.state.account.toLowerCase()){
       blockieOpacity = 0.7
     }

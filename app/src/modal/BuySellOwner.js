@@ -59,7 +59,7 @@ class BuySellOwner extends Component {
               style={{maxHeight:42,cursor:"pointer",verticalAlign:'middle'}} onClick={this.props.setSellPrice.bind(this,this.props.landX,this.props.landY,this.props.index,this.state.newSellTokenAddress,this.state.newSellTokenPrice)}/>
             </td>
             <td style={{width:"50%",verticalAlign:"top"}}>
-            Address:<input
+            <input
               style={{textAlign:'right',width:80,margin:6,maxHeight:20,padding:5,border:'2px solid #ccc',borderRadius:5}}
               type="text" name="newBuyTokenAddress" value={this.state.newBuyTokenAddress} onChange={this.handleChangeNewBuyTokenAddress.bind(this)}
             />

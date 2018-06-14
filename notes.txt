@@ -30,5 +30,20 @@ I have a new event parser built and I should integrate it into Galleass
 ### Possible Changes
 ```
 Citizen chars are uint16 but you could have more if you use uint8
-Citizen status should probably be uint16 
+Citizen status should probably be uint16
+```
+
+
+### Before Staging
+```
+NFT modal (when you click your ship in your inv)
+Timber should pay waaay slower
+All tokens can be bought and sold in market
+Maybe grass and mountain tiles could also produce resources like the timbercamp?
+```
+
+## Once staging
+```
+Transactions should show up in bottom left to give progress bars to non-ship button clicks
+Make sure all things link to etherscan correctly
 ```

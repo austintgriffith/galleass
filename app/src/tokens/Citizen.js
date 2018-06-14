@@ -60,7 +60,9 @@ class Citizen extends Component {
               onChange={this.handleInput.bind(this,"moveTile")}
             />
             <img src="metamasksign.png" style={{cursor:"pointer",maxHeight:28,marginLeft:5,verticalAlign:'middle'}} onClick={()=>{
-              this.props.moveCitizen(this.props.id,this.state.moveTile)
+              if(this.state.moveTile){
+                this.props.moveCitizen(this.props.id,this.state.moveTile)
+              }
             }}/>
           </div>
         )

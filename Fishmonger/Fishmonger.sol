@@ -32,6 +32,7 @@ contract Fishmonger is Galleasset, HasNoEther {
     require( _species != address(0) );
     uint256 fishPrice = price[_species];
     require( fishPrice>0 );
+    require( _amount>0 );
     StandardToken fishContract = StandardToken(_species);
     require( fishContract.galleassTransferFrom(msg.sender,address(this),_amount) );
 

@@ -61,6 +61,9 @@ class Ships extends Component {
         {
           translatedX+=(width);
         }
+        if(!ships[b].direction){
+         translatedX-=shipwidth;
+        }
       }else if(ships[b].fishing){
           image+="fishing";
           translatedX = width*(ships[b].location/65535)-(shipwidth/2);

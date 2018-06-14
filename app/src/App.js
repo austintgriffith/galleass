@@ -793,6 +793,9 @@ class App extends Component {
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       this.startWaiting(receipt.transactionHash)
+      if(this.state.modalHeight>=0){
+        this.closeModal()
+      }
     })
   }
   async embark() {
@@ -827,7 +830,7 @@ class App extends Component {
     console.log("Fishmonger is paying ",paying," for ",fishContract._address)
     contracts["Fishmonger"].methods.sellFish(fishContract._address,amount).send({
       from: accounts[0],
-      gas:120000+(amount*60000),
+      gas:180000+(amount*80000),
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
@@ -1603,9 +1606,14 @@ class App extends Component {
       modalObject.filletBalance = await contracts["Fillet"].methods.balanceOf(contracts["Fishmonger"]._address).call();
     }
 
+
+
     if(name=="Market"){
-      modalObject.sellPricesTimber = await contracts["Market"].methods.sellPrices(this.state.landX,this.state.landY,index,contracts["Timber"]._address).call();
-      modalObject.buyPricesTimber = await contracts["Market"].methods.buyPrices(this.state.landX,this.state.landY,index,contracts["Timber"]._address).call();
+      modalObject.sellPrices = {}
+      modalObject.buyPrices = {}
+
+      modalObject.sellPrices['Timber'] = parseInt(await contracts["Market"].methods.sellPrices(this.state.landX,this.state.landY,index,contracts["Timber"]._address).call());
+      modalObject.buyPrices['Timber'] = parseInt(await contracts["Market"].methods.buyPrices(this.state.landX,this.state.landY,index,contracts["Timber"]._address).call());
       //modalObject.filletBalance = await contracts["Market"].methods.balanceOf(contracts["Fishmonger"]._address).call();
     }
 
@@ -2026,7 +2034,7 @@ let inventory = (
       invClick={this.invClick.bind(this)}
       inventory={this.state.inventory}
       Ships={this.state.Ships}
-      sellFish={this.sellFish.bind(this)}
+      /*sellFish={this.sellFish.bind(this)}*/
       contracts={contracts}
       etherscan={this.state.etherscan}
       />
@@ -2744,6 +2752,12 @@ return (
           content.push(
             <BuySellTable buyArray={buyArray} sellArray={sellArray}/>
           )
+
+          content.push(
+            <div style={{position:"absolute",left:130,top:105,cursor:"pointer"}} onClick={this.disembark.bind(this)}>
+              <img style={{maxHeight:50,maxWidth:50}} src={"disembark.png"} />
+            </div>
+          )
         }
         if(this.state.modalObject.name == "Fishmonger"){
           let buyArray = [{
@@ -2762,7 +2776,7 @@ return (
               first:this.state.modalObject.fish[f],
               price:this.state.modalObject.prices[this.state.modalObject.fish[f]],
               second:"copper",
-              clickFn: this.sellFish.bind(this,this.state.modalObject.fish[f]),
+              clickFn: this.sellFish.bind(this,this.state.modalObject.fish[f],1),
             }
           }
           content.push(
@@ -2771,22 +2785,33 @@ return (
         }
 
         if(this.state.modalObject.name == "Market"){
-          let buyArray = [{
-            amount: "1",
-            balance: this.state.modalObject.timberBalance,
-            first:"timber",
-            price: this.state.modalObject.sellPricesTimber,
-            second:"copper",
-            clickFn: this.buyFromMarket.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,"Timber",1,this.state.modalObject.sellPricesTimber),//(x,y,i,tokenName,amountToBuy,copperToSpend)
-          }]
-          let sellArray = [{
-            amount:"1",
-            balance:false,
-            first:"timber",
-            price:this.state.modalObject.buyPricesTimber,
-            second:"copper",
-            clickFn: this.sellToMarket.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,"Timber",1,this.state.modalObject.buyPricesTimber),
-          }]
+          let buyArray = []
+
+          if(this.state.modalObject.sellPrices["Timber"]>0){
+            buyArray.push(
+              {
+                amount: "1",
+                balance: this.state.modalObject.timberBalance,
+                first:"timber",
+                price: this.state.modalObject.sellPrices["Timber"],
+                second:"copper",
+                clickFn: this.buyFromMarket.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,"Timber",1,this.state.modalObject.sellPrices["Timber"]),//(x,y,i,tokenName,amountToBuy,copperToSpend)
+              }
+            )
+          }
+          let sellArray = []
+          if(this.state.modalObject.buyPrices["Timber"]){
+            sellArray.push(
+              {
+                amount:"1",
+                balance:false,
+                first:"timber",
+                price:this.state.modalObject.buyPrices["Timber"],
+                second:"copper",
+                clickFn: this.sellToMarket.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,"Timber",1,this.state.modalObject.buyPrices["Timber"]),
+              }
+            )
+          }
 
 
           content.push(
