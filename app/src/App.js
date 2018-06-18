@@ -16,6 +16,7 @@ import galleassBlockNumber from './blockNumber.js'
 import Writing from './Writing.js'
 
 // -- tokens --- //
+import Dogger from './tokens/Dogger.js'
 import Citizen from './tokens/Citizen.js'
 import CitizenFace from './tokens/CitizenFace.js'
 
@@ -497,7 +498,7 @@ class App extends Component {
 
   }
   async doSyncShips(from,to) {
-    let DEBUG_SYNCSHIPS = false;
+    let DEBUG_SYNCSHIPS = true;
     if(DEBUG_SYNCSHIPS) console.log("Sync ships")
     if(from<1) from=1
     let ships = await contracts["Sea"].getPastEvents('ShipUpdate', {
@@ -511,7 +512,7 @@ class App extends Component {
       let id = ships[b].returnValues.owner.toLowerCase()
       let timestamp = ships[b].returnValues.timestamp
       if(!storedShips[id]||storedShips[id].timestamp < timestamp){
-        if(DEBUG_SYNCSHIPS) console.log(ships[b].returnValues)
+        if(DEBUG_SYNCSHIPS) console.log("UPDATED SHIP "+b,ships[b].returnValues)
         storedShips[id]={
           timestamp:timestamp,
           id:ships[b].returnValues.id,
@@ -523,6 +524,7 @@ class App extends Component {
           blockNumber:ships[b].returnValues.blockNumber,
           location:ships[b].returnValues.location
         };
+        console.log("FLOATING FOR "+b+" ("+id+") should be set to ",storedShips[id].floating)
       }
     }
     if(hasElements(storedShips)){
@@ -798,14 +800,18 @@ class App extends Component {
       }
     })
   }
-  async embark() {
+  async embark(shipId) {
     console.log("embark")
     this.bumpButton("approveandembark")
+
+    if(!shipId){
+      shipId = this.state.inventoryDetail['Dogger'][0]
+    }
 
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
     //console.log(accounts)
     //console.log("methods.embark(",this.state.inventoryDetail['Ships'][0])
-    contracts["Sea"].methods.embark(this.state.inventoryDetail['Dogger'][0]).send({
+    contracts["Sea"].methods.embark(shipId).send({
       from: accounts[0],
       gas:200000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
@@ -814,10 +820,14 @@ class App extends Component {
       this.setState({currentTx:hash});
       if(!error) this.load()
       this.resetButton("approveandembark")
+      if(this.state.modalHeight>=0){
+        this.closeModal()
+      }
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       this.setState({isEmbarking:true})
       this.startWaiting(receipt.transactionHash)
+
     })
   }
   async sellFish(fish,amount){
@@ -1034,7 +1044,7 @@ class App extends Component {
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
     contracts["Citizens"].methods.moveCitizen(id,tile).send({
       from: accounts[0],
-      gas:300000,
+      gas:70000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
@@ -1510,12 +1520,12 @@ class App extends Component {
     //I setup previousModalObject so there could be one modal and then another
     //and you could return to the first one, but I haven't used it yet
     let modalObject = this.state.previousModalObject
-    if(modalObject.name!="Loading..."){
+    /*if(modalObject.name!="Loading..."){/////////// this stuff is for stacking modals.. skipping for now
       this.setState({
         modalObject:modalObject,
         previousModalObject:{"name":"Loading..."}
       })
-    }else{
+    }else{*/
       this.setState({
         //loaderOpacity:1,
         modalHeight:-600,
@@ -1524,7 +1534,7 @@ class App extends Component {
         previousModalObject:{"name":"Loading..."},
         modalObject:{"name":"Loading..."}
       })
-    }
+    //}
   }
   titleClick(){
     console.log("Clicked Title")
@@ -1630,6 +1640,7 @@ class App extends Component {
       modalObject.copperBalance = await contracts["Copper"].methods.balanceOf(contracts[cleanName]._address).call();
       modalObject.filletBalance = await contracts["Fillet"].methods.balanceOf(contracts[cleanName]._address).call();
       modalObject.timberBalance = await contracts["Timber"].methods.balanceOf(contracts[cleanName]._address).call();
+      modalObject.doggerBalance = await contracts["Dogger"].methods.balanceOf(contracts[cleanName]._address).call();
       console.log("copperBalance",contracts["Copper"]._address,cleanName,contracts[cleanName]._address,modalObject.copperBalance)
     }
 
@@ -1824,7 +1835,7 @@ class App extends Component {
         )
       )
     }else if(this.state.inventory['Dogger']>0){
-      let clickFn = this.embark.bind(this)
+      let clickFn = this.embark.bind(this,false)
       if(buttonDisabled){clickFn=()=>{}}
       if(this.state.inventoryDetail['Dogger'] && this.state.inventoryDetail['Dogger'].length>0){
         buttons.push(
@@ -2617,6 +2628,14 @@ return (
                 </div>
               )
             })
+          }else if(this.state.modalObject.name=="Dogger"){
+            allTokens = this.state.modalObject.tokensOfOwner.map((id)=>{
+              return (
+                <div>
+                  <Dogger id={id} {...this.state.modalObject.tokens[id]} embark={this.embark.bind(this)}/>
+                </div>
+              )
+            })
           }else{
             allTokens = this.state.modalObject.tokensOfOwner.map((token)=>{
               return (
@@ -2703,6 +2722,16 @@ return (
             </span>
           )
         }
+
+
+        if(this.state.modalObject.doggerBalance>0){
+          inventoryItems.push(
+            <span style={modalInvStyle}><img style={{maxHeight:invHeight}} src="dogger.png" />
+            <Writing string={this.state.modalObject.doggerBalance} size={invHeight+2}/>
+            </span>
+          )
+        }
+
         if(this.state.modalObject.copperBalance>0){
           inventoryItems.push(
             <span style={modalInvStyle}><img style={{maxHeight:invHeight}} src="copper.png" />
@@ -2999,8 +3028,8 @@ function mergeByBlockNumber(a,b) {
 }
 function mergeByTimestamp(a,b) {
   for(let i in a) {
-    if(a[i]&&b[i]&& a[i].blockNumber && b[i].blockNumber){
-      if(a[i].blockNumber>b[i].blockNumber){
+    if(a[i]&&b[i]&& a[i].timestamp && b[i].timestamp){
+      if(parseInt(a[i].timestamp)>parseInt(b[i].timestamp)){
         b[i] = a[i];
       }else{
         a[i] = b[i];

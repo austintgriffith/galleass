@@ -27,7 +27,7 @@ contract Sea is Galleasset, HasNoEther {
   mapping (bytes32 => address) public fish;
   mapping (address => bool) public species;
 
-  event ShipUpdate(uint256 id,address owner,uint timestamp,bool floating,bool sailing,bool direction,bool fishing,uint32 blockNumber,uint16 location);
+  event ShipUpdate(uint256 id,address owner,uint timestamp,bool floating,bool sailing,bool direction,bool fishing,uint64 blockNumber,uint16 location);
 
   struct Ship{
     uint256 id;
@@ -35,7 +35,7 @@ contract Sea is Galleasset, HasNoEther {
     bool sailing;
     bool direction; //true: east (+), false: west (-)
     bool fishing;
-    uint32 blockNumber;
+    uint64 blockNumber;
     uint16 location;
     //when you cast, it is after a specific fish with a certain bait hash
     bytes32 bait;
@@ -45,9 +45,9 @@ contract Sea is Galleasset, HasNoEther {
   // --------------------------------------------------------------------------- BUILD
 
   function addCloud(uint16 _location,uint8 _speed,uint8 _image) onlyOwner public returns (bool) {
-    Cloud(_location,_speed,_image,uint32(block.number));
+    Cloud(_location,_speed,_image,uint64(block.number));
   }
-  event Cloud(uint16 location,uint8 speed,uint8 image,uint32 block);
+  event Cloud(uint16 location,uint8 speed,uint8 image,uint64 block);
 
   function allowSpecies(address _species) onlyOwner public returns (bool) {
     assert( _species != address(0) );
@@ -91,7 +91,7 @@ contract Sea is Galleasset, HasNoEther {
     ships[msg.sender].floating=true;
     ships[msg.sender].sailing=false;
     ships[msg.sender].location=getHarborLocation();
-    ships[msg.sender].blockNumber=uint32(block.number);
+    ships[msg.sender].blockNumber=uint64(block.number);
     ships[msg.sender].direction=false;
 
     ShipUpdate(ships[msg.sender].id,msg.sender,now,ships[msg.sender].floating,ships[msg.sender].sailing,ships[msg.sender].direction,ships[msg.sender].fishing,ships[msg.sender].blockNumber,ships[msg.sender].location);
@@ -146,7 +146,7 @@ contract Sea is Galleasset, HasNoEther {
     require( !ships[msg.sender].sailing );
 
     ships[msg.sender].sailing=true;
-    ships[msg.sender].blockNumber=uint32(block.number);
+    ships[msg.sender].blockNumber=uint64(block.number);
     ships[msg.sender].direction=direction;
 
     ShipUpdate(ships[msg.sender].id,msg.sender,now,ships[msg.sender].floating,ships[msg.sender].sailing,ships[msg.sender].direction,ships[msg.sender].fishing,ships[msg.sender].blockNumber,ships[msg.sender].location);
@@ -163,7 +163,7 @@ contract Sea is Galleasset, HasNoEther {
     require( ships[msg.sender].sailing );
 
     ships[msg.sender].location = shipLocation(msg.sender);
-    ships[msg.sender].blockNumber = uint32(block.number);
+    ships[msg.sender].blockNumber = uint64(block.number);
     ships[msg.sender].sailing = false;
 
     ShipUpdate(ships[msg.sender].id,msg.sender,now,ships[msg.sender].floating,ships[msg.sender].sailing,ships[msg.sender].direction,ships[msg.sender].fishing,ships[msg.sender].blockNumber,ships[msg.sender].location);
@@ -180,7 +180,7 @@ contract Sea is Galleasset, HasNoEther {
     require( !ships[msg.sender].fishing );
 
     ships[msg.sender].fishing = true;
-    ships[msg.sender].blockNumber = uint32(block.number);
+    ships[msg.sender].blockNumber = uint64(block.number);
     ships[msg.sender].bait = baitHash;
 
     ShipUpdate(ships[msg.sender].id,msg.sender,now,ships[msg.sender].floating,ships[msg.sender].sailing,ships[msg.sender].direction,ships[msg.sender].fishing,ships[msg.sender].blockNumber,ships[msg.sender].location);
@@ -258,7 +258,7 @@ contract Sea is Galleasset, HasNoEther {
     bool sailing,
     bool direction,
     bool fishing,
-    uint32 blockNumber,
+    uint64 blockNumber,
     uint16 location
   ) {
     return(

@@ -10,26 +10,16 @@ The market facilitates the buying and selling of different tokens
 */
 
 import 'Galleasset.sol';
+import 'StandardTile.sol';
 import 'zeppelin-solidity/contracts/ownership/HasNoEther.sol';
 
-contract Market is Galleasset, HasNoEther {
+contract Market is Galleasset, StandardTile, HasNoEther {
 
   function Market(address _galleass) public Galleasset(_galleass) { }
 
-
   //      land x            land y          land tile
-  mapping(uint16 => mapping(uint16 => mapping(uint8 => address))) public landOwners;
   mapping(uint16 => mapping(uint16 => mapping(uint8 => mapping (address => uint)))) public buyPrices;
   mapping(uint16 => mapping(uint16 => mapping(uint8 => mapping (address => uint)))) public sellPrices;
-
-  //standard tile interface
-  //called when tile is purchased from Land contract
-  function onPurchase(uint16 _x,uint16 _y,uint8 _tile,address _owner,uint _amount) public returns (bool) {
-    require(msg.sender==getContract("Land") || msg.sender==getContract("LandLib"));
-    landOwners[_x][_y][_tile] = _owner;
-    emit LandOwner(_x,_y,_tile,_owner);
-  }
-  event LandOwner(uint16 _x,uint16 _y,uint8 _tile,address _owner);
 
   function setBuyPrice(uint16 _x,uint16 _y,uint8 _tile,address _token,uint _price) public returns (bool) {
     require(msg.sender==landOwners[_x][_y][_tile]);

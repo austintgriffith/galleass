@@ -9,9 +9,10 @@ pragma solidity ^0.4.15;
 */
 
 import 'Galleasset.sol';
+import 'StandardTile.sol';
 import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
-contract TimberCamp is Galleasset, Ownable {
+contract TimberCamp is Galleasset, StandardTile, Ownable {
 
   /* right now the village contract represents all of the villages but
     it has a single land owner and inventory
@@ -23,13 +24,10 @@ contract TimberCamp is Galleasset, Ownable {
   */
 
   bytes2 public min = 0x0001;
-  bytes2 public max = 0x7FFF;
+  bytes2 public max = 0x0666; //should be about 1 every 10 minutes
 
   uint8 public maxCollect = 8;
   bytes32 public resource = "Timber";
-
-  //      land x            land y          land tile
-  mapping(uint16 => mapping(uint16 => mapping(uint8 => address))) public landOwners;
 
   //keep track of the last block they pulled resources so you know what is available to
   mapping(uint16 => mapping(uint16 => mapping(uint8 => uint64))) public lastBlock;
@@ -69,13 +67,6 @@ contract TimberCamp is Galleasset, Ownable {
     return amount;
   }
   event Debug(uint16 _x,uint16 _y,uint8 _tile,uint64 _block,bytes32 _hash);
-  //standard tile interface
-  //called when tile is purchased from Land contract
-  function onPurchase(uint16 _x,uint16 _y,uint8 _tile,address _owner,uint _amount) public returns (bool) {
-    require(msg.sender==getContract("Land") || msg.sender==getContract("LandLib"));
-    landOwners[_x][_y][_tile] = _owner;
-    lastBlock[_x][_y][_tile] = uint64(block.number);
-  }
 
   function withdraw(uint256 _amount) public onlyOwner isBuilding returns (bool) {
     require(this.balance >= _amount);

@@ -7,8 +7,6 @@ tests/publish.js
 app/App.js?
 ```
 
-
-
 ### Exporting all layers to files (the alphabet/citizen from psd)
 ```
 File -> Scripts -> Browse
@@ -17,22 +15,17 @@ run
 (script comes from https://github.com/jwa107/Photoshop-Export-Layers-as-Images)
 ```
 
-
-
 ### Events Parsing
 ```
 Set DEBUG_SYNCCITIZENS to true to see how bad it is
 I have a new event parser built and I should integrate it into Galleass
 ```
 
-
-
 ### Possible Changes
 ```
 Citizen chars are uint16 but you could have more if you use uint8
 Citizen status should probably be uint16
 ```
-
 
 ### Before Staging
 ```
@@ -42,8 +35,19 @@ All tokens can be bought and sold in market
 Maybe grass and mountain tiles could also produce resources like the timbercamp?
 ```
 
-## Once staging
+### Once staging
 ```
 Transactions should show up in bottom left to give progress bars to non-ship button clicks
 Make sure all things link to etherscan correctly
+```
+
+### Neat things to write about
+```
+fully decentralized means each iteration lives forever on ipfs (no backend servers to upgrade, etc)
+main contract never change and if it does you use descendant system
+from there you have auth system getContract and hasPermission
+which brings up all the different ways to move tokens... authorize and then transfer (two tx), 667 transfer and call (parse data), give contract permission to transfer (soft/hard assets)
+contract "library" so the contract only holds who owns what and all the business logic is in an upgradable contract (until production flag is set)
+the whole event triggered paradigm is really efficient... like how the clouds or resources or sailing works
+multiplayer so massive it comes down to what can be displayed ... with the ethereum blockchain as the only backend
 ```

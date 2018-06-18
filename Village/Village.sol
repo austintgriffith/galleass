@@ -9,9 +9,10 @@ pragma solidity ^0.4.15;
 */
 
 import 'Galleasset.sol';
+import 'StandardTile.sol';
 import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
-contract Village is Galleasset, Ownable {
+contract Village is Galleasset, StandardTile, Ownable {
 
   /* right now the village contract represents all of the villages but
     it has a single land owner and inventory
@@ -21,9 +22,6 @@ contract Village is Galleasset, Ownable {
     then call a function on the village that increments the inventory
     for a specific village
   */
-
-  //      land x            land y          land tile
-  mapping(uint16 => mapping(uint16 => mapping(uint8 => address))) public landOwners;
 
   function Village(address _galleass) public Galleasset(_galleass) { }
   function () public {revert();}
@@ -36,13 +34,6 @@ contract Village is Galleasset, Ownable {
     }*/
   }
   event TokenTransfer(address token,address sender,uint amount,bytes data);
-
-  //standard tile interface
-  //called when tile is purchased from Land contract
-  function onPurchase(uint16 _x,uint16 _y,uint8 _tile,address _owner,uint _amount) public returns (bool) {
-    require(msg.sender==getContract("Land") || msg.sender==getContract("LandLib"));
-    landOwners[_x][_y][_tile] = _owner;
-  }
 
   function createCitizen(uint16 _x,uint16 _y,uint8 _tile) public returns (uint) {
     require(msg.sender==landOwners[_x][_y][_tile]);
