@@ -11,10 +11,9 @@ pragma solidity ^0.4.15;
 
 import 'Galleasset.sol';
 import 'ERC677Token.sol';
-import 'zeppelin-solidity/contracts/ownership/HasNoEther.sol';
-import 'zeppelin-solidity/contracts/token/MintableToken.sol';
+import 'zeppelin-solidity/contracts/token/ERC20/MintableToken.sol';
 
-contract Redbass is Galleasset, HasNoEther, MintableToken, ERC677Token {
+contract Redbass is Galleasset, MintableToken, ERC677Token {
 
   string public constant name = "Galleass Redbass";
   string public constant symbol = "G_REDBASS";
@@ -23,8 +22,8 @@ contract Redbass is Galleasset, HasNoEther, MintableToken, ERC677Token {
 
   uint256 public constant INITIAL_SUPPLY = 0;
 
-  function Redbass(address _galleass) Galleasset(_galleass) public {
-    totalSupply = INITIAL_SUPPLY;
+  constructor(address _galleass) Galleasset(_galleass) public {
+    totalSupply_ = INITIAL_SUPPLY;
   }
 
   function galleassTransferFrom(address _from, address _to, uint256 _value) public returns (bool) {

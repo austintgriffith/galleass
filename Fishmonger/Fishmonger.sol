@@ -11,12 +11,11 @@ the Sea for other players to catch.
 
 */
 
-import 'Galleasset.sol';
-import 'zeppelin-solidity/contracts/ownership/HasNoEther.sol';
+import 'StandardTile.sol';
 
-contract Fishmonger is Galleasset, HasNoEther {
+contract Fishmonger is StandardTile {
 
-  function Fishmonger(address _galleass) public Galleasset(_galleass) { }
+  constructor(address _galleass) public StandardTile(_galleass) { }
 
   //how much the fishmonger is willing to pay for each species of fish
   mapping (address => uint256) public price;
@@ -51,29 +50,16 @@ contract Fishmonger is Galleasset, HasNoEther {
     StandardToken copperContract = StandardToken(copperContractAddress);
     require( copperContract.transfer(msg.sender,fishPrice*_amount) );
 
-    updateExperience(msg.sender);
+    _updateExperience(msg.sender);
     return true;
   }
 
-  function updateExperience(address _player) internal returns (bool){
+  function _updateExperience(address _player) internal returns (bool){
     address experienceContractAddress = getContract("Experience");
     require( experienceContractAddress!=address(0) );
     Experience experienceContract = Experience(experienceContractAddress);
     experienceContract.update(_player,3,true);//milestone 3: Sell Fish for Copper
   }
-
-
-  //      land x            land y          land tile
-  mapping(uint16 => mapping(uint16 => mapping(uint8 => address))) public landOwners;
-  //standard tile interface
-  //called when tile is purchased from Land contract
-  function onPurchase(uint16 _x,uint16 _y,uint8 _tile,address _owner,uint _amount) public returns (bool) {
-    require(msg.sender==getContract("Land") || msg.sender==getContract("LandLib"));
-    landOwners[_x][_y][_tile] = _owner;
-    emit LandOwner(_x,_y,_tile,_owner);
-  }
-  event LandOwner(uint16 _x,uint16 _y,uint8 _tile,address _owner);
-
 
   function onTokenTransfer(address _sender, uint _amount, bytes _data) isGalleasset("Fishmonger") returns (bool){
     TokenTransfer(msg.sender,_sender,_amount,_data);
@@ -102,12 +88,6 @@ contract Fishmonger is Galleasset, HasNoEther {
     StandardToken filletContract = StandardToken(filletAddress);
     require(filletAmount <= filletContract.balanceOf(address(this)), "Fishmonger does not have enough fillets");
     require(filletContract.transfer(_sender,filletAmount), "Failed to transfer fillets");
-    return true;
-  }
-
-  function withdrawToken(address _token,uint256 _amount) public onlyOwner isBuilding returns (bool) {
-    StandardToken token = StandardToken(_token);
-    token.transfer(msg.sender,_amount);
     return true;
   }
 

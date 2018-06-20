@@ -12,9 +12,8 @@ pragma solidity ^0.4.15;
 */
 
 import 'Galleasset.sol';
-import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
-contract Land is Galleasset, Ownable {
+contract Land is Galleasset {
 
   uint16 public mainX;
   uint16 public mainY;

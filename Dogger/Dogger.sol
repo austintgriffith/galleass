@@ -17,7 +17,7 @@ contract Dogger is Galleasset, NFT {
     string public constant name = "Galleass Dogger";
     string public constant symbol = "G_DOGGER";
 
-    function Dogger(address _galleass) Galleasset(_galleass) public {
+    constructor(address _galleass) Galleasset(_galleass) public {
       //0 index should be a blank item owned by no one
       Item memory _item = Item({
         strength: 0,

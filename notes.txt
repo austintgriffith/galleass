@@ -29,10 +29,13 @@ Citizen status should probably be uint16
 
 ### Before Staging
 ```
+StandardToken inventory should be based on a per-tile basis... right now it show the inv for the contract.. it needs to also be withdrawal from the landowner
+(When you send a token to a contract address it somehow needs to know which one (677 data?))
+Harbor and FishMonger need to be moved over to landOwner system instead of contract owner
 NFT modal (when you click your ship in your inv)
-Timber should pay waaay slower
 All tokens can be bought and sold in market
 Maybe grass and mountain tiles could also produce resources like the timbercamp?
+The Sea should become The Bay and a new "Sea" is more about moving from island to island
 ```
 
 ### Once staging
@@ -46,7 +49,7 @@ Make sure all things link to etherscan correctly
 fully decentralized means each iteration lives forever on ipfs (no backend servers to upgrade, etc)
 main contract never change and if it does you use descendant system
 from there you have auth system getContract and hasPermission
-which brings up all the different ways to move tokens... authorize and then transfer (two tx), 667 transfer and call (parse data), give contract permission to transfer (soft/hard assets)
+which brings up all the different ways to move tokens... authorize and then transfer (two tx, harbor does it to build ships), 667 transfer and call (parse data), give contract permission to transfer (soft/hard assets)
 contract "library" so the contract only holds who owns what and all the business logic is in an upgradable contract (until production flag is set)
 the whole event triggered paradigm is really efficient... like how the clouds or resources or sailing works
 multiplayer so massive it comes down to what can be displayed ... with the ethereum blockchain as the only backend

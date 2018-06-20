@@ -17,11 +17,10 @@ pragma solidity ^0.4.15;
 // (Fishmonger.sol)   milestone 3: Sell Fish for Copper
 
 import 'Galleasset.sol';
-import 'zeppelin-solidity/contracts/ownership/HasNoEther.sol';
 
-contract Experience is Galleasset, HasNoEther {
+contract Experience is Galleasset {
 
-  function Experience(address _galleass) public Galleasset(_galleass) { }
+  constructor(address _galleass) public Galleasset(_galleass) { }
 
   mapping(address => mapping(uint16 => bool)) public experience;
 
@@ -33,9 +32,4 @@ contract Experience is Galleasset, HasNoEther {
   }
   event ExperienceUpdate(address _owner,uint16 _milestone,bool _value);
 
-  /*
-  for some reason the automatic getter wasn't working until I made this one and now it's fine?!?
-  function hasExperience(address _player,uint16 _milestone) public constant returns (bool){
-    return experience[_player][_milestone];
-  }*/
 }

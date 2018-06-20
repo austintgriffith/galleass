@@ -11,20 +11,18 @@ pragma solidity ^0.4.15;
 
 */
 
-import 'Galleasset.sol';
 import 'StandardTile.sol';
-import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
-contract Harbor is Galleasset, StandardTile, Ownable {
+contract Harbor is StandardTile {
 
-  mapping (bytes32 => uint256[999]) public shipStorage; //make ship storage very large for now (eventually this should be much smaller)
+  mapping (bytes32 => uint256[999]) public shipStorage; //make ship storage very large for testnet (eventually this should be much smaller)
   mapping (bytes32 => uint256) public currentPrice;
 
-  function Harbor(address _galleass) public Galleasset(_galleass) {
+  constructor(address _galleass) public StandardTile(_galleass) {
     currentPrice["Dogger"] = ((1 ether)/1000);
   }
-  function () public {revert();}
 
+  /*
   function onTokenTransfer(address _sender, uint _value, bytes _data) isGalleasset("Harbor") returns (bool) {
     if( msg.sender == getContract("Timber") ){
       TokensIncoming("Timber",_sender,_value,_data);
@@ -34,6 +32,7 @@ contract Harbor is Galleasset, StandardTile, Ownable {
     }
   }
   event TokensIncoming(bytes32 _contract,address _sender,uint _value, bytes _data);
+  */
 
   function buildShip(bytes32 model) public isGalleasset("Harbor") returns (uint) {
     if(model=="Dogger"){
@@ -53,6 +52,11 @@ contract Harbor is Galleasset, StandardTile, Ownable {
     return shipId;
   }
 
+
+  //this is old code, but it looks like you can sell ships back to the harbor
+  // it also looks like you only get 9/10s of the price back if you sell it
+  // I was probably just playing around with how ether moves around differently
+  // than the native erc20s
   function sellShip(uint256 shipId,bytes32 model) public isGalleasset("Harbor") returns (bool) {
     address shipsContractAddress = getContract(model);
     require( shipsContractAddress!=address(0) );
@@ -67,13 +71,9 @@ contract Harbor is Galleasset, StandardTile, Ownable {
     return msg.sender.send(buyBackAmount);
   }
 
-  modifier enoughValue(bytes32 model){
+  function buyShip(bytes32 model) public payable isGalleasset("Harbor") returns (uint) {
     require( currentPrice[model] > 0 );
     require( msg.value >= currentPrice[model] );
-    _;
-  }
-
-  function buyShip(bytes32 model) public payable isGalleasset("Harbor") enoughValue(model) returns (uint) {
     address shipsContractAddress = getContract(model);
     require( shipsContractAddress!=address(0) );
     NFT shipsContract = NFT(shipsContractAddress);
@@ -89,6 +89,8 @@ contract Harbor is Galleasset, StandardTile, Ownable {
     return availableShip;
   }
 
+  //this should be transferred over to the new system
+  // where it is the landOwner that sets the price not the contract owner
   function setPrice(bytes32 model,uint256 amount) public onlyOwner isBuilding returns (bool) {
     currentPrice[model]=amount;
   }
@@ -128,26 +130,6 @@ contract Harbor is Galleasset, StandardTile, Ownable {
       index++;
     }
     return count;
-  }
-
-  //assuming this is more like a tip jar while building, you can pull out ether
-  //in the long run the eth used to buy a ship is meant to pay
-  //the ship builder for their citizens' time and timber used to build
-  // -- instead of pulling out ether it should be used to support the internal economy
-  function withdraw(uint256 _amount) public onlyOwner isBuilding returns (bool) {
-    require(this.balance >= _amount);
-    assert(owner.send(_amount));
-    return true;
-  }
-
-  function withdrawToken(address _token,uint256 _amount) public onlyOwner isBuilding returns (bool) {
-    StandardToken token = StandardToken(_token);
-    token.transfer(msg.sender,_amount);
-    return true;
-  }
-
-  function getBalance() public view returns (uint256) {
-    return this.balance;
   }
 
 }

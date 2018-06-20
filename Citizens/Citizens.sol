@@ -13,7 +13,6 @@ pragma solidity ^0.4.15;
 import 'Galleasset.sol';
 import 'NFT.sol';
 
-
 contract Citizens is Galleasset, NFT {
 
     string public constant name = "Galleass Citizen";
@@ -27,7 +26,7 @@ contract Citizens is Galleasset, NFT {
     }
     event RunTest(uint count); */
 
-    function Citizens(address _galleass) Galleasset(_galleass) public {
+    constructor(address _galleass) Galleasset(_galleass) public {
       //0 index should be a blank ship owned by no one
       Citizen memory _citizen = Citizen({
         status: 0,
@@ -64,7 +63,7 @@ contract Citizens is Galleasset, NFT {
         _transfer(_from, _to, _tokenId);
     }
 
-    //citzens should be bought and sold for ether
+    //citizens should be bought and sold for ether
     function setPrice(uint _id,uint _price) public isGalleasset("Citizens") returns (bool){
       //you must own the citizen to set its sale price
       require(tokenIndexToOwner[_id]==msg.sender);
@@ -124,6 +123,7 @@ contract Citizens is Galleasset, NFT {
       BUT, if there is a contract for every village then it would need to be deployed as a new one is built
       this deployment would have to come from the builder and you would have to trust it...
       ...maybe that is okay? Maybe the bytecode could be compared or something...
+      ..I think I've decided against that, I think it makes more sense to have one contract for all of the villages.
       */
       require( getGalleassTokens(owner,"Fillet",3) );
       /*require( getTokens(msg.sender,food1,1) );

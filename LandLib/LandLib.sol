@@ -12,9 +12,8 @@ pragma solidity ^0.4.15;
 */
 
 import 'Galleasset.sol';
-import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
-contract LandLib is Galleasset, Ownable {
+contract LandLib is Galleasset {
 
   mapping (bytes32 => uint16) public tileTypes;
 
@@ -110,10 +109,10 @@ contract LandLib is Galleasset, Ownable {
     //assuming the we used the fist 6 bytes of the data for action,x,y,tile we will use the rest as the id of
     // the citizen that will be building the timber camp
     uint citizenId = uint(getRemainingBytes(6,_data));
+
     //make sure that this address owns a citizen at this location with strength and stamina > 1
     // if everything is right, set the status to timber camp
     require(useCitizenAsLumberjack(_sender,_x,_y,_tile,citizenId));
-
     //set new tile type
     landContract.setTileTypeAt(_x,_y,_tile,tileTypes["TimberCamp"]);
 
@@ -126,9 +125,8 @@ contract LandLib is Galleasset, Ownable {
     return true;
   }
   //event Debug(bytes32 citizenBytes,uint8 b,uint8 d, bytes32 thisByte);
-  event Debug(address TimberCamp);
 
-  function useCitizenAsLumberjack(address _sender, uint16 _x, uint16 _y, uint8 _tile,uint _citizen) internal constant returns (bool){
+  function useCitizenAsLumberjack(address _sender, uint16 _x, uint16 _y, uint8 _tile,uint _citizen) internal returns (bool){
     Citizens citizensContract = Citizens(getContract("Citizens"));
     address owner;
     uint8 status;

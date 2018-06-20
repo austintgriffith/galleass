@@ -1,6 +1,6 @@
 pragma solidity ^0.4.11;
 
-import 'zeppelin-solidity/contracts/token/StandardToken.sol';
+import 'zeppelin-solidity/contracts/token/ERC20/StandardToken.sol';
 
 // adapted from https://github.com/ethereum/EIPs/issues/677
 //    big thanks to Steve Ellis
@@ -15,7 +15,7 @@ contract ERC677Token is StandardToken {
     returns (bool success)
   {
     super.transfer(_to, _value);
-    Transfer(msg.sender, _to, _value, _data);
+    emit Transfer(msg.sender, _to, _value, _data);
     if (isContract(_to)) {
       contractFallback(_to, _value, _data);
     }

@@ -1,4 +1,5 @@
 const clevis = require("clevis")
+var parallel = require('mocha.parallel');
 const colors = require('colors')
 const chai = require("chai")
 const assert = chai.assert
@@ -41,6 +42,7 @@ let BAIT
 module.exports = {
   web3:web3,
   localContractAddress,localContractAddress,
+
   reload:()=>{
     describe('#reload() ', function() {
       it('should force browser to reload', async function() {
@@ -53,6 +55,15 @@ module.exports = {
       it('should get version', async function() {
         this.timeout(90000)
         const result = await clevis("version")
+        console.log(result)
+      });
+    });
+  },
+  blockNumber:()=>{
+    describe('#blockNumber() ', function() {
+      it('should get blockNumber', async function() {
+        this.timeout(90000)
+        const result = await clevis("blockNumber")
         console.log(result)
       });
     });
@@ -76,6 +87,25 @@ module.exports = {
       });
     });
   },
+  compileBatch:(contracts)=>{
+    parallel('#compile() contracts', function() {
+      for(let contractIndex in contracts){
+        it('should compile '+contracts[contractIndex].magenta+' contract to bytecode', async function() {
+          this.timeout(90000)
+          const result = await clevis("compile",contracts[contractIndex])
+          console.log(result)
+          assert(Object.keys(result.contracts).length>0, "No compiled contacts found.")
+          let count = 0
+          for(let c in result.contracts){
+            console.log("\t\t"+"contract "+c.blue+": ",result.contracts[c].bytecode.length)
+            if(count++==0){
+                assert(result.contracts[c].bytecode.length > 1, "No bytecode for contract "+c)
+            }
+          }
+        });
+      }
+    });
+  },
   deploy:(contract,accountindex)=>{
     describe('#deploy() '+contract.magenta, function() {
       it('should deploy '+contract.magenta+' as account '+accountindex, async function() {
@@ -86,7 +116,20 @@ module.exports = {
         assert(result.contractAddress)
       });
     });
-  },
+  },/*
+  deployBatch:(contracts,accountindex)=>{
+    describe('#deploy batch', function() {
+      it('should deploy batch of contracts', async function() {
+        for(let c in contracts){
+          this.timeout(360000)
+          const result = await clevis("deploy",contracts[c],accountindex)
+          printTxResult(result)
+          console.log(tab+"Address: "+result.contractAddress.blue)
+          assert(result.contractAddress)
+        }
+      });
+    });
+  },*/
 
   setContract:(contract,accountindex)=>{
     describe('#setContract() '+contract.magenta, function() {
@@ -725,7 +768,7 @@ module.exports = {
 
         const result = await clevis("contract","editTile","Land",accountindex,x,y,tileIndex,tileType,contractAddress)
         printTxResult(result)
-        
+
       });
     });
   },
@@ -914,7 +957,7 @@ module.exports = {
 
         module.exports.mintTo("Redbass",0,"0x2a906694d15df38f59e76ed3a5735f8aabcce9cb",5)
         module.exports.mintTo("Timber",0,"0x2a906694d15df38f59e76ed3a5735f8aabcce9cb",50)
-        module.exports.mintTo("Copper",0,"0x2a906694d15df38f59e76ed3a5735f8aabcce9cb",50)
+        module.exports.mintTo("Copper",0,"0x2a906694d15df38f59e76ed3a5735f8aabcce9cb",10000)
         module.exports.mintTo("Fillet",0,"0x2a906694d15df38f59e76ed3a5735f8aabcce9cb",50)
       });
     });
@@ -974,13 +1017,13 @@ module.exports = {
       });
     });
     //do an initail publish just to get the browser to reload with the latest
-    describe(bigHeader('PUBLISH'), function() {
-      it('should publish conract address to app', async function() {
-        this.timeout(6000000)
-        const result = await clevis("test","publish")
-        assert(result==0,"publish ERRORS")
-      });
-    });
+    // describe(bigHeader('PUBLISH'), function() {
+    //   it('should publish conract address to app', async function() {
+    //     this.timeout(6000000)
+    //     const result = await clevis("test","publish")
+    //     assert(result==0,"publish ERRORS")
+    //   });
+    // });
     describe(bigHeader('METAMASK'), function() {
       it('should give metamask users some fake ether', async function() {
         this.timeout(6000000)
@@ -1003,13 +1046,13 @@ module.exports = {
       });
     });
     //do a final publish to reload the browser with updates
-    describe(bigHeader('PUBLISH'), function() {
-      it('should publish conract address to app', async function() {
-        this.timeout(6000000)
-        const result = await clevis("test","publish")
-        assert(result==0,"publish ERRORS")
-      });
-    });
+    // describe(bigHeader('PUBLISH'), function() {
+    //   it('should publish conract address to app', async function() {
+    //     this.timeout(6000000)
+    //     const result = await clevis("test","publish")
+    //     assert(result==0,"publish ERRORS")
+    //   });
+    // });
     describe(bigHeader('TIMBER MINTING & BUILD SHIPS'), function() {
       it('should mintTimberBuildShips', async function() {
         this.timeout(6000000)

@@ -10,10 +10,10 @@ pragma solidity ^0.4.15;
 */
 
 import 'Galleasset.sol';
-import 'zeppelin-solidity/contracts/ownership/HasNoEther.sol';
-import 'zeppelin-solidity/contracts/token/MintableToken.sol';
+import 'ERC677Token.sol';
+import 'zeppelin-solidity/contracts/token/ERC20/MintableToken.sol';
 
-contract Dangler is Galleasset, HasNoEther, MintableToken {
+contract Dangler is Galleasset, MintableToken, ERC677Token {
 
   string public constant name = "Galleass Dangler";
   string public constant symbol = "G_DANGLER";
@@ -22,8 +22,8 @@ contract Dangler is Galleasset, HasNoEther, MintableToken {
 
   uint256 public constant INITIAL_SUPPLY = 0;
 
-  function Dangler(address _galleass) Galleasset(_galleass) public {
-    totalSupply = INITIAL_SUPPLY;
+  constructor(address _galleass) Galleasset(_galleass) public {
+    totalSupply_ = INITIAL_SUPPLY;
   }
 
   function galleassTransferFrom(address _from, address _to, uint256 _value) public returns (bool) {

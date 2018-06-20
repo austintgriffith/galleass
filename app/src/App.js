@@ -498,7 +498,7 @@ class App extends Component {
 
   }
   async doSyncShips(from,to) {
-    let DEBUG_SYNCSHIPS = true;
+    let DEBUG_SYNCSHIPS = false;
     if(DEBUG_SYNCSHIPS) console.log("Sync ships")
     if(from<1) from=1
     let ships = await contracts["Sea"].getPastEvents('ShipUpdate', {
@@ -524,7 +524,7 @@ class App extends Component {
           blockNumber:ships[b].returnValues.blockNumber,
           location:ships[b].returnValues.location
         };
-        console.log("FLOATING FOR "+b+" ("+id+") should be set to ",storedShips[id].floating)
+        if(DEBUG_SYNCSHIPS) console.log("FLOATING FOR "+b+" ("+id+") should be set to ",storedShips[id].floating)
       }
     }
     if(hasElements(storedShips)){
@@ -645,7 +645,7 @@ class App extends Component {
     }
   }
   async syncLand() {
-    const DEBUG_SYNCLAND = false;
+    const DEBUG_SYNCLAND = true;
     if(DEBUG_SYNCLAND) console.log("SYNCING LAND")
     if(!this.state.landX || !this.state.landY){
       let mainX = await contracts["Land"].methods.mainX().call();
@@ -670,7 +670,7 @@ class App extends Component {
         if(contractOfTileHere!="0x0000000000000000000000000000000000000000" && ownerOfTileHere && this.state.account && ownerOfTileHere.toLowerCase()==this.state.account.toLowerCase()){
           if(currentTileHere==150){
             //timber camp
-            //console.log("Checking on timber...")
+            if(DEBUG_SYNCLAND) console.log("Checking on timber camp collect ...")
             let timberToCollect = await contracts["TimberCamp"].methods.canCollect(this.state.landX,this.state.landY,l).call()
             //console.log("timberToCollect:",timberToCollect)
             if(timberToCollect>0){
@@ -1013,9 +1013,10 @@ class App extends Component {
     console.log("collect",name,tile,this.state.landX,this.state.landY)
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
     //  collect(uint16 _x,uint16 _y,uint8 _tile)
+    let timberToCollect = await contracts["TimberCamp"].methods.canCollect(this.state.landX,this.state.landY,tile).call()
     contracts[name].methods.collect(this.state.landX,this.state.landY,tile).send({
       from: accounts[0],
-      gas:120000,
+      gas:100000+50000*timberToCollect,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
@@ -1621,9 +1622,10 @@ class App extends Component {
     if(name=="Market"){
       modalObject.sellPrices = {}
       modalObject.buyPrices = {}
-
-      modalObject.sellPrices['Timber'] = parseInt(await contracts["Market"].methods.sellPrices(this.state.landX,this.state.landY,index,contracts["Timber"]._address).call());
-      modalObject.buyPrices['Timber'] = parseInt(await contracts["Market"].methods.buyPrices(this.state.landX,this.state.landY,index,contracts["Timber"]._address).call());
+      for(let i in inventoryTokens){
+        modalObject.sellPrices[inventoryTokens[i]] = parseInt(await contracts["Market"].methods.sellPrices(this.state.landX,this.state.landY,index,contracts[inventoryTokens[i]]._address).call());
+        modalObject.buyPrices[inventoryTokens[i]] = parseInt(await contracts["Market"].methods.buyPrices(this.state.landX,this.state.landY,index,contracts[inventoryTokens[i]]._address).call());
+      }
       //modalObject.filletBalance = await contracts["Market"].methods.balanceOf(contracts["Fishmonger"]._address).call();
     }
 
@@ -2815,32 +2817,37 @@ return (
 
         if(this.state.modalObject.name == "Market"){
           let buyArray = []
+            let sellArray = []
+          for(let i in inventoryTokens){
+            if(this.state.modalObject.sellPrices[inventoryTokens[i]]>0){
+              buyArray.push(
+                {
+                  amount: "1",
+                  balance: this.state.modalObject.timberBalance,
+                  first:inventoryTokens[i]/*.toLowerCase()*/,
+                  price: this.state.modalObject.sellPrices[inventoryTokens[i]],
+                  second:"copper",
+                  clickFn: this.buyFromMarket.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,inventoryTokens[i],1,this.state.modalObject.sellPrices[inventoryTokens[i]]),//(x,y,i,tokenName,amountToBuy,copperToSpend)
+                }
+              )
+            }
+            if(this.state.modalObject.buyPrices[inventoryTokens[i]]){
+              sellArray.push(
+                {
+                  amount:"1",
+                  balance:false,
+                  first:inventoryTokens[i],
+                  price:this.state.modalObject.buyPrices[inventoryTokens[i]],
+                  second:"copper",
+                  clickFn: this.sellToMarket.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,inventoryTokens[i],1,this.state.modalObject.buyPrices[inventoryTokens[i]]),
+                }
+              )
+            }
+          }
 
-          if(this.state.modalObject.sellPrices["Timber"]>0){
-            buyArray.push(
-              {
-                amount: "1",
-                balance: this.state.modalObject.timberBalance,
-                first:"timber",
-                price: this.state.modalObject.sellPrices["Timber"],
-                second:"copper",
-                clickFn: this.buyFromMarket.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,"Timber",1,this.state.modalObject.sellPrices["Timber"]),//(x,y,i,tokenName,amountToBuy,copperToSpend)
-              }
-            )
-          }
-          let sellArray = []
-          if(this.state.modalObject.buyPrices["Timber"]){
-            sellArray.push(
-              {
-                amount:"1",
-                balance:false,
-                first:"timber",
-                price:this.state.modalObject.buyPrices["Timber"],
-                second:"copper",
-                clickFn: this.sellToMarket.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,"Timber",1,this.state.modalObject.buyPrices["Timber"]),
-              }
-            )
-          }
+
+
+
 
 
           content.push(
