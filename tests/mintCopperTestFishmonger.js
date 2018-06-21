@@ -25,8 +25,8 @@ const galleass = require("./galleass.js")
 // galleass.reload()
 // //---------------- ^^^^^ ----------------- happens in deploy ------- //
 
-galleass.testMint("Catfish",0,1,2)
-galleass.sellFish(1,"Catfish",2)
+galleass.testMint("Catfish",0,1,10)//mint 10 Catfish to account 1
+galleass.sellFish(1,"Catfish",10)//sell and butcher 10 catfish to produce 10 fillets at the fish monger
 
-galleass.testMint("Copper",0,1,100)
-galleass.transferAndCall("Copper",1,"Fishmonger",2,"0x01")//buy 1 copper worth of  Fillets
+galleass.testMint("Copper",0,1,100)//mint 100 copper to account 1
+galleass.transferAndCall("Copper",1,"Fishmonger",6,"0x01")//account 1 sends 6 copper to the fishmonger to buy (2) fillets (assuming price is still 3?)

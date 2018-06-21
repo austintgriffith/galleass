@@ -32,9 +32,15 @@ class ResourceTable extends Component {
     return (
       <div style={{marginTop:20}}>
 
-        <div style={{position:"absolute",left:130,top:105,cursor:"pointer"}} onClick={this.props.collect}>
+
+        <div style={{position:"absolute",left:130,top:105,cursor:"pointer"}} onClick={this.props.collect} data-rh="Collect Timber" data-rh-at="bottom" >
           <img style={{maxHeight:50,maxWidth:50}} src={"collect"+this.props.resourceType[0].toUpperCase()+this.props.resourceType.substring(1)+".png"} />
         </div>
+
+        <div style={{position:"absolute",left:190,top:105,cursor:"pointer"}} onClick={this.props.extractRawResource} data-rh="Spend 3 Copper for 1 Timber" data-rh-at="bottom" >
+          <img style={{maxHeight:50,maxWidth:50}} src={"extractRaw"+this.props.resourceType[0].toUpperCase()+this.props.resourceType.substring(1)+".png"} />
+        </div>
+
 
         <Writing string={"Mined blocks between "+this.props.resourceMin+" and "+this.props.resourceMax+" produce "} size={24}/>
         <img style={{maxHeight:24,maxWidth:24}} src={this.props.resourceType+".png"} /><Writing string={this.props.resourceType} size={24}/>

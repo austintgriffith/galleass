@@ -17,8 +17,8 @@ contract Market is StandardTile, DataParser {
   constructor(address _galleass) public StandardTile(_galleass) { }
 
   //      land x            land y          land tile
-  mapping(uint16 => mapping(uint16 => mapping(uint8 => mapping (address => uint)))) public buyPrices;
-  mapping(uint16 => mapping(uint16 => mapping(uint8 => mapping (address => uint)))) public sellPrices;
+  mapping(uint16 => mapping(uint16 => mapping(uint8 => mapping (address => uint)))) public buyPrices; //how much the market will buy items for
+  mapping(uint16 => mapping(uint16 => mapping(uint8 => mapping (address => uint)))) public sellPrices; //how much the market will sell items for
 
   function setBuyPrice(uint16 _x,uint16 _y,uint8 _tile,address _token,uint _price) public isGalleasset("Market") isLandOwner(_x,_y,_tile) returns (bool) {
     buyPrices[_x][_y][_tile][_token] = _price;
@@ -43,7 +43,7 @@ contract Market is StandardTile, DataParser {
   }*/
 
   function onTokenTransfer(address _sender, uint _amount, bytes _data) public isGalleasset("Market") returns (bool){
-    TokenTransfer(msg.sender,_sender,_amount,_data);
+    emit TokenTransfer(msg.sender,_sender,_amount,_data);
     uint8 action = uint8(_data[0]);
     if(action==0){
       //action zero should be a transfer... like stocking the tile up
@@ -67,45 +67,44 @@ contract Market is StandardTile, DataParser {
     uint16 _y = getY(_data);
     uint8 _tile = getTile(_data);
     address _tokenAddress = getAddressFromBytes(6,_data);
-    uint _amountToBuy = getRemainingUint(26,_data);
-
-    emit BuyInternal(_x,_y,_tile,_tokenAddress,_amountToBuy);
 
     //token must have a sell price
     require(sellPrices[_x][_y][_tile][_tokenAddress]>0);
-    //they must send enough copper
-    require(_amount>=sellPrices[_x][_y][_tile][_tokenAddress]*_amountToBuy);
+
+    uint amountOfTokensToSend = _amount/sellPrices[_x][_y][_tile][_tokenAddress];
     //send them their new tokens
     StandardToken tokenContract = StandardToken(_tokenAddress);
-    require(tokenContract.transfer(_sender,_amountToBuy));
+    require(tokenContract.transfer(_sender,amountOfTokensToSend));
+
+    emit BuyInternal(_x,_y,_tile,_amount,_tokenAddress,amountOfTokensToSend);
+
     return true;
   }
-  event BuyInternal(uint16 _x,uint16 _y,uint8 _tile,address _tokenAddress,uint _amountToBuy);
+  event BuyInternal(uint16 _x,uint16 _y,uint8 _tile,uint copperSpent, address _tokenAddress,uint amountOfTokensToSend);
 
+  //player is sending some token to the market and expecting payment in copper based on the buyPrice the market is willing to pay for the incoming token
   function _sell(address _sender, uint _amount, bytes _data) internal returns (bool) {
     uint16 _x = getX(_data);
     uint16 _y = getY(_data);
     uint8 _tile = getTile(_data);
-    uint _amountToSell = getRemainingUint(6,_data);
-
-    emit SellInternal(_x,_y,_tile,msg.sender,_amountToSell);
 
     //token must have a buy price
     require(buyPrices[_x][_y][_tile][msg.sender]>0);
 
+    emit SellInternal(_x,_y,_tile,msg.sender,_amount,_sender);
 
     if(msg.sender==getContract("Timber")  || msg.sender==getContract("Fillet")  ||
         msg.sender==getContract("Snark")  || msg.sender==getContract("Dangler")  ||
         msg.sender==getContract("Redbass") || msg.sender==getContract("Pinner")  || msg.sender==getContract("Catfish")
       ){
       StandardToken copperContract = StandardToken(getContract("Copper"));
-      require(copperContract.transfer(_sender,_amountToSell*buyPrices[_x][_y][_tile][msg.sender]));
+      require(copperContract.transfer(_sender,_amount*buyPrices[_x][_y][_tile][msg.sender]));
       return true;
     }else{
       revert();
     }
   }
-  event SellInternal(uint16 _x,uint16 _y,uint8 _tile,address _tokenAddress,uint _amountToSell);
+  event SellInternal(uint16 _x,uint16 _y,uint8 _tile,address _tokenAddress,uint _amount,address _sender);
 
 }
 

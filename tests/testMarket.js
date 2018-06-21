@@ -10,4 +10,5 @@ galleass.reload()
 // //---------------- ^^^^^ ----------------- happens in deploy ------- //
 //
 //setContractOfTile:(accountindex,x,y,tileIndex,name)
-galleass.setContractOfTile(0,2422,14719,1,"Market")
+galleass.setContractOfTile(0,26535,24925,12,"Market")
+galleass.setPriceOfFirstTileOfType(0,102,9)

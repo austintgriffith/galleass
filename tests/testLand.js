@@ -11,6 +11,7 @@ galleass.compile("LandLib")
 galleass.deploy("LandLib",0)
 galleass.setContract("LandLib",0)
 galleass.setPermission("LandLib",0,"useCitizens","true")
+galleass.setPermission("LandLib",0,"mintTimber","true")
 //----------------
 // galleass.compile("Citizens")
 // galleass.deploy("Citizens",0)

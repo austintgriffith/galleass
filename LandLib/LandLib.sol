@@ -17,7 +17,7 @@ contract LandLib is Galleasset {
 
   mapping (bytes32 => uint16) public tileTypes;
 
-  function LandLib(address _galleass) public Galleasset(_galleass) {
+  constructor(address _galleass) public Galleasset(_galleass) {
     //this is mainly just for human reference and to make it easier to track tiles mentally
     //it's expensive and probably won't be included in production contracts
     tileTypes["Water"]=0;
@@ -51,15 +51,17 @@ contract LandLib is Galleasset {
     TokenTransfer(msg.sender,_sender,_amount,_data);
     uint8 action = uint8(_data[0]);
     if(action==1){
-      return buyTile(_sender,_amount,_data);
+      return _buyTile(_sender,_amount,_data);
     } else if(action==2){
-      return buildTimberCamp(_sender,_amount,_data);
+      return _buildTimberCamp(_sender,_amount,_data);
+    } else if(action==3){
+      return _extractRawResource(_sender,_amount,_data);
     }
     return false;
   }
   event TokenTransfer(address token,address sender,uint amount,bytes data);
 
-  function buyTile(address _sender, uint _amount, bytes _data) internal returns (bool) {
+  function _buyTile(address _sender, uint _amount, bytes _data) internal returns (bool) {
     Land landContract = Land(getContract("Land"));
     address copperContractAddress = getContract("Copper");
     require(msg.sender == copperContractAddress);
@@ -86,7 +88,7 @@ contract LandLib is Galleasset {
     return true;
   }
 
-  function buildTimberCamp(address _sender, uint _amount, bytes _data) internal returns (bool) {
+  function _buildTimberCamp(address _sender, uint _amount, bytes _data) internal returns (bool) {
     Land landContract = Land(getContract("Land"));
     //build timber camp
     address copperContractAddress = getContract("Copper");
@@ -112,7 +114,7 @@ contract LandLib is Galleasset {
 
     //make sure that this address owns a citizen at this location with strength and stamina > 1
     // if everything is right, set the status to timber camp
-    require(useCitizenAsLumberjack(_sender,_x,_y,_tile,citizenId));
+    require(_useCitizenAsLumberjack(_sender,_x,_y,_tile,citizenId));
     //set new tile type
     landContract.setTileTypeAt(_x,_y,_tile,tileTypes["TimberCamp"]);
 
@@ -126,7 +128,7 @@ contract LandLib is Galleasset {
   }
   //event Debug(bytes32 citizenBytes,uint8 b,uint8 d, bytes32 thisByte);
 
-  function useCitizenAsLumberjack(address _sender, uint16 _x, uint16 _y, uint8 _tile,uint _citizen) internal returns (bool){
+  function _useCitizenAsLumberjack(address _sender, uint16 _x, uint16 _y, uint8 _tile,uint _citizen) internal returns (bool){
     Citizens citizensContract = Citizens(getContract("Citizens"));
     address owner;
     uint8 status;
@@ -151,6 +153,33 @@ contract LandLib is Galleasset {
     require(stamina>1);
     //set citizen status to TimberCamp tile type (lumberjack!)
     require(citizensContract.setStatus(_citizen,uint8(tileTypes["TimberCamp"])));
+    return true;
+  }
+
+  function _extractRawResource(address _sender, uint _amount, bytes _data) internal returns (bool) {
+    Land landContract = Land(getContract("Land"));
+    address copperContractAddress = getContract("Copper");
+    require(msg.sender == copperContractAddress);
+
+    uint16 _x = uint16(_data[1]) << 8 | uint16(_data[2]);
+    uint16 _y = uint16(_data[3]) << 8 | uint16(_data[4]);
+    uint8 _tile = uint8(_data[5]);
+
+    //they must own the tile
+    require(landContract.ownerAt(_x,_y,_tile)==_sender);
+    //move that copper to the Land contract
+    StandardToken copperContract = StandardToken(copperContractAddress);
+    require(copperContract.transfer(getContract("Land"),_amount));
+
+    if(landContract.tileTypeAt(_x,_y,_tile)==tileTypes["Forest"] || landContract.tileTypeAt(_x,_y,_tile)==tileTypes["TimberCamp"]){
+      //they must send in 3 copper to extract 1 Timber
+      require(_amount>=3);
+      StandardToken resourceContract = StandardToken(getContract("Timber"));
+      require(resourceContract.galleassMint(_sender,1));
+      return true;
+    }else{
+      return false;
+    }
     return true;
   }
 
@@ -230,6 +259,7 @@ contract StandardToken {
   function transfer(address _to, uint256 _value) public returns (bool) { }
   function transferFrom(address _from, address _to, uint256 _value) public returns (bool) { }
   function galleassTransferFrom(address _from, address _to, uint256 _value) public returns (bool) { }
+  function galleassMint(address _to,uint _amount) public returns (bool){ }
 }
 
 contract StandardTile {

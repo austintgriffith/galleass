@@ -23,23 +23,28 @@ I have a new event parser built and I should integrate it into Galleass
 
 ### Possible Changes
 ```
+Maybe there should be an indicator above a tile for each citizen there
+Fish should pay more Copper
+A village should cost 4 Timber instead of 6
 Citizen chars are uint16 but you could have more if you use uint8
 Citizen status should probably be uint16
 ```
 
 ### Before Staging
 ```
+It can take a while when you click on a building for the modal to throw... may pop something above the building up that looks like a loader
 StandardToken inventory should be based on a per-tile basis... right now it show the inv for the contract.. it needs to also be withdrawal from the landowner
 (When you send a token to a contract address it somehow needs to know which one (677 data?))
 Harbor and FishMonger need to be moved over to landOwner system instead of contract owner
-NFT modal (when you click your ship in your inv)
-All tokens can be bought and sold in market
+
+More tokens in the Market by default
 Maybe grass and mountain tiles could also produce resources like the timbercamp?
-The Sea should become The Bay and a new "Sea" is more about moving from island to island
+The Sea should become The Bay and a new "Sea" is more about moving from island to island (Bay is 1 dogger per address, but Sea will track by Galley address)
 ```
 
 ### Once staging
 ```
+Make sure it looks good on all phones
 Transactions should show up in bottom left to give progress bars to non-ship button clicks
 Make sure all things link to etherscan correctly
 ```

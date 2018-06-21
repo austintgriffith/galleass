@@ -20,18 +20,26 @@ contract Fishmonger is StandardTile {
   //how much the fishmonger is willing to pay for each species of fish
   mapping (address => uint256) public price;
 
-  uint256 public filletPrice = 2;
+  uint256 public filletPrice = 3;
 
   function setPrice(address _species,uint256 _price) onlyOwner public returns (bool) {
     assert( _species != address(0) );
     price[_species]=_price;
   }
 
+  function setFilletPrice(uint256 _price) onlyOwner public returns (bool) {
+    filletPrice=_price;
+  }
+
   function sellFish(address _species,uint256 _amount) public isGalleasset("Fishmonger") returns (bool) {
+    //they supplied a species
     require( _species != address(0) );
+    //this species has a sale price here
     uint256 fishPrice = price[_species];
     require( fishPrice>0 );
+    //they are selling more than 0 fish
     require( _amount>0 );
+    //take the fish even without approval because of permissions
     StandardToken fishContract = StandardToken(_species);
     require( fishContract.galleassTransferFrom(msg.sender,address(this),_amount) );
 
@@ -43,7 +51,7 @@ contract Fishmonger is StandardTile {
 
     //CONVERT THE FISH TO FILLETS (THE fishmonger then sells fillets for citizen food in later levels)
     StandardToken filletContract = StandardToken(getContract("Fillet"));
-    require( filletContract.galleassMint(address(this),1) ); //mint 1 fillet for each fish caught
+    require( filletContract.galleassMint(address(this),_amount) ); //mint 1 fillet for each fish caught
 
     //SEND THEM price[_species]*_amount COPPER FOR THE FISH
     address copperContractAddress = getContract("Copper");
@@ -76,20 +84,17 @@ contract Fishmonger is StandardTile {
 
   function buyFillet(address _sender, uint _amount, bytes _data) internal returns (bool) {
     require(msg.sender == getContract("Copper"),"Requires copper");
-
     address filletAddress = getContract("Fillet");
     require(filletAddress != address(0), "Fillet must have address");
-    require(filletPrice != 0, "Fillet must have a price");
-
+    require(filletPrice > 0, "Fillet must have a price");
     uint filletAmount = _amount / filletPrice;
     require(filletAmount>0,"Amount was too low?");
-    require(_amount >= (filletAmount*filletPrice),"Not enough Copper?");
-
     StandardToken filletContract = StandardToken(filletAddress);
     require(filletAmount <= filletContract.balanceOf(address(this)), "Fishmonger does not have enough fillets");
     require(filletContract.transfer(_sender,filletAmount), "Failed to transfer fillets");
     return true;
   }
+  event Debug(uint _amount);
 
 }
 

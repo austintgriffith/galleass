@@ -27,6 +27,7 @@ import CreateTable from './modal/CreateTable.js'
 import ResourceTable from './modal/ResourceTable.js'
 import SendToken from './modal/SendToken.js'
 import BuySellOwner from './modal/BuySellOwner.js'
+import ForestTile from './modal/ForestTile.js'
 
 // -- hud--- //
 import Inventory from './hud/Inventory.js'
@@ -866,6 +867,30 @@ class App extends Component {
       }
     })
   }
+  async extractRawResource(x,y,i){
+    console.log("Extract raw resource from ",x,y,i)
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+    let xHex = parseInt(x).toString(16)
+    while(xHex.length<4) xHex="0"+xHex;
+    let yHex = parseInt(y).toString(16)
+    while(yHex.length<4) yHex="0"+yHex;
+    let iHex = parseInt(i).toString(16)
+    while(iHex.length<2) iHex="0"+iHex;
+    let action = "0x03"
+    let finalHex = action+xHex+yHex+iHex
+    let amountOfCopper = 3
+    console.log("Sending "+amountOfCopper+" copper to LandLib with data:"+finalHex)
+    contracts["Copper"].methods.transferAndCall(contracts["LandLib"]._address,amountOfCopper,finalHex).send({
+      from: accounts[0],
+      gas:160000,
+      gasPrice:Math.round(this.state.GWEI * 1000000000)
+    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+      console.log("RESULT:",receipt)
+      if(this.state.modalHeight>=0){
+        this.closeModal()
+      }
+    })
+  }
   async testMarket(x,y,i){
     console.log("TEST MARKET")
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
@@ -900,8 +925,8 @@ class App extends Component {
       }
     })
   }
-  async buyFromMarket(x,y,i,tokenName,amountToBuy,copperToSpend){
-    console.log("TEST MARKET")
+  async buyFromMarket(x,y,i,tokenName,copperToSpend){
+    console.log("buyFromMarket",x,y,i,tokenName,copperToSpend)
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
     let xHex = parseInt(x).toString(16)
     while(xHex.length<4) xHex="0"+xHex;
@@ -910,19 +935,17 @@ class App extends Component {
     let iHex = parseInt(i).toString(16)
     while(iHex.length<2) iHex="0"+iHex;
     let addressHex = contracts[tokenName]._address
+
     addressHex = addressHex.replace("0x","")
     if(addressHex.length%2==1){
       addressHex="0"+addressHex;
     }
-    amountToBuy = web3.utils.toHex(amountToBuy)
-    amountToBuy = amountToBuy.replace("0x","")
-    if(amountToBuy.length%2==1){
-      amountToBuy="0"+amountToBuy;
-    }
+    console.log("addressHex",addressHex)
+
     let amountOfCopper = copperToSpend
     let action = "0x01"
-    let finalHex = action+xHex+yHex+iHex+addressHex+amountToBuy
-    console.log("Test market at  x:"+xHex+" y:"+yHex+" i:"+iHex+" for "+amountOfCopper+" copper with finalHex: "+finalHex)
+    let finalHex = action+xHex+yHex+iHex+addressHex
+    console.log("%%%%%%%%%%%%%%%%% Buy "+tokenName+" at the market  x:"+xHex+" y:"+yHex+" i:"+iHex+" for "+amountOfCopper+" copper with finalHex: "+finalHex)
     contracts["Copper"].methods.transferAndCall(contracts["Market"]._address,amountOfCopper,finalHex).send({
       from: accounts[0],
       gas:500000,
@@ -934,8 +957,8 @@ class App extends Component {
       }
     })
   }
-  async sellToMarket(x,y,i,tokenName,amountToBuy,amountToSpend){
-    console.log("SELL TO MARKET",x,y,i,tokenName,amountToBuy,amountToSpend)
+  async sellToMarket(x,y,i,tokenName,amountOfTokenToSend){
+    console.log("SELL TO MARKET",x,y,i,tokenName,amountOfTokenToSend)
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
     let xHex = parseInt(x).toString(16)
     while(xHex.length<4) xHex="0"+xHex;
@@ -944,15 +967,10 @@ class App extends Component {
     let iHex = parseInt(i).toString(16)
     while(iHex.length<2) iHex="0"+iHex;
 
-    amountToBuy = web3.utils.toHex(amountToBuy)
-    amountToBuy = amountToBuy.replace("0x","")
-    if(amountToBuy.length%2==1){
-      amountToBuy="0"+amountToBuy;
-    }
     let action = "0x02"
-    let finalHex = action+xHex+yHex+iHex+amountToBuy
-    console.log("Test sell to market at  x:"+xHex+" y:"+yHex+" i:"+iHex+" for "+amountToSpend+" copper with finalHex: "+finalHex)
-    contracts[tokenName].methods.transferAndCall(contracts["Market"]._address,amountToSpend,finalHex).send({
+    let finalHex = action+xHex+yHex+iHex
+    console.log("Trying to sill "+amountOfTokenToSend+" "+tokenName+" to market at  x:"+xHex+" y:"+yHex+" i:"+iHex+" with finalHex: "+finalHex)
+    contracts[tokenName].methods.transferAndCall(contracts["Market"]._address,amountOfTokenToSend,finalHex).send({
       from: accounts[0],
       gas:500000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
@@ -1016,7 +1034,7 @@ class App extends Component {
     let timberToCollect = await contracts["TimberCamp"].methods.canCollect(this.state.landX,this.state.landY,tile).call()
     contracts[name].methods.collect(this.state.landX,this.state.landY,tile).send({
       from: accounts[0],
-      gas:100000+50000*timberToCollect,
+      gas:20000+75000*timberToCollect,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
@@ -1512,7 +1530,7 @@ class App extends Component {
       //loaderOpacity:0,
       modalObject:modalObject,
       previousModalObject:this.state.modalObject,//this let's your layer up two modals
-      modalHeight:150,
+      modalHeight:100,
       clickScreenTop:0,
       clickScreenOpacity:0.9
     })
@@ -1620,11 +1638,12 @@ class App extends Component {
 
 
     if(name=="Market"){
+      let marketTokens = ["Timber","Fillet"]
       modalObject.sellPrices = {}
       modalObject.buyPrices = {}
-      for(let i in inventoryTokens){
-        modalObject.sellPrices[inventoryTokens[i]] = parseInt(await contracts["Market"].methods.sellPrices(this.state.landX,this.state.landY,index,contracts[inventoryTokens[i]]._address).call());
-        modalObject.buyPrices[inventoryTokens[i]] = parseInt(await contracts["Market"].methods.buyPrices(this.state.landX,this.state.landY,index,contracts[inventoryTokens[i]]._address).call());
+      for(let i in marketTokens){
+        modalObject.sellPrices[marketTokens[i]] = parseInt(await contracts["Market"].methods.sellPrices(this.state.landX,this.state.landY,index,contracts[marketTokens[i]]._address).call());
+        modalObject.buyPrices[marketTokens[i]] = parseInt(await contracts["Market"].methods.buyPrices(this.state.landX,this.state.landY,index,contracts[marketTokens[i]]._address).call());
       }
       //modalObject.filletBalance = await contracts["Market"].methods.balanceOf(contracts["Fishmonger"]._address).call();
     }
@@ -2827,7 +2846,8 @@ return (
                   first:inventoryTokens[i]/*.toLowerCase()*/,
                   price: this.state.modalObject.sellPrices[inventoryTokens[i]],
                   second:"copper",
-                  clickFn: this.buyFromMarket.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,inventoryTokens[i],1,this.state.modalObject.sellPrices[inventoryTokens[i]]),//(x,y,i,tokenName,amountToBuy,copperToSpend)
+                  //buyFromMarket(x,y,i,tokenName,copperToSpend)
+                  clickFn: this.buyFromMarket.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,inventoryTokens[i],this.state.modalObject.sellPrices[inventoryTokens[i]]),//(x,y,i,tokenName,amountToBuy,copperToSpend)
                 }
               )
             }
@@ -2873,36 +2893,33 @@ return (
             </div>
           )
         }else if(OWNS_TILE && this.state.modalObject.name == "Forest Resource"){
-          let tileIndex = this.state.modalObject.index;
-          if(!this.state.modalObject.citizens||!this.state.modalObject.citizens[0]||!this.state.modalObject.citizens[0].id){
-            content.push(
-              <div style={{marginTop:80}}>
-                <Writing style={{verticalAlign:'middle',opacity:0.9}} string={"Move a citizen here (tile "+this.state.modalObject.index+") to build a Timber Camp"} size={20}/>
-              </div>
-            )
-          }else{
-            content.push(
-              <div style={{marginTop:60}}>
-                <CreateTable image={"buildTimberCamp"} clickFn={this.buildTimberCamp.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,this.state.modalObject.citizens[0].id)}/>
-              </div>
-            )
+          let citizen = false
+          if(this.state.modalObject.citizens[0]){
+            citizen = this.state.modalObject.citizens[0].id
           }
+          content.push(
+            <ForestTile
+              modalObject={this.state.modalObject}
+              extractRawResource={this.extractRawResource.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index)}
+              buildTimberCamp={this.buildTimberCamp.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,citizen)}
+            />
+          )
         }else if(OWNS_TILE && this.state.modalObject.name == "Timber Camp"){
           let tileIndex = this.state.modalObject.index;
           content.push(
             <div>
-              <ResourceTable collect={(e)=>{
-                this.collect("TimberCamp",this.state.modalObject.index)
-                e.preventDefault()
-                e.stopPropagation()
-                return false
-              }} {...this.state.modalObject} web3={web3} blockNumber={this.state.blockNumber}/>
+              <ResourceTable
+                extractRawResource={this.extractRawResource.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index)}
+                collect={(e)=>{
+                  this.collect("TimberCamp",this.state.modalObject.index)
+                  e.preventDefault()
+                  e.stopPropagation()
+                  return false
+                }} {...this.state.modalObject} web3={web3} blockNumber={this.state.blockNumber}
+              />
             </div>
           )
         }
-
-
-
 
         //  <div>Price: {this.state.modalObject.price}</div>
         //

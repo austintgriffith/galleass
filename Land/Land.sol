@@ -32,8 +32,6 @@ contract Land is Galleasset {
 
   mapping (uint16 => mapping (uint16 => uint16)) public totalWidth;
 
-
-
   function Land(address _galleass) public Galleasset(_galleass) { }
   function () public {revert();}
 
