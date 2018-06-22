@@ -49,7 +49,7 @@ class CreateTable extends Component {
          <img style={{maxHeight:21,marginLeft:5,verticalAlign:"middle"}} src={"copper.png"} />
          <Writing string={"Copper"} size={fontSize} verticalAlign={"middle"} space={5}/>
          <img data-rh={"Sell "+this.state.fishSellAmount+" "+this.props.modalObject.name+" to the Fishmonger"} data-rh-at="right" src="metamasksign.png"
-         style={{maxHeight:42,cursor:"pointer",verticalAlign:'middle'}} onClick={this.props.sellFish.bind(this,this.props.modalObject.name,this.state.fishSellAmount)}/>
+         style={{maxHeight:42,cursor:"pointer",verticalAlign:'middle'}} onClick={this.props.sellFish.bind(this,this.state.fishSellAmount)}/>
         </div>
       )
     }

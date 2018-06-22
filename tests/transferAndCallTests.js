@@ -15,7 +15,10 @@ galleass.setContract("Timber",0)
 
 
 galleass.testMint("Timber",0,1,10)
-galleass.transferAndCall("Timber",1,"Harbor",2,web3.utils.fromAscii("Some Data"))
+
+
+//THIS HAS CHANGED NOW:::: location is appended 
+//galleass.transferAndCall("Timber",1,"Harbor",2,web3.utils.fromAscii("Some Data"))
 
 /*
 galleass.setPermission("Harbor",0,"buildShip","true")

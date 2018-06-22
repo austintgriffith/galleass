@@ -97,6 +97,7 @@ contract Land is Galleasset {
        StandardTile tileContract = StandardTile(contractAt[_x][_y][_tile]);
        tileContract.onPurchase(_x,_y,_tile,ownerAt[_x][_y][_tile],priceAt[_x][_y][_tile]);
     }
+    ownerAt[_x][_y][_tile]=msg.sender;
   }
 
   function buyTile(uint16 _x,uint16 _y,uint8 _tile) public isGalleasset("Land") returns (bool) {

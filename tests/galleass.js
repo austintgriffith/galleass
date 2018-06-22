@@ -1,5 +1,5 @@
 const clevis = require("clevis")
-var parallel = require('mocha.parallel');
+//var parallel = require('mocha.parallel');
 const colors = require('colors')
 const chai = require("chai")
 const assert = chai.assert
@@ -30,6 +30,14 @@ function loadAbi(contract){
   //console.log(contract+" ABI:",abi.gray)
   fs.writeFileSync("app/src/"+contract+".abi.js","module.exports = "+abi);
 }
+function getPaddedHexFromNumber(num,digits){
+  let hexIs = web3.utils.numberToHex(num).replace("0x","");
+  while(hexIs.length<digits){
+    hexIs = "0"+hexIs
+  }
+  return hexIs
+}
+
 const tab = "\t\t";
 
 let TARGET_LOCATION
@@ -87,7 +95,7 @@ module.exports = {
       });
     });
   },
-  compileBatch:(contracts)=>{
+  /*compileBatch:(contracts)=>{
     parallel('#compile() contracts', function() {
       for(let contractIndex in contracts){
         it('should compile '+contracts[contractIndex].magenta+' contract to bytecode', async function() {
@@ -105,7 +113,7 @@ module.exports = {
         });
       }
     });
-  },
+  },*/
   deploy:(contract,accountindex)=>{
     describe('#deploy() '+contract.magenta, function() {
       it('should deploy '+contract.magenta+' as account '+accountindex, async function() {
@@ -567,6 +575,19 @@ module.exports = {
     describe('#transferAndCall() '+contract.magenta, function() {
       it('should transfer '+amount+' '+contract.yellow+' tokens to '+toContract+' and then call receiver function with data:'+data.blue, async function() {
         this.timeout(120000)
+
+        let mainLand = await getMainLand();
+
+        let toContractTileType = await clevis("contract","tileTypes","LandLib",web3.utils.fromAscii(toContract))
+
+        let found = await searchLandFromCenterOut(mainLand,9,toContractTileType)
+        console.log(tab,"Found tiletype "+toContractTileType+" at:",mainLand[0],mainLand[1],found)
+
+        let xHex = getPaddedHexFromNumber(mainLand[0],4)
+        let yHex = getPaddedHexFromNumber(mainLand[1],4)
+        let tileHex = getPaddedHexFromNumber(found,2)
+
+        data = data+xHex+yHex+tileHex
         let toContractAddress = localContractAddress(toContract);
         console.log("Transferring "+amount+" "+contract+" to "+toContract+" ("+toContractAddress+") and then calling receiver with data: "+data)
         const result = await clevis("contract","transferAndCall",contract,accountindex,toContractAddress,amount,data)
@@ -619,10 +640,16 @@ module.exports = {
     describe('#setFishPrice()', function() {
       it('should set price of species at the Fishmonger', async function() {
         this.timeout(120000)
+
+        let mainLand = await getMainLand();
+        let fishmongerTile = await clevis("contract","tileTypes","LandLib",web3.utils.fromAscii("Fishmonger"))
+        let found = await searchLandFromCenterOut(mainLand,9,fishmongerTile)
+        console.log(tab,"Found fishmonger tile at:",mainLand[0],mainLand[1],found)
         let speciesAddress = localContractAddress(species);
-        const result = await clevis("contract","setPrice","Fishmonger",accountindex,speciesAddress,price)
+        console.log("setPrice()",accountindex,mainLand[0],mainLand[1],found,speciesAddress,price)
+        const result = await clevis("contract","setPrice","Fishmonger",accountindex,mainLand[0],mainLand[1],found,speciesAddress,price)
         printTxResult(result)
-        const newprice = await clevis("contract","price","Fishmonger",speciesAddress)
+        const newprice = await clevis("contract","price","Fishmonger",mainLand[0],mainLand[1],found,speciesAddress)
         assert(newprice==price,"Price at Fishmonger is "+newprice+" and it should be "+price)
       });
     });
@@ -631,9 +658,13 @@ module.exports = {
     describe('#sellFish()', function() {
       it('should sell species to Fishmonger (and butcher and stock)', async function() {
         this.timeout(120000)
+        let mainLand = await getMainLand();
+        let fishmongerTile = await clevis("contract","tileTypes","LandLib",web3.utils.fromAscii("Fishmonger"))
+        let found = await searchLandFromCenterOut(mainLand,9,fishmongerTile)
+        console.log(tab,"Found fishmonger tile at:",mainLand[0],mainLand[1],found)
         let speciesAddress = localContractAddress(species);
-        console.log(tab,"Selling "+amount+" "+speciesAddress+" fish to Fishmonger to butcher from "+accountindex)
-        const result = await clevis("contract","sellFish","Fishmonger",accountindex,speciesAddress,amount)
+        console.log(tab,"Selling "+amount+" "+speciesAddress+" fish to Fishmonger @ "+mainLand[0]+","+mainLand[1]+","+found+" to butcher from "+accountindex)
+        const result = await clevis("contract","sellFish","Fishmonger",accountindex,mainLand[0],mainLand[1],found,speciesAddress,amount)
         printTxResult(result)
       });
     });
@@ -914,6 +945,7 @@ module.exports = {
         loadAbi("Harbor")
         loadAbi("Dogger")
         loadAbi("Timber")
+        loadAbi("Greens")
         loadAbi("Catfish")
         loadAbi("Pinner")
         loadAbi("Redbass")
@@ -959,6 +991,7 @@ module.exports = {
         module.exports.mintTo("Timber",0,"0x2a906694d15df38f59e76ed3a5735f8aabcce9cb",50)
         module.exports.mintTo("Copper",0,"0x2a906694d15df38f59e76ed3a5735f8aabcce9cb",10000)
         module.exports.mintTo("Fillet",0,"0x2a906694d15df38f59e76ed3a5735f8aabcce9cb",50)
+        module.exports.mintTo("Greens",0,"0x2a906694d15df38f59e76ed3a5735f8aabcce9cb",20)
       });
     });
   },

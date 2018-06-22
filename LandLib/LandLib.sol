@@ -12,8 +12,9 @@ pragma solidity ^0.4.15;
 */
 
 import 'Galleasset.sol';
+import 'DataParser.sol';
 
-contract LandLib is Galleasset {
+contract LandLib is Galleasset, DataParser {
 
   mapping (bytes32 => uint16) public tileTypes;
 
@@ -65,9 +66,9 @@ contract LandLib is Galleasset {
     Land landContract = Land(getContract("Land"));
     address copperContractAddress = getContract("Copper");
     require(msg.sender == copperContractAddress);
-    uint16 _x = uint16(_data[1]) << 8 | uint16(_data[2]);
-    uint16 _y = uint16(_data[3]) << 8 | uint16(_data[4]);
-    uint8 _tile = uint8(_data[5]);
+    uint16 _x = getX(_data);
+    uint16 _y = getY(_data);
+    uint8 _tile = getTile(_data);
     //must be for sale
     require(landContract.priceAt(_x,_y,_tile)>0);
     //must send at least enough as the price
@@ -93,9 +94,9 @@ contract LandLib is Galleasset {
     //build timber camp
     address copperContractAddress = getContract("Copper");
     require(msg.sender == copperContractAddress);
-    uint16 _x = uint16(_data[1]) << 8 | uint16(_data[2]);
-    uint16 _y = uint16(_data[3]) << 8 | uint16(_data[4]);
-    uint8 _tile = uint8(_data[5]);
+    uint16 _x = getX(_data);
+    uint16 _y = getY(_data);
+    uint8 _tile = getTile(_data);
 
     //they must own the tile
     require(landContract.ownerAt(_x,_y,_tile)==_sender);
@@ -161,36 +162,32 @@ contract LandLib is Galleasset {
     address copperContractAddress = getContract("Copper");
     require(msg.sender == copperContractAddress);
 
-    uint16 _x = uint16(_data[1]) << 8 | uint16(_data[2]);
-    uint16 _y = uint16(_data[3]) << 8 | uint16(_data[4]);
-    uint8 _tile = uint8(_data[5]);
+    uint16 _x = getX(_data);
+    uint16 _y = getY(_data);
+    uint8 _tile = getTile(_data);
 
     //they must own the tile
     require(landContract.ownerAt(_x,_y,_tile)==_sender);
     //move that copper to the Land contract
     StandardToken copperContract = StandardToken(copperContractAddress);
     require(copperContract.transfer(getContract("Land"),_amount));
+    StandardToken resourceContract;
 
     if(landContract.tileTypeAt(_x,_y,_tile)==tileTypes["Forest"] || landContract.tileTypeAt(_x,_y,_tile)==tileTypes["TimberCamp"]){
       //they must send in 3 copper to extract 1 Timber
       require(_amount>=3);
-      StandardToken resourceContract = StandardToken(getContract("Timber"));
+      resourceContract = StandardToken(getContract("Timber"));
+      require(resourceContract.galleassMint(_sender,1));
+      return true;
+    }else if(landContract.tileTypeAt(_x,_y,_tile)==tileTypes["Grass"] || landContract.tileTypeAt(_x,_y,_tile)==tileTypes["MainGrass"]){
+      //they must send in 3 copper to extract 1 Timber
+      require(_amount>=2);
+      resourceContract = StandardToken(getContract("Greens"));
       require(resourceContract.galleassMint(_sender,1));
       return true;
     }else{
       return false;
     }
-    return true;
-  }
-
-
-  function getRemainingBytes(uint8 _offset, bytes _data) internal constant returns (bytes32 newBytes){
-    uint8 b = 31;
-    uint8 d = uint8(_data.length-1);
-    while(d>_offset-1){
-      newBytes |= bytes32(_data[d--] & 0xFF) >> (b-- * 8);
-    }
-    return newBytes;
   }
 
   function translateTileToWidth(uint16 _tileType) public constant returns (uint16) {

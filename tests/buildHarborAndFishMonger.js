@@ -35,6 +35,15 @@ galleass.editMiddleTile(0,"Harbor",100)
 galleass.setPriceOfFirstTileOfType(0,100,1999)
 galleass.editMiddleTile(0,"Fishmonger",101)
 galleass.setPriceOfFirstTileOfType(0,101,1999)
+
+galleass.setFishPrice(0,"Pinner",2)
+galleass.setFishPrice(0,"Redbass",4)
+galleass.setFishPrice(0,"Catfish",5)
+galleass.setFishPrice(0,"Snark",8)
+galleass.setFishPrice(0,"Dangler",9)
+
+
+
 galleass.editMiddleTile(0,"Market",102)
 galleass.setPriceOfFirstTileOfType(0,102,1999)
 

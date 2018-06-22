@@ -28,6 +28,7 @@ import ResourceTable from './modal/ResourceTable.js'
 import SendToken from './modal/SendToken.js'
 import BuySellOwner from './modal/BuySellOwner.js'
 import ForestTile from './modal/ForestTile.js'
+import GrassTile from './modal/GrassTile.js'
 
 // -- hud--- //
 import Inventory from './hud/Inventory.js'
@@ -75,6 +76,7 @@ let loadContracts = [
   "Harbor",
   "Dogger",
   "Timber",
+  "Greens",
   "Catfish",
   "Pinner",
   "Redbass",
@@ -98,6 +100,7 @@ let inventoryTokens = [
   "Dogger",
   "Copper",
   "Timber",
+  "Greens",
   "Fillet",
   "Catfish",
   "Pinner",
@@ -651,8 +654,11 @@ class App extends Component {
     if(!this.state.landX || !this.state.landY){
       let mainX = await contracts["Land"].methods.mainX().call();
       let mainY = await contracts["Land"].methods.mainY().call();
-      this.setState({landX:mainX,landY:mainY},()=>{
-        console.log("Reloading with Land x,y",mainX,mainY)
+      //we also want to track where the fishmoger is
+      let fishmongerTileType = await contracts["LandLib"].methods.tileTypes(web3.utils.fromAscii("Fishmonger")).call()
+      let fishmongerIndex = await contracts["Land"].methods.findTile(mainX,mainY,fishmongerTileType).call()
+      this.setState({landX:mainX,landY:mainY,fishmongerIndex:fishmongerIndex},()=>{
+        console.log("Reloading with Land x,y and fishmongerIndex",mainX,mainY,fishmongerIndex)
         this.syncLand()
       })
     }else{
@@ -831,15 +837,15 @@ class App extends Component {
 
     })
   }
-  async sellFish(fish,amount){
+  async sellFish(x,y,i,fish,amount){
     if(!amount) amount=1
-    console.log("SELL FISH "+fish)
+    console.log("SELL FISH ",x,y,i,fish,amount)
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
     let fishContract = contracts[fish];
     console.log("fishContractAddress:",fishContract._address)
-    let paying = await contracts["Fishmonger"].methods.price(fishContract._address).call()
+    let paying = await contracts["Fishmonger"].methods.price(x,y,i,fishContract._address).call()
     console.log("Fishmonger is paying ",paying," for ",fishContract._address)
-    contracts["Fishmonger"].methods.sellFish(fishContract._address,amount).send({
+    contracts["Fishmonger"].methods.sellFish(x,y,i,fishContract._address,amount).send({
       from: accounts[0],
       gas:180000+(amount*80000),
       gasPrice:Math.round(this.state.GWEI * 1000000000)
@@ -850,13 +856,25 @@ class App extends Component {
       }
     })
   }
-  async buyFillet(fish){
-    console.log("BUY FILLET ")
+  async buyFillet(x,y,i){
+    console.log("BUY FILLET ",x,y,i)
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
     let buyAmount = 1
-    let filletPrice = await contracts["Fishmonger"].methods.filletPrice().call()
+    let filletPrice = await contracts["Fishmonger"].methods.filletPrice(x,y,i).call()
     console.log("Fishmonger charges ",filletPrice," for fillets")
-    contracts["Copper"].methods.transferAndCall(contracts["Fishmonger"]._address,filletPrice*buyAmount,"0x01").send({
+
+
+    let xHex = parseInt(x).toString(16)
+    while(xHex.length<4) xHex="0"+xHex;
+    let yHex = parseInt(y).toString(16)
+    while(yHex.length<4) yHex="0"+yHex;
+    let iHex = parseInt(i).toString(16)
+    while(iHex.length<2) iHex="0"+iHex;
+
+    let data = "0x01"+xHex+yHex+iHex
+    console.log("Final data:",data)
+
+    contracts["Copper"].methods.transferAndCall(contracts["Fishmonger"]._address,filletPrice*buyAmount,data).send({
       from: accounts[0],
       gas:120000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
@@ -867,7 +885,7 @@ class App extends Component {
       }
     })
   }
-  async extractRawResource(x,y,i){
+  async extractRawResource(x,y,i,amountOfCopper){
     console.log("Extract raw resource from ",x,y,i)
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
     let xHex = parseInt(x).toString(16)
@@ -878,7 +896,6 @@ class App extends Component {
     while(iHex.length<2) iHex="0"+iHex;
     let action = "0x03"
     let finalHex = action+xHex+yHex+iHex
-    let amountOfCopper = 3
     console.log("Sending "+amountOfCopper+" copper to LandLib with data:"+finalHex)
     contracts["Copper"].methods.transferAndCall(contracts["LandLib"]._address,amountOfCopper,finalHex).send({
       from: accounts[0],
@@ -1629,10 +1646,10 @@ class App extends Component {
       ]
       modalObject.prices = []
       for(let f in modalObject.fish){
-        modalObject.prices[modalObject.fish[f]] = await contracts["Fishmonger"].methods.price(contracts[modalObject.fish[f]]._address).call();
+        modalObject.prices[modalObject.fish[f]] = await contracts["Fishmonger"].methods.price(this.state.landX,this.state.landY,index,contracts[modalObject.fish[f]]._address).call();
       }
-      modalObject.filletPrice = await contracts["Fishmonger"].methods.filletPrice().call();
-      modalObject.filletBalance = await contracts["Fillet"].methods.balanceOf(contracts["Fishmonger"]._address).call();
+      modalObject.filletPrice = await contracts["Fishmonger"].methods.filletPrice(this.state.landX,this.state.landY,index).call();
+      modalObject.filletBalance = await contracts["Fishmonger"].methods.filletBalance(this.state.landX,this.state.landY,index).call();
     }
 
 
@@ -1690,7 +1707,8 @@ class App extends Component {
       modalObject.isFish = true
       modalObject.prices = {}
       for(let f in fish){
-        modalObject.prices[fish[f]] = await contracts["Fishmonger"].methods.price(contracts[fish[f]]._address).call();
+        console.log("Getting price:",this.state.landX,this.state.landY,this.state.fishmongerIndex)
+        modalObject.prices[fish[f]] = await contracts["Fishmonger"].methods.price(this.state.landX,this.state.landY,this.state.fishmongerIndex,contracts[fish[f]]._address).call();
       }
     }
 
@@ -2675,7 +2693,14 @@ return (
         }else{
           body = (
             <div style={{marginTop:100}}>
-              <SendToken modalObject={this.state.modalObject} sendToken={this.sendToken.bind(this)} sellFish={this.sellFish.bind(this)}/>
+              <SendToken
+                modalObject={this.state.modalObject}
+                sendToken={this.sendToken.bind(this)}
+                sellFish={(fishSellAmount)=>{
+                  console.log("SELLFISH",this.state.landX,this.state.landY,this.state.fishmongerIndex,this.state.modalObject.name,fishSellAmount)
+                  this.sellFish(this.state.landX,this.state.landY,this.state.fishmongerIndex,this.state.modalObject.name,fishSellAmount)
+                }}
+              />
             </div>
           )
         }
@@ -2816,7 +2841,7 @@ return (
             first:"fillet",
             price: this.state.modalObject.filletPrice,
             second:"copper",
-            clickFn: this.buyFillet.bind(this),
+            clickFn: this.buyFillet.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index),
           }]
           let sellArray = []
           for(let f in this.state.modalObject.fish){
@@ -2826,7 +2851,7 @@ return (
               first:this.state.modalObject.fish[f],
               price:this.state.modalObject.prices[this.state.modalObject.fish[f]],
               second:"copper",
-              clickFn: this.sellFish.bind(this,this.state.modalObject.fish[f],1),
+              clickFn: this.sellFish.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,this.state.modalObject.fish[f],1),
             }
           }
           content.push(
@@ -2900,8 +2925,19 @@ return (
           content.push(
             <ForestTile
               modalObject={this.state.modalObject}
-              extractRawResource={this.extractRawResource.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index)}
+              extractRawResource={this.extractRawResource.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,3)}
               buildTimberCamp={this.buildTimberCamp.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,citizen)}
+            />
+          )
+        }else if(OWNS_TILE && this.state.modalObject.name == "Grass Resource"){
+          let citizen = false
+          if(this.state.modalObject.citizens[0]){
+            citizen = this.state.modalObject.citizens[0].id
+          }
+          content.push(
+            <GrassTile
+              modalObject={this.state.modalObject}
+              extractRawResource={this.extractRawResource.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,2)}
             />
           )
         }else if(OWNS_TILE && this.state.modalObject.name == "Timber Camp"){
@@ -2909,7 +2945,7 @@ return (
           content.push(
             <div>
               <ResourceTable
-                extractRawResource={this.extractRawResource.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index)}
+                extractRawResource={this.extractRawResource.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,3)}
                 collect={(e)=>{
                   this.collect("TimberCamp",this.state.modalObject.index)
                   e.preventDefault()
