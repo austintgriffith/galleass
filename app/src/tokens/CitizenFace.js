@@ -14,11 +14,11 @@ class CitizenFace extends Component {
       top:0,
     }
     let typeCount = {
-      head: 4,
-      hair: 5,
-      nose: 5,
-      mouth: 5,
-      eyes: 6,
+      head: 8,
+      hair: 8,
+      nose: 8,
+      mouth: 8,
+      eyes: 8,
     }
     let images = {}
     for(let type in typeCount){

@@ -177,7 +177,7 @@ contract Citizens is Galleasset, NFT {
     }
 
     function getCitizenGenes(uint256 _id) public view returns (uint16 head,uint16 hair,uint16 eyes,uint16 nose,uint16 mouth) {
-      head = uint16(citizens[_id].characteristics[0]) << 8 | uint16(citizens[_id].genes[1]);
+      head = uint16(citizens[_id].genes[0]) << 8 | uint16(citizens[_id].genes[1]);
       hair = uint16(citizens[_id].genes[2]) << 8 | uint16(citizens[_id].genes[3]);
       eyes = uint16(citizens[_id].genes[4]) << 8 | uint16(citizens[_id].genes[5]);
       nose = uint16(citizens[_id].genes[6]) << 8 | uint16(citizens[_id].genes[7]);

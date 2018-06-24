@@ -111,7 +111,8 @@ contract LandLib is Galleasset, DataParser {
 
     //assuming the we used the fist 6 bytes of the data for action,x,y,tile we will use the rest as the id of
     // the citizen that will be building the timber camp
-    uint citizenId = uint(getRemainingBytes(6,_data));
+    uint citizenId = uint(getRemainingBytesLeadingZs(6,_data));
+    //uint citizenId = getRemainingUint(6,_data);
 
     //make sure that this address owns a citizen at this location with strength and stamina > 1
     // if everything is right, set the status to timber camp

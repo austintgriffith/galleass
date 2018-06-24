@@ -658,8 +658,11 @@ class App extends Component {
       //we also want to track where the fishmoger is
       let fishmongerTileType = await contracts["LandLib"].methods.tileTypes(web3.utils.fromAscii("Fishmonger")).call()
       let fishmongerIndex = await contracts["Land"].methods.findTile(mainX,mainY,fishmongerTileType).call()
-      this.setState({landX:mainX,landY:mainY,fishmongerIndex:fishmongerIndex},()=>{
-        console.log("Reloading with Land x,y and fishmongerIndex",mainX,mainY,fishmongerIndex)
+      //and the harbor
+      let harborTileType = await contracts["LandLib"].methods.tileTypes(web3.utils.fromAscii("Harbor")).call()
+      let harborIndex = await contracts["Land"].methods.findTile(mainX,mainY,harborTileType).call()
+      this.setState({landX:mainX,landY:mainY,fishmongerIndex:fishmongerIndex,harborIndex:harborIndex},()=>{
+        console.log("Reloading with Land x,y and fishmongerIndex",mainX,mainY,fishmongerIndex,harborIndex)
         this.syncLand()
       })
     }else{
@@ -757,9 +760,9 @@ class App extends Component {
         if(!accounts[0]){
           this.metamaskHint()
         }else{
-          let currentPrice = await contracts["Harbor"].methods.currentPrice(web3.utils.fromAscii("Dogger")).call()
+          let currentPrice = await contracts["Harbor"].methods.currentPrice(this.state.landX,this.state.landY,this.state.harborIndex,web3.utils.fromAscii("Dogger")).call()
           console.log("current price for",FISHINGBOAT,"is",currentPrice)
-          contracts["Harbor"].methods.buyShip(web3.utils.fromAscii("Dogger")).send({
+          contracts["Harbor"].methods.buyShip(this.state.landX,this.state.landY,this.state.harborIndex,web3.utils.fromAscii("Dogger")).send({
             value: currentPrice,
             from: accounts[0],
             gas:130000,
@@ -784,6 +787,36 @@ class App extends Component {
         this.metamaskHint()
       }
     }
+  }
+  async buildShip(x,y,i){
+    console.log("BUILD DOGGER ",x,y,i)
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+    let doggerPrice = 2
+    let xHex = parseInt(x).toString(16)
+    while(xHex.length<4) xHex="0"+xHex;
+    let yHex = parseInt(y).toString(16)
+    while(yHex.length<4) yHex="0"+yHex;
+    let iHex = parseInt(i).toString(16)
+    while(iHex.length<2) iHex="0"+iHex;
+
+    let model = web3.utils.fromAscii("Dogger")
+    model=model.replace("0x","")
+    while(model.length%2!=0) model="0"+model;
+
+
+    let data = "0x01"+xHex+yHex+iHex+model
+    console.log("Final data:",data)
+
+    contracts["Timber"].methods.transferAndCall(contracts["Harbor"]._address,doggerPrice,data).send({
+      from: accounts[0],
+      gas:230000,
+      gasPrice:Math.round(this.state.GWEI * 1000000000)
+    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+      console.log("RESULT:",receipt)
+      if(this.state.modalHeight>=0){
+        this.closeModal()
+      }
+    })
   }
   async disembark() {
     console.log("disembark")
@@ -1661,8 +1694,8 @@ class App extends Component {
 
 
     if(name=="Harbor"){
-      modalObject.doggers = await contracts["Harbor"].methods.countShips(web3.utils.asciiToHex("Dogger")).call();
-      modalObject.doggerPrice = await contracts["Harbor"].methods.currentPrice(web3.utils.asciiToHex("Dogger")).call();
+      modalObject.doggers = await contracts["Harbor"].methods.countShips(this.state.landX,this.state.landY,this.state.harborIndex,web3.utils.asciiToHex("Dogger")).call();
+      modalObject.doggerPrice = await contracts["Harbor"].methods.currentPrice(this.state.landX,this.state.landY,this.state.harborIndex,web3.utils.asciiToHex("Dogger")).call();
     }
 
     if(name=="Fishmonger"){
@@ -2881,7 +2914,13 @@ return (
           content.push(
             <BuySellTable buyArray={buyArray} sellArray={sellArray}/>
           )
-
+          if(OWNS_TILE){
+            content.push(
+              <div style={{position:"absolute",left:190,top:105,cursor:"pointer"}} onClick={this.buildShip.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index)}>
+                <img style={{maxHeight:50,maxWidth:50}} src={"buildDogger.png"} />
+              </div>
+            )
+          }
           content.push(
             <div style={{position:"absolute",left:130,top:105,cursor:"pointer"}} onClick={this.disembark.bind(this)}>
               <img style={{maxHeight:50,maxWidth:50}} src={"disembark.png"} />

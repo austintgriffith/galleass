@@ -215,14 +215,37 @@ module.exports = {
       });
     });
   },
+  setShipPrice:(accountindex,model,ether)=>{
+    describe('#buyShip()', function() {
+      it('should buy ship from the Harbor', async function() {
+        this.timeout(120000)
+        const accounts = await clevis("accounts")
+        let mainLand = await getMainLand();
+        let harborTile = await clevis("contract","tileTypes","LandLib",web3.utils.fromAscii("Harbor"))
+        let found = await searchLandFromCenterOut(mainLand,9,harborTile)
+        console.log(tab,"Found harbor tile at:",mainLand[0],mainLand[1],found)
+        //setPrice(uint16 _x,uint16 _y,uint8 _tile,bytes32 model,uint256 amount)
+        const result = await clevis("contract","setPrice","Harbor",accountindex,mainLand[0],mainLand[1],found,web3.utils.fromAscii(model),web3.utils.toWei(ether,"ether"))
+        printTxResult(result)
+        const currentPrice = await clevis("contract","currentPrice","Harbor",mainLand[0],mainLand[1],found,web3.utils.fromAscii(model));
+        const priceInEther = web3.utils.fromWei(currentPrice,"ether")
+        console.log(tab,"The currentPrice for a "+model.blue+" at the",mainLand[0],mainLand[1],found,"Harbor is",priceInEther.toString().green,"ETH")
+        assert(ether==priceInEther,"Price did not set correctly.")
+      });
+    });
+  },
   buyShip:(accountindex,model)=>{
     describe('#buyShip()', function() {
       it('should buy ship from the Harbor', async function() {
         this.timeout(120000)
         const accounts = await clevis("accounts")
-        //const wei = await clevis("wei",ether,"ether")
-        const wei = await clevis("contract","currentPrice","Harbor",web3.utils.fromAscii(model))
-        const result = await clevis("contract","buyShip","Harbor",accountindex,wei,web3.utils.fromAscii(model))
+        let mainLand = await getMainLand();
+        let harborTile = await clevis("contract","tileTypes","LandLib",web3.utils.fromAscii("Harbor"))
+        let found = await searchLandFromCenterOut(mainLand,9,harborTile)
+        console.log(tab,"Found harbor tile at:",mainLand[0],mainLand[1],found)
+        const currentPrice = await clevis("contract","currentPrice","Harbor",mainLand[0],mainLand[1],found,web3.utils.fromAscii(model));
+        // buyShip(uint16 _x,uint16 _y,uint8 _tile,bytes32 model)
+        const result = await clevis("contract","buyShip","Harbor",accountindex,currentPrice,mainLand[0],mainLand[1],found,web3.utils.fromAscii(model))
         printTxResult(result)
         const ships = await clevis("contract","tokensOfOwner","Dogger",accounts[accountindex])
         console.log(tab,"Ships (model "+model+") belonging to "+accounts[accountindex].blue+":",ships)
@@ -309,11 +332,16 @@ module.exports = {
     describe('#buildShip()', function() {
       it('should build Ships at the Harbor', async function() {
         this.timeout(120000)
-        const result = await clevis("contract","buildShip","Harbor",accountindex,web3.utils.fromAscii(model))
+        let mainLand = await getMainLand();
+        let harborTile = await clevis("contract","tileTypes","LandLib",web3.utils.fromAscii("Harbor"))
+        let found = await searchLandFromCenterOut(mainLand,9,harborTile)
+        console.log(tab,"Found harbor tile at:",mainLand[0],mainLand[1],found)
+        const result = await clevis("contract","buildShip","Harbor",accountindex,mainLand[0],mainLand[1],found,web3.utils.fromAscii(model))
         printTxResult(result)
-        const ships = await clevis("contract","balanceOf",model,localContractAddress("Harbor"))
+        //countShips(uint16 _x,uint16 _y,uint8 _tile,bytes32 _model)
+        const ships = await clevis("contract","countShips","Harbor",mainLand[0],mainLand[1],found,web3.utils.fromAscii(model))
         assert(ships>=1,"Dogger didn't build!?!")
-        console.log(tab,"Harbor has "+((ships+"").yellow+" "+model+"(s)"))
+        console.log(tab,"Harbor @ "+mainLand[0]+","+mainLand[1]+","+found+" has "+((ships+"").yellow+" "+model+"(s)"))
       });
     });
   },
