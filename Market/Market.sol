@@ -10,9 +10,8 @@ The market facilitates the buying and selling of different tokens
 */
 
 import 'StandardTile.sol';
-import 'DataParser.sol';
 
-contract Market is StandardTile, DataParser {
+contract Market is StandardTile {
 
   constructor(address _galleass) public StandardTile(_galleass) { }
 
@@ -29,7 +28,7 @@ contract Market is StandardTile, DataParser {
     return true;
   }
 
-  //if the market has permissing to galleassTransferFrom your token you can call sell directly
+  //if the market has permission to galleassTransferFrom your token you can call sell directly
   // it's better to 667 them in without special galeeass permission
   /*function sell(uint16 _x,uint16 _y,uint8 _tile,address _token,uint _amount) public isGalleasset("Market") returns (bool) {
     //token must have a buy price
@@ -46,9 +45,7 @@ contract Market is StandardTile, DataParser {
     emit TokenTransfer(msg.sender,_sender,_amount,_data);
     uint8 action = uint8(_data[0]);
     if(action==0){
-      //action zero should be a transfer... like stocking the tile up
-      // you just need to keep track of what is transferred in so you
-      // can display it on the modal of the tile and let the withdraw
+      return _sendToken(_sender,_amount,_data);
     } else if(action==1){
       return _buy(_sender,_amount,_data);
     } else if(action==2){
@@ -62,6 +59,8 @@ contract Market is StandardTile, DataParser {
   function _buy(address _sender, uint _amount, bytes _data) internal returns (bool) {
     //you must be sending in copper
     require(msg.sender == getContract("Copper"));
+    //increment tile's copper balance
+    _incrementTokenBalance(_x,_y,_tile,msg.sender,_amount);
     //parse land location out of data
     uint16 _x = getX(_data);
     uint16 _y = getY(_data);
@@ -70,17 +69,22 @@ contract Market is StandardTile, DataParser {
 
     //token must have a sell price
     require(sellPrices[_x][_y][_tile][_tokenAddress]>0);
+    //increment tile's token balance
+    _incrementTokenBalance(_x,_y,_tile,_tokenAddress,_amount);
 
     uint amountOfTokensToSend = _amount/sellPrices[_x][_y][_tile][_tokenAddress];
+
+    //make sure this tile has enough of this token to send
+    _decrementTokenBalance(_x,_y,_tile,_tokenAddress,amountOfTokensToSend);
     //send them their new tokens
     StandardToken tokenContract = StandardToken(_tokenAddress);
     require(tokenContract.transfer(_sender,amountOfTokensToSend));
 
-    emit BuyInternal(_x,_y,_tile,_amount,_tokenAddress,amountOfTokensToSend);
+    emit Buy(_x,_y,_tile,_amount,_tokenAddress,amountOfTokensToSend);
 
     return true;
   }
-  event BuyInternal(uint16 _x,uint16 _y,uint8 _tile,uint copperSpent, address _tokenAddress,uint amountOfTokensToSend);
+  event Buy(uint16 _x,uint16 _y,uint8 _tile,uint copperSpent, address _tokenAddress,uint amountOfTokensToSend);
 
   //player is sending some token to the market and expecting payment in copper based on the buyPrice the market is willing to pay for the incoming token
   function _sell(address _sender, uint _amount, bytes _data) internal returns (bool) {
@@ -91,20 +95,19 @@ contract Market is StandardTile, DataParser {
     //token must have a buy price
     require(buyPrices[_x][_y][_tile][msg.sender]>0);
 
-    emit SellInternal(_x,_y,_tile,msg.sender,_amount,_sender);
+    //increment tile's balance of this token
+    _incrementTokenBalance(_x,_y,_tile,msg.sender,_amount);
 
-    if(msg.sender==getContract("Timber")  || msg.sender==getContract("Fillet")  ||
-        msg.sender==getContract("Snark")  || msg.sender==getContract("Dangler")  ||
-        msg.sender==getContract("Redbass") || msg.sender==getContract("Pinner")  || msg.sender==getContract("Catfish")
-      ){
-      StandardToken copperContract = StandardToken(getContract("Copper"));
-      require(copperContract.transfer(_sender,_amount*buyPrices[_x][_y][_tile][msg.sender]));
-      return true;
-    }else{
-      revert();
-    }
+    emit Sell(_x,_y,_tile,msg.sender,_amount,_sender);
+    
+    uint amountOfCopperToSend = _amount*buyPrices[_x][_y][_tile][msg.sender];
+    //make sure this tile has enough copper to buy the token
+    _decrementTokenBalance(_x,_y,_tile,getContract("Copper"),amountOfCopperToSend);
+    StandardToken copperContract = StandardToken(getContract("Copper"));
+    require(copperContract.transfer(_sender,amountOfCopperToSend));
+    return true;
   }
-  event SellInternal(uint16 _x,uint16 _y,uint8 _tile,address _tokenAddress,uint _amount,address _sender);
+  event Sell(uint16 _x,uint16 _y,uint8 _tile,address _tokenAddress,uint _amount,address _sender);
 
 }
 

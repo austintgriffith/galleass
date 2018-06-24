@@ -12,10 +12,11 @@ the Sea for other players to catch.
 */
 
 import 'StandardTile.sol';
-import 'DataParser.sol';
 
-contract Fishmonger is StandardTile, DataParser {
-  
+contract Fishmonger is StandardTile {
+
+  uint8 public constant FILLETSPERFISH = 4;
+
   constructor(address _galleass) public StandardTile(_galleass) { }
 
   //how much the fishmonger is willing to pay for each species of fish
@@ -26,9 +27,6 @@ contract Fishmonger is StandardTile, DataParser {
   //      land x            land y          land tile
   mapping(uint16 => mapping(uint16 => mapping(uint8 => uint256))) public filletPrice;
 
-  //each tile will have an inventory of fillets
-  //      land x            land y          land tile
-  mapping(uint16 => mapping(uint16 => mapping(uint8 => uint256))) public filletBalance;
 
   function onPurchase(uint16 _x,uint16 _y,uint8 _tile,address _owner,uint _amount) public returns (bool) {
     require(super.onPurchase(_x,_y,_tile,_owner,_amount));
@@ -64,14 +62,17 @@ contract Fishmonger is StandardTile, DataParser {
     require( seaContract.stock(_species,_amount) ); ////////            <--------------------  this will need x y tile too
     //CONVERT THE FISH TO FILLETS (THE fishmonger then sells fillets for citizen food in later levels)
     StandardToken filletContract = StandardToken(getContract("Fillet"));
-    require( filletContract.galleassMint(address(this),_amount) ); //mint 1 fillet for each fish caught
-    //each tile has a different inventory of fillets
-    _incrementFilletBalance(_x,_y,_tile,_amount);
+    require( filletContract.galleassMint(address(this),_amount*FILLETSPERFISH) ); //mint 1 fillet for each fish caught
+    //each tile has a different inventory of fillets, increment it
+    _incrementTokenBalance(_x,_y,_tile,getContract("Fillet"),_amount);
 
     //SEND THEM price[_species]*_amount COPPER FOR THE FISH
     address copperContractAddress = getContract("Copper");
+    //each tile has a different inventory of copper, decrement it
+    _decrementTokenBalance(_x,_y,_tile,copperContractAddress,fishPrice*_amount);
     StandardToken copperContract = StandardToken(copperContractAddress);
     require( copperContract.transfer(msg.sender,fishPrice*_amount) );
+
 
     _updateExperience(msg.sender);
     return true;
@@ -80,7 +81,9 @@ contract Fishmonger is StandardTile, DataParser {
   function onTokenTransfer(address _sender, uint _amount, bytes _data) public isGalleasset("Fishmonger") returns (bool){
     emit TokenTransfer(msg.sender,_sender,_amount,_data);
     uint8 action = uint8(_data[0]);
-    if(action==1){
+    if(action==0){
+      return _sendToken(_sender,_amount,_data);
+    } else if(action==1){
       return _buyFillet(_sender,_amount,_data);
     } else if(action==2){
       //sellFish
@@ -90,6 +93,7 @@ contract Fishmonger is StandardTile, DataParser {
   }
   event TokenTransfer(address token,address sender,uint amount,bytes data);
 
+  //players will buy fillets to feed their citizens
   function _buyFillet(address _sender, uint _amount, bytes _data) internal returns (bool) {
     uint16 _x = getX(_data);
     uint16 _y = getY(_data);
@@ -100,11 +104,13 @@ contract Fishmonger is StandardTile, DataParser {
     require(filletPrice[_x][_y][_tile] > 0, "Fillet must have a price");
     uint filletAmount = _amount / filletPrice[_x][_y][_tile];
     require(filletAmount>0,"Amount was too low?");
-    StandardToken filletContract = StandardToken(filletAddress);
-    require(filletAmount <= filletBalance[_x][_y][_tile], "This tile does not have enough fillets");
-    require(filletContract.transfer(_sender,filletAmount), "Failed to transfer fillets");
     //subtract amount from this tile's fillet balance
-    _decrementFilletBalance(_x,_y,_tile,filletAmount);
+    _decrementTokenBalance(_x,_y,_tile,filletAddress,filletAmount);
+    //increment the copper balance
+    _incrementTokenBalance(_x,_y,_tile,msg.sender,_amount);
+    //transfer fillets
+    StandardToken filletContract = StandardToken(filletAddress);
+    require(filletContract.transfer(_sender,filletAmount), "Failed to transfer fillets");
     return true;
   }
 
@@ -112,13 +118,6 @@ contract Fishmonger is StandardTile, DataParser {
   function _getFishPrice(uint16 _x,uint16 _y,uint8 _tile,address _species) internal returns (uint256) {
     return  price[_x][_y][_tile][_species];
   }
-  function _incrementFilletBalance(uint16 _x,uint16 _y,uint8 _tile,uint _amount) internal {
-    filletBalance[_x][_y][_tile]+=_amount;
-  }
-  function _decrementFilletBalance(uint16 _x,uint16 _y,uint8 _tile,uint _amount) internal {
-    filletBalance[_x][_y][_tile]-=_amount;
-  }
-
   function _updateExperience(address _player) internal returns (bool){
     address experienceContractAddress = getContract("Experience");
     require( experienceContractAddress!=address(0) );

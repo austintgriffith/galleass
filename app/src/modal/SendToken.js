@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import Writing from '../Writing.js'
 //import BuySellItem from './BuySellItem.js'
-class CreateTable extends Component {
+class SendToken extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -79,4 +79,4 @@ class CreateTable extends Component {
 }
 
 
-export default CreateTable;
+export default SendToken;

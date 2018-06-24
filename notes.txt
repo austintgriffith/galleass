@@ -47,6 +47,7 @@ The Sea should become The Bay and a new "Sea" is more about moving from island t
 Make sure it looks good on all phones
 Transactions should show up in bottom left to give progress bars to non-ship button clicks
 Make sure all things link to etherscan correctly
+Update your portfolio page for Galleass to basically be a wiki... explain everything... tokens, loader bars, event based actions like sailing and collecting, citizens, etc
 ```
 
 ### Neat things to write about
@@ -58,4 +59,5 @@ which brings up all the different ways to move tokens... authorize and then tran
 contract "library" so the contract only holds who owns what and all the business logic is in an upgradable contract (until production flag is set)
 the whole event triggered paradigm is really efficient... like how the clouds or resources or sailing works
 multiplayer so massive it comes down to what can be displayed ... with the ethereum blockchain as the only backend
+I'm building it with the assumption that tranastions will be 100x cheaper or it will run on a side chain or something... there is no way you would want to pay full mainnet costs
 ```

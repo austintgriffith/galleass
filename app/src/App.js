@@ -29,6 +29,7 @@ import SendToken from './modal/SendToken.js'
 import BuySellOwner from './modal/BuySellOwner.js'
 import ForestTile from './modal/ForestTile.js'
 import GrassTile from './modal/GrassTile.js'
+import SendToTile from './modal/SendToTile.js'
 
 // -- hud--- //
 import Inventory from './hud/Inventory.js'
@@ -885,6 +886,31 @@ class App extends Component {
       }
     })
   }
+  async transferAndCall(x,y,i,contractName,amount,tokenName){
+    console.log("BUY FILLET ",x,y,i)
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+
+    let xHex = parseInt(x).toString(16)
+    while(xHex.length<4) xHex="0"+xHex;
+    let yHex = parseInt(y).toString(16)
+    while(yHex.length<4) yHex="0"+yHex;
+    let iHex = parseInt(i).toString(16)
+    while(iHex.length<2) iHex="0"+iHex;
+
+    let data = "0x00"+xHex+yHex+iHex
+    console.log("Final data:",data)
+
+    contracts[tokenName].methods.transferAndCall(contracts[contractName]._address,amount,data).send({
+      from: accounts[0],
+      gas:120000,
+      gasPrice:Math.round(this.state.GWEI * 1000000000)
+    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+      console.log("RESULT:",receipt)
+      if(this.state.modalHeight>=0){
+        this.closeModal()
+      }
+    })
+  }
   async extractRawResource(x,y,i,amountOfCopper){
     console.log("Extract raw resource from ",x,y,i)
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
@@ -1628,7 +1654,10 @@ class App extends Component {
       }
     }
 
-
+    //sometimes each tile will have a different balance, show the local balance
+    //sometimes you will want to show the global balance of the contract backing the tile
+    //(probably if there is a single contract deployed for the tile)
+    let calculateBalanceGlobally = true;
 
 
     if(name=="Harbor"){
@@ -1649,20 +1678,30 @@ class App extends Component {
         modalObject.prices[modalObject.fish[f]] = await contracts["Fishmonger"].methods.price(this.state.landX,this.state.landY,index,contracts[modalObject.fish[f]]._address).call();
       }
       modalObject.filletPrice = await contracts["Fishmonger"].methods.filletPrice(this.state.landX,this.state.landY,index).call();
-      modalObject.filletBalance = await contracts["Fishmonger"].methods.filletBalance(this.state.landX,this.state.landY,index).call();
+
+      let fishmongerTokens = ["Copper","Fillet"]
+      modalObject.tokenBalance = {}
+      for(let i in fishmongerTokens){
+        modalObject.tokenBalance[fishmongerTokens[i]] = parseInt(await contracts["Fishmonger"].methods.tokenBalance(this.state.landX,this.state.landY,index,contracts[fishmongerTokens[i]]._address).call());
+      }
+      //each tile will have a different balance, show the local balance
+      calculateBalanceGlobally=false;
     }
 
 
 
     if(name=="Market"){
-      let marketTokens = ["Timber","Fillet"]
+      let marketTokens = ["Copper","Timber","Fillet","Greens"]
       modalObject.sellPrices = {}
       modalObject.buyPrices = {}
+      modalObject.tokenBalance = {}
       for(let i in marketTokens){
         modalObject.sellPrices[marketTokens[i]] = parseInt(await contracts["Market"].methods.sellPrices(this.state.landX,this.state.landY,index,contracts[marketTokens[i]]._address).call());
         modalObject.buyPrices[marketTokens[i]] = parseInt(await contracts["Market"].methods.buyPrices(this.state.landX,this.state.landY,index,contracts[marketTokens[i]]._address).call());
+        modalObject.tokenBalance[marketTokens[i]] = parseInt(await contracts["Market"].methods.tokenBalance(this.state.landX,this.state.landY,index,contracts[marketTokens[i]]._address).call());
       }
-      //modalObject.filletBalance = await contracts["Market"].methods.balanceOf(contracts["Fishmonger"]._address).call();
+      //each tile will have a different balance, show the local balance
+      calculateBalanceGlobally=false;
     }
 
     if(name=="Timber Camp"){
@@ -1671,15 +1710,18 @@ class App extends Component {
       modalObject.resourceType = (web3.utils.hexToAscii(await contracts["TimberCamp"].methods.resource().call())).replace(/[^a-z0-9A-Z ]/gmi, "")
     }
 
+
     //if we have a contract for this tile, check the balance and display tokens that the contract owns
-    let cleanName = name.replace(" ","");
-    if(contracts[cleanName]){
-      if(contracts[cleanName].methods.getBalance) modalObject.balance = await contracts[cleanName].methods.getBalance().call();
-      modalObject.copperBalance = await contracts["Copper"].methods.balanceOf(contracts[cleanName]._address).call();
-      modalObject.filletBalance = await contracts["Fillet"].methods.balanceOf(contracts[cleanName]._address).call();
-      modalObject.timberBalance = await contracts["Timber"].methods.balanceOf(contracts[cleanName]._address).call();
-      modalObject.doggerBalance = await contracts["Dogger"].methods.balanceOf(contracts[cleanName]._address).call();
-      console.log("copperBalance",contracts["Copper"]._address,cleanName,contracts[cleanName]._address,modalObject.copperBalance)
+    if(calculateBalanceGlobally){
+      let cleanName = name.replace(" ","")
+      if(contracts[cleanName]){
+        if(contracts[cleanName].methods.getBalance) modalObject.balance = await contracts[cleanName].methods.getBalance().call();
+        modalObject.copperBalance = await contracts["Copper"].methods.balanceOf(contracts[cleanName]._address).call();
+        modalObject.filletBalance = await contracts["Fillet"].methods.balanceOf(contracts[cleanName]._address).call();
+        modalObject.timberBalance = await contracts["Timber"].methods.balanceOf(contracts[cleanName]._address).call();
+        modalObject.doggerBalance = await contracts["Dogger"].methods.balanceOf(contracts[cleanName]._address).call();
+        console.log("copperBalance",contracts["Copper"]._address,cleanName,contracts[cleanName]._address,modalObject.copperBalance)
+      }
     }
 
     this.openModal(modalObject)
@@ -2768,8 +2810,20 @@ return (
             </span>
           )
         }
+        //new method of looking at token balance in a contract
+        if(this.state.modalObject.tokenBalance){
+          for(let i in inventoryTokens){
+            if(this.state.modalObject.tokenBalance[inventoryTokens[i]]>0){
+              inventoryItems.push(
+                <span style={modalInvStyle}><img style={{maxHeight:invHeight}} src={inventoryTokens[i].toLowerCase()+".png"} />
+                <Writing string={this.state.modalObject.tokenBalance[inventoryTokens[i]]} size={invHeight+2}/>
+                </span>
+              )
+            }
+          }
+        }
 
-
+        /*
         if(this.state.modalObject.doggerBalance>0){
           inventoryItems.push(
             <span style={modalInvStyle}><img style={{maxHeight:invHeight}} src="dogger.png" />
@@ -2798,7 +2852,7 @@ return (
             <Writing string={this.state.modalObject.timberBalance} size={invHeight+2}/>
             </span>
           )
-        }
+        }*/
         content.push(
           <div style={{position:'absolute',left:20,bottom:50}}>
           {inventoryItems}
@@ -2857,6 +2911,12 @@ return (
           content.push(
             <BuySellTable buyArray={buyArray} sellArray={sellArray}/>
           )
+          content.push(
+            <SendToTile modalObject={this.state.modalObject} inventoryTokens={inventoryTokens} sendToTile={(contractName,amount,tokenName)=>{
+              console.log("SendToTile",contractName,amount,tokenName)
+              this.transferAndCall(this.state.landX,this.state.landY,this.state.modalObject.index,contractName,amount,tokenName);
+            }}/>
+          )
         }
 
         if(this.state.modalObject.name == "Market"){
@@ -2889,14 +2949,14 @@ return (
               )
             }
           }
-
-
-
-
-
-
           content.push(
             <BuySellTable buyArray={buyArray} sellArray={sellArray}/>
+          )
+          content.push(
+            <SendToTile modalObject={this.state.modalObject} inventoryTokens={inventoryTokens} sendToTile={(contractName,amount,tokenName)=>{
+              console.log("SendToTile",contractName,amount,tokenName)
+              this.transferAndCall(this.state.landX,this.state.landY,this.state.modalObject.index,contractName,amount,tokenName);
+            }}/>
           )
          if(OWNS_TILE){
            content.push(

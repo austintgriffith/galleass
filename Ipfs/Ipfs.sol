@@ -10,10 +10,10 @@ contract Ipfs is Galleasset {
 
   function setIpfs(string _ipfs) public isGalleasset("Ipfs") onlyOwner returns (bool) {
     ipfs=_ipfs;
-    Update(msg.sender,ipfs);
+    emit Update(msg.sender,ipfs,now);
     return true;
   }
 
-  event Update(address _sender,string _ipfs);
+  event Update(address _sender,string _ipfs,uint _timestamp);
 
 }

@@ -37,7 +37,7 @@ class ResourceTable extends Component {
           <img style={{maxHeight:50,maxWidth:50}} src={"collect"+this.props.resourceType[0].toUpperCase()+this.props.resourceType.substring(1)+".png"} />
         </div>
 
-        <div style={{position:"absolute",left:190,top:105,cursor:"pointer"}} onClick={this.props.extractRawResource} data-rh="Spend 3 Copper for 1 Timber" data-rh-at="bottom" >
+        <div style={{position:"absolute",left:190,top:105,cursor:"pointer"}} onClick={this.props.extractRawResource} data-rh="Spend 3 Copper to chop 1 Timber" data-rh-at="bottom" >
           <img style={{maxHeight:50,maxWidth:50}} src={"extractRaw"+this.props.resourceType[0].toUpperCase()+this.props.resourceType.substring(1)+".png"} />
         </div>
 

@@ -27,7 +27,7 @@ class Land extends Component {
   }
   landTile(location,owner,type,buttons){
 
-    let blockieOpacity = 0.4
+    let blockieOpacity = 0.1
     if(this.state.account&&owner.toLowerCase()==this.state.account.toLowerCase()){
       blockieOpacity = 0.7
     }
@@ -55,7 +55,7 @@ class Land extends Component {
   hillsMain(location,owner){
     let mainWidth = 120
     let mainHeight = 125
-    let blockieOpacity = 0.4
+    let blockieOpacity = 0.1
     if(this.state.account&&owner.toLowerCase()==this.state.account.toLowerCase()){
       blockieOpacity = 0.7
     }
@@ -154,6 +154,10 @@ class Land extends Component {
   harborTile(location,owner){
     let mainWidth = 120
     let mainHeight = 125
+    let blockieOpacity = 0.1
+    if(this.state.account&&owner.toLowerCase()==this.state.account.toLowerCase()){
+      blockieOpacity = 0.7
+    }
     return (
       <div key={"Land"+location} style={{
         position:'absolute',
@@ -163,6 +167,12 @@ class Land extends Component {
         width:mainWidth,
         height:mainHeight
       }}>
+        <div style={{position:'absolute',left:52,top:-23,opacity:blockieOpacity}}>
+          <this.props.Blockies
+            seed={owner.toLowerCase()}
+            scale={2}
+          />
+        </div>
         <img style={{position:'absolute',top:3,left:20}} src="harbor.png" />
       </div>
     )
@@ -170,6 +180,10 @@ class Land extends Component {
   marketTile(location,owner){
     let mainWidth = 120
     let mainHeight = 125
+    let blockieOpacity = 1
+    //if(this.state.account&&owner.toLowerCase()==this.state.account.toLowerCase()){
+    //  blockieOpacity = 0.7
+    //}
     return (
       <div key={"Land"+location} style={{
         position:'absolute',
@@ -179,6 +193,24 @@ class Land extends Component {
         width:mainWidth,
         height:mainHeight
       }}>
+      <div style={{position:'absolute',left:45,top:-9,opacity:blockieOpacity}}>
+        <this.props.Blockies
+          seed={owner.toLowerCase()}
+          scale={1.4}
+        />
+      </div>
+      <div style={{position:'absolute',left:66,top:-9,opacity:blockieOpacity}}>
+        <this.props.Blockies
+          seed={owner.toLowerCase()}
+          scale={1.4}
+        />
+      </div>
+      <div style={{position:'absolute',left:87,top:-7,opacity:blockieOpacity}}>
+        <this.props.Blockies
+          seed={owner.toLowerCase()}
+          scale={1.4}
+        />
+      </div>
         <img style={{position:'absolute',top:3,left:20}} src="market.png" />
       </div>
     )
@@ -189,6 +221,10 @@ class Land extends Component {
   fishMongerTile(location,owner){
     let mainWidth = 120
     let mainHeight = 125
+    let blockieOpacity = 0.1
+    if(this.state.account&&owner.toLowerCase()==this.state.account.toLowerCase()){
+      blockieOpacity = 0.7
+    }
     return (
       <div key={"Land"+location} style={{
         position:'absolute',
@@ -198,8 +234,13 @@ class Land extends Component {
         width:mainWidth,
         height:mainHeight
       }}>
+        <div style={{position:'absolute',left:52,top:-23,opacity:blockieOpacity}}>
+          <this.props.Blockies
+            seed={owner.toLowerCase()}
+            scale={2}
+          />
+        </div>
         <img style={{position:'absolute',top:0,left:10}} src="fishmonger.png" />
-
       </div>
     )
   }

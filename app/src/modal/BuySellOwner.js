@@ -40,6 +40,21 @@ class BuySellOwner extends Component {
 //setSellPrice(x,y,tile,tokenAddress,price)
 //
 
+  let sellHint = "Start selling a new token for Copper."
+  let sellClickFuntion = false
+  if(this.state.newSellTokenAddress && this.state.newSellTokenPrice){
+    sellHint = "Start selling new token with address "+this.state.newSellTokenAddress+" for "+this.state.newSellTokenPrice+" Copper each."
+    sellClickFuntion = this.props.setSellPrice.bind(this,this.props.landX,this.props.landY,this.props.index,this.state.newSellTokenAddress,this.state.newSellTokenPrice)
+  }
+
+  let buyHint = "Start buying a new token with Copper."
+  let buyClickFuntion = false
+  if(this.state.newBuyTokenAddress && this.state.newBuyTokenPrice){
+    buyHint = "Start buying new token with address "+this.state.newBuyTokenAddress+" for "+this.state.newBuyTokenPrice+" Copper each."
+    buyClickFuntion = this.props.setBuyPrice.bind(this,this.props.landX,this.props.landY,this.props.index,this.state.newBuyTokenAddress,this.state.newBuyTokenPrice)
+  }
+
+
 
     return (
       <table cellSpacing={"0"} cellPadding={"5"} border={"0"} width="100%">
@@ -55,8 +70,8 @@ class BuySellOwner extends Component {
                 style={{textAlign:'right',width:30,margin:6,maxHeight:20,padding:5,border:'2px solid #ccc',borderRadius:5}}
                 type="text" name="newSellTokenPrice" value={this.state.newSellTokenPrice} onChange={this.handleChangeNewSellTokenPrice.bind(this)}
               />
-              <img data-rh={"Start selling new token with address "+this.state.newSellTokenAddress+" for "+this.state.newSellTokenPrice+" Copper each."} data-rh-at="right" src="metamasksign.png"
-              style={{maxHeight:42,cursor:"pointer",verticalAlign:'middle'}} onClick={this.props.setSellPrice.bind(this,this.props.landX,this.props.landY,this.props.index,this.state.newSellTokenAddress,this.state.newSellTokenPrice)}/>
+              <img data-rh={sellHint} data-rh-at="right" src="metamasksign.png"
+              style={{maxHeight:42,cursor:"pointer",verticalAlign:'middle'}} onClick={sellClickFuntion}/>
             </td>
             <td style={{width:"50%",verticalAlign:"top"}}>
             <input
@@ -68,8 +83,8 @@ class BuySellOwner extends Component {
               style={{textAlign:'right',width:30,margin:6,maxHeight:20,padding:5,border:'2px solid #ccc',borderRadius:5}}
               type="text" name="newBuylTokenPrice" value={this.state.newBuylTokenPrice} onChange={this.handleChangeNewBuyTokenPrice.bind(this)}
             />
-            <img data-rh={"Start buying new token with address "+this.state.newBuyTokenAddress+" for "+this.state.newBuyTokenPrice+" Copper each."} data-rh-at="right" src="metamasksign.png"
-            style={{maxHeight:42,cursor:"pointer",verticalAlign:'middle'}} onClick={this.props.setBuyPrice.bind(this,this.props.landX,this.props.landY,this.props.index,this.state.newBuyTokenAddress,this.state.newBuyTokenPrice)}/>
+            <img data-rh={buyHint} data-rh-at="right" src="metamasksign.png"
+            style={{maxHeight:42,cursor:"pointer",verticalAlign:'middle'}} onClick={buyClickFuntion}/>
             </td>
           </tr>
         </tbody>

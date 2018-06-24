@@ -28,7 +28,7 @@ class ForestTile extends Component {
     return (
       <div style={{marginTop:30}}>
         <div style={{marginTop:0}}>
-          <img src="extractRawTimber.png" data-rh-at="right" data-rh={"Spend 3 Copper to extract 1 Timber"} style={{cursor:"pointer"}}
+          <img src="extractRawTimber.png" data-rh-at="right" data-rh={"Spend 3 Copper to chop 1 Timber"} style={{cursor:"pointer"}}
             onClick={this.props.extractRawResource}
           />
         </div>

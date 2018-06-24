@@ -68,9 +68,10 @@ galleass.setPermission("Fishmonger",0,"transferFish","true")
 galleass.setPermission("Fishmonger",0,"mintFillet","true")
 galleass.setPermission("Fishmonger",0,"updateExperience","true")
 
-galleass.testMint("Copper",0,1,10000)
-galleass.approveContract("Copper",1,"Fishmonger",10000)
-galleass.transferTokens("Copper",1,"Fishmonger",10000)
+//make sure the fishmonger has a little copper for testing
+// galleass.testMint("Copper",0,1,10)
+// galleass.approveContract("Copper",1,"Fishmonger",10)
+// galleass.transferTokens("Copper",1,"Fishmonger",10)
 
 galleass.deploy("Ipfs",0)
 galleass.setContract("Ipfs",0)
