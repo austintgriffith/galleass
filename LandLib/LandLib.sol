@@ -148,13 +148,14 @@ contract LandLib is Galleasset, DataParser {
     require(_y==y);
     require(_tile==tile);
     //citizen must have enough strength and stamina to be a lumberjack
+    CitizensLib citizensLibContract = CitizensLib(getContract("CitizensLib"));
     uint16 strength;
     uint16 stamina;
-    (strength,stamina,,,,,) = citizensContract.getCitizenBaseCharacteristics(_citizen);
+    (strength,stamina,,,,,) = citizensLibContract.getCitizenCharacteristics(_citizen);
     require(strength>1);
     require(stamina>1);
     //set citizen status to TimberCamp tile type (lumberjack!)
-    require(citizensContract.setStatus(_citizen,uint8(tileTypes["TimberCamp"])));
+    require(citizensLibContract.setStatus(_citizen,uint8(tileTypes["TimberCamp"])));
     return true;
   }
 
@@ -232,9 +233,11 @@ contract LandLib is Galleasset, DataParser {
 }
 
 contract Citizens {
-  function setStatus(uint _id,uint8 _status) returns (bool) { }
-  function getCitizenBaseCharacteristics(uint256 _id) public view returns (uint16 strength,uint16 stamina,uint16 dexterity,uint16 intelligence,uint16 ambition,uint16 rigorous,uint16 industrious) { }
   function getToken(uint256 _id) public view returns (address owner,uint8 status,uint data,uint16 x,uint16 y,uint8 tile, bytes32 genes,bytes32 characteristics,uint64 birth) { }
+}
+contract CitizensLib {
+  function getCitizenCharacteristics(uint256 _id) public view returns (uint16 strength,uint16 stamina,uint16 dexterity,uint16 intelligence,uint16 ambition,uint16 rigorous,uint16 industrious,uint16 ingenuity) { }
+  function setStatus(uint _id,uint8 _status) public returns (bool){ }
 }
 
 contract Land {

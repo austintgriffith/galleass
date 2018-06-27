@@ -986,6 +986,7 @@ module.exports = {
         loadAbi("Land")
         loadAbi("Ipfs")
         loadAbi("Village")
+        loadAbi("CitizensLib")
         loadAbi("Citizens")
         loadAbi("TimberCamp")
         loadAbi("Market")

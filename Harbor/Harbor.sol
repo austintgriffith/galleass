@@ -61,7 +61,7 @@ contract Harbor is StandardTile {
       return true;
     }else{
       return false;
-    } 
+    }
   }
   event Debug(bytes32 _model,bytes32 shouldbe);
 
@@ -121,8 +121,6 @@ contract Harbor is StandardTile {
     return availableShip;
   }
 
-  //this should be transferred over to the new system
-  // where it is the landOwner that sets the price not the contract owner
   function setPrice(uint16 _x,uint16 _y,uint8 _tile,bytes32 model,uint256 amount) public isLandOwner(_x,_y,_tile) returns (bool) {
     currentPrice[_x][_y][_tile][model]=amount;
   }

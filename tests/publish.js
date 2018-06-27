@@ -15,10 +15,12 @@ let loadContracts = [
   "Sea",
   "Harbor",
   "Fishmonger",
+  "Market",
   "Village",
   "Citizens",
   "Dogger",
   "Timber",
+  "TimberCamp",
   "Greens",
   "Catfish",
   "Pinner",
@@ -32,8 +34,7 @@ let loadContracts = [
   "Galleasset",
   "Staged",
   "LandLib",
-  "TimberCamp",
-  "Market"
+  "CitizensLib",
 ]
 
 contractsHtml = "<table cellspacing='0' cellpadding='10' border='0'>"

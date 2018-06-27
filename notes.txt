@@ -23,6 +23,7 @@ I have a new event parser built and I should integrate it into Galleass
 
 ### Possible Changes
 ```
+I think Citizen.data should be bytes32 instead of uint256 just because it could be used for more than just the price in the future
 Maybe there should be an indicator above a tile for each citizen there
 Fish should pay more Copper
 A village should cost 4 Timber instead of 6
@@ -34,8 +35,8 @@ Citizen status should probably be uint16
 ```
 It can take a while when you click on a building for the modal to throw... may pop something above the building up that looks like a loader
 StandardToken inventory should be based on a per-tile basis... right now it show the inv for the contract.. it needs to also be withdrawal from the landowner
-(When you send a token to a contract address it somehow needs to know which one (677 data?))
-Harbor and FishMonger need to be moved over to landOwner system instead of contract owner
+    (When you send a token to a contract address it somehow needs to know which one (677 data?))
+Harbor, Sea (Bay), and [x]FishMonger need to be moved over to landOwner system instead of contract owner
 
 More tokens in the Market by default
 Maybe grass and mountain tiles could also produce resources like the timbercamp?
@@ -48,6 +49,7 @@ Make sure it looks good on all phones
 Transactions should show up in bottom left to give progress bars to non-ship button clicks
 Make sure all things link to etherscan correctly
 Update your portfolio page for Galleass to basically be a wiki... explain everything... tokens, loader bars, event based actions like sailing and collecting, citizens, etc
+Any click to the top left click screen when not fully logged in should take you to the wiki and links to the contracts etc should be at the top of the wiki
 ```
 
 ### Neat things to write about

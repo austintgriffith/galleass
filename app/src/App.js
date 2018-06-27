@@ -92,6 +92,7 @@ let loadContracts = [
   "Ipfs",
   "Village",
   "Citizens",
+  "CitizensLib",
   "TimberCamp",
   "Market"
 ]
@@ -1123,9 +1124,9 @@ class App extends Component {
     let wei = web3.utils.toWei(""+price,'ether')
     console.log("setCitizenPrice",id,price,wei)
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
-    contracts["Citizens"].methods.setPrice(id,wei).send({
+    contracts["CitizensLib"].methods.setPrice(id,wei).send({
       from: accounts[0],
-      gas:300000,
+      gas:95000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
@@ -1137,9 +1138,9 @@ class App extends Component {
   async moveCitizen(id,tile){
     console.log("moveCitizen",id,tile)
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
-    contracts["Citizens"].methods.moveCitizen(id,tile).send({
+    contracts["CitizensLib"].methods.moveCitizen(id,tile).send({
       from: accounts[0],
-      gas:70000,
+      gas:90000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
@@ -1209,7 +1210,7 @@ class App extends Component {
     console.log("finalHex:",finalHex)
     contracts["Copper"].methods.transferAndCall(contracts["LandLib"]._address,copper,finalHex).send({
       from: accounts[0],
-      gas:300000,
+      gas:400000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
@@ -1681,7 +1682,7 @@ class App extends Component {
           owner:this.state.citizens[c].owner,
           status:this.state.citizens[c].status,
           data:this.state.citizens[c].data,
-          geneObject: await contracts["Citizens"].methods.getCitizenGenes(this.state.citizens[c].id).call()
+          geneObject: await contracts["CitizensLib"].methods.getCitizenGenes(this.state.citizens[c].id).call()
         };
         modalObject.citizens.push(citizenObject)
       }
@@ -1795,10 +1796,10 @@ class App extends Component {
          modalObject.tokens[modalObject.tokensOfOwner[tokenId]] = await contracts[name].methods.getToken(modalObject.tokensOfOwner[tokenId]).call()
          console.log("GOT TOKEN DATA",modalObject.tokens[modalObject.tokensOfOwner[tokenId]])
          //load specific functions for specific tokens
-         if(modalObject.tokens[modalObject.tokensOfOwner[tokenId]].genes){
-           modalObject.tokens[modalObject.tokensOfOwner[tokenId]].geneObject = await contracts[name].methods.getCitizenGenes(modalObject.tokensOfOwner[tokenId]).call()
+         if(name=="Citizens"){
+           modalObject.tokens[modalObject.tokensOfOwner[tokenId]].geneObject = await contracts['CitizensLib'].methods.getCitizenGenes(modalObject.tokensOfOwner[tokenId]).call()
            //modalObject.tokens[modalObject.tokensOfOwner[tokenId]].statusObject = await contracts[name].methods.getCitizenStatus(modalObject.tokensOfOwner[tokenId]).call()
-           modalObject.tokens[modalObject.tokensOfOwner[tokenId]].characteristicsObject = await contracts[name].methods.getCitizenBaseCharacteristics(modalObject.tokensOfOwner[tokenId]).call()
+           modalObject.tokens[modalObject.tokensOfOwner[tokenId]].characteristicsObject = await contracts['CitizensLib'].methods.getCitizenCharacteristics(modalObject.tokensOfOwner[tokenId]).call()
          }
       }
     }else{

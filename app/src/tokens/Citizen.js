@@ -5,7 +5,6 @@ import CitizenFace from './CitizenFace.js'
 class Citizen extends Component {
   constructor(props) {
     super(props);
-
     this.state = {
       menu: false,
       sellPrice: 0.001
@@ -30,10 +29,13 @@ class Citizen extends Component {
     this.setState(update)
   }
   render(){
+    let statsSize = "20%"
+    let buttonSize = "70%"
+    let stats=""
     let menu
     if(this.state.menu=="sellCitizen"){
       menu = (
-        <div>
+        <div style={{float:"right"}}>
           <img src="exit.png" style={{cursor:"pointer",maxHeight:28,marginRight:5,verticalAlign:'middle'}} onClick={()=>{
             this.setState({menu:false})
           }}/>
@@ -50,7 +52,7 @@ class Citizen extends Component {
       )
     }else if(this.state.menu=="moveCitizen"){
         menu = (
-          <div>
+          <div style={{float:"right"}}>
             <img src="exit.png" style={{cursor:"pointer",maxHeight:28,marginRight:5,verticalAlign:'middle'}} onClick={()=>{
               this.setState({menu:false})
             }}/>
@@ -77,9 +79,44 @@ class Citizen extends Component {
           }}/>
         </div>
       )
+
+      let chars = []
+      for(let c in this.props.characteristics){
+        if(c.length>=3){
+          chars.push(
+            <span style={{fontSize:11,padding:2}}>
+              {c.substring(0,3)}:{this.props.characteristics[c]}
+            </span>
+          )
+        }
+      }
+      stats = (
+        <table cellSpacing={"0"} cellPadding={"2"} border={"0"} width="100%" style={{padding:0}}>
+          <tbody>
+            <tr>
+              <td>
+                #{this.props.id} <span style={{fontWeight:'bold'}}>{this.convertStatus(this.props.status,this.props.data)}</span>
+              </td>
+              <td style={{textAlign:'right'}}>
+                {chars}
+              </td>
+            </tr>
+            <tr>
+              <td colspan={"2"} style={{textAlign:'right'}}>
+                <div style={{position:"relative"}}>
+                  {this.props.tile} @ ({this.props.x},{this.props.y})
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      )
+      statsSize = "65%"
+      buttonSize = "25%"
     }
 
-    //,overflowX:"scroll"
+
+
 
     return (
       <div style={{width:"100%",height:50}}>
@@ -89,28 +126,10 @@ class Citizen extends Component {
               <td style={{width:"10%",verticalAlign:"bottom"}}>
                 <CitizenFace {...this.props}/>
               </td>
-              <td style={{width:"40%",verticalAlign:"bottom"}}>
-                <table cellSpacing={"0"} cellPadding={"2"} border={"0"} width="100%" style={{padding:0}}>
-                  <tbody>
-                    <tr>
-                      <td>
-                        #{this.props.id} <span style={{fontWeight:'bold'}}>{this.convertStatus(this.props.status,this.props.data)}</span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div style={{position:"relative"}}>
-                          <img src="mapicon.png" style={{maxHeight:26,position:"absolute",left:-9,top:-4,zIndex:-1,opacity:0.2}}/>
-                          <span style={{marginRight:15,opacity:0.7}}>location:</span> {this.props.tile} @ ({this.props.x},{this.props.y})
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-                <div>
-                </div>
+              <td style={{width:statsSize,verticalAlign:"bottom"}}>
+                {stats}
               </td>
-              <td style={{width:"50%",verticalAlign:"bottom"}}>
+              <td style={{width:buttonSize,verticalAlign:"bottom"}}>
                 <div>
                   {menu}
                 </div>
