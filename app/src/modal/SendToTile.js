@@ -4,12 +4,10 @@ import Writing from '../Writing.js'
 class SendToTile extends Component {
   constructor(props) {
     super(props);
-
     let defaultToken = "Copper"
     if(props.defaultToken){
       defaultToken = props.defaultToken
     }
-
     this.state = {
       amount:1,
       tokenName:defaultToken
@@ -27,13 +25,12 @@ class SendToTile extends Component {
   }
   render(){
     let fontSize = 21
-
-    let tokenOptions = this.props.inventoryTokens.map((tokenName)=>{
+    let {inventoryTokens,name,sendToTile} = this.props
+    let tokenOptions = inventoryTokens.map((tokenName)=>{
       return (
         <option key={tokenName}>{tokenName}</option>
       )
     })
-
     return (
       <div style={{position:'absolute',right:21,bottom:43}}>
         <div style={{marginTop:40}}>
@@ -48,14 +45,15 @@ class SendToTile extends Component {
            >
             {tokenOptions}
            </select>
-           <img data-rh={"Send "+this.state.amount+" of "+this.state.tokenName+" to "+this.props.modalObject.name} data-rh-at="right" src="metamasksign.png"
-           style={{maxHeight:42,cursor:"pointer",verticalAlign:'middle'}} onClick={this.props.sendToTile.bind(this,this.props.modalObject.name,this.state.amount,this.state.tokenName)}/>
+           <img data-rh={"Send "+this.state.amount+" of "+this.state.tokenName+" to "+name} data-rh-at="right" src="metamasksign.png"
+            style={{maxHeight:42,cursor:"pointer",verticalAlign:'middle'}}
+            onClick={sendToTile.bind(this,name,this.state.amount,this.state.tokenName)}
+          />
         </div>
 
       </div>
     )
   }
 }
-
 
 export default SendToTile;

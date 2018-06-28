@@ -26,10 +26,13 @@ import BuildTable from './modal/BuildTable.js'
 import CreateTable from './modal/CreateTable.js'
 import ResourceTable from './modal/ResourceTable.js'
 import SendToken from './modal/SendToken.js'
+import SendToTile from './modal/SendToTile.js'
 import BuySellOwner from './modal/BuySellOwner.js'
 import ForestTile from './modal/ForestTile.js'
 import GrassTile from './modal/GrassTile.js'
-import SendToTile from './modal/SendToTile.js'
+import Harbor from './modal/Harbor.js'
+import Market from './modal/Market.js'
+import Fishmonger from './modal/Fishmonger.js'
 
 // -- hud--- //
 import Inventory from './hud/Inventory.js'
@@ -637,7 +640,6 @@ class App extends Component {
         }else{
           this.setState({scrollLeft:myLocation-windowWidthWithZoom/2})
         }
-
       }
       //console.log("SHIP UPDATE ",getMyShip)
       try{
@@ -789,36 +791,6 @@ class App extends Component {
       }
     }
   }
-  async buildShip(x,y,i){
-    console.log("BUILD DOGGER ",x,y,i)
-    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
-    let doggerPrice = 2
-    let xHex = parseInt(x).toString(16)
-    while(xHex.length<4) xHex="0"+xHex;
-    let yHex = parseInt(y).toString(16)
-    while(yHex.length<4) yHex="0"+yHex;
-    let iHex = parseInt(i).toString(16)
-    while(iHex.length<2) iHex="0"+iHex;
-
-    let model = web3.utils.fromAscii("Dogger")
-    model=model.replace("0x","")
-    while(model.length%2!=0) model="0"+model;
-
-
-    let data = "0x01"+xHex+yHex+iHex+model
-    console.log("Final data:",data)
-
-    contracts["Timber"].methods.transferAndCall(contracts["Harbor"]._address,doggerPrice,data).send({
-      from: accounts[0],
-      gas:230000,
-      gasPrice:Math.round(this.state.GWEI * 1000000000)
-    }).on('error',this.handleError.bind(this)).then((receipt)=>{
-      console.log("RESULT:",receipt)
-      if(this.state.modalHeight>=0){
-        this.closeModal()
-      }
-    })
-  }
   async disembark() {
     console.log("disembark")
     this.bumpButton("disembark")
@@ -883,35 +855,6 @@ class App extends Component {
     contracts["Fishmonger"].methods.sellFish(x,y,i,fishContract._address,amount).send({
       from: accounts[0],
       gas:180000+(amount*80000),
-      gasPrice:Math.round(this.state.GWEI * 1000000000)
-    }).on('error',this.handleError.bind(this)).then((receipt)=>{
-      console.log("RESULT:",receipt)
-      if(this.state.modalHeight>=0){
-        this.closeModal()
-      }
-    })
-  }
-  async buyFillet(x,y,i){
-    console.log("BUY FILLET ",x,y,i)
-    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
-    let buyAmount = 1
-    let filletPrice = await contracts["Fishmonger"].methods.filletPrice(x,y,i).call()
-    console.log("Fishmonger charges ",filletPrice," for fillets")
-
-
-    let xHex = parseInt(x).toString(16)
-    while(xHex.length<4) xHex="0"+xHex;
-    let yHex = parseInt(y).toString(16)
-    while(yHex.length<4) yHex="0"+yHex;
-    let iHex = parseInt(i).toString(16)
-    while(iHex.length<2) iHex="0"+iHex;
-
-    let data = "0x01"+xHex+yHex+iHex
-    console.log("Final data:",data)
-
-    contracts["Copper"].methods.transferAndCall(contracts["Fishmonger"]._address,filletPrice*buyAmount,data).send({
-      from: accounts[0],
-      gas:120000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     }).on('error',this.handleError.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
@@ -1034,62 +977,7 @@ class App extends Component {
       }
     })
   }
-  async sellToMarket(x,y,i,tokenName,amountOfTokenToSend){
-    console.log("SELL TO MARKET",x,y,i,tokenName,amountOfTokenToSend)
-    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
-    let xHex = parseInt(x).toString(16)
-    while(xHex.length<4) xHex="0"+xHex;
-    let yHex = parseInt(y).toString(16)
-    while(yHex.length<4) yHex="0"+yHex;
-    let iHex = parseInt(i).toString(16)
-    while(iHex.length<2) iHex="0"+iHex;
 
-    let action = "0x02"
-    let finalHex = action+xHex+yHex+iHex
-    console.log("Trying to sill "+amountOfTokenToSend+" "+tokenName+" to market at  x:"+xHex+" y:"+yHex+" i:"+iHex+" with finalHex: "+finalHex)
-    contracts[tokenName].methods.transferAndCall(contracts["Market"]._address,amountOfTokenToSend,finalHex).send({
-      from: accounts[0],
-      gas:500000,
-      gasPrice:Math.round(this.state.GWEI * 1000000000)
-    }).on('error',this.handleError.bind(this)).then((receipt)=>{
-      console.log("RESULT:",receipt)
-      if(this.state.modalHeight>=0){
-        this.closeModal()
-      }
-    })
-  }
-  async setSellPrice(x,y,tile,tokenAddress,price){
-    console.log("setSellPrice",x,y,tile,tokenAddress,price)
-    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
-    //setSellPrice(uint16 _x,uint16 _y,uint8 _tile,address _token,uint _price
-    console.log("setSellPrice.....")
-    contracts["Market"].methods.setSellPrice(x,y,tile,tokenAddress,price).send({
-      from: accounts[0],
-      gas:250000,
-      gasPrice:Math.round(this.state.GWEI * 1000000000)
-    }).on('error',this.handleError.bind(this)).then((receipt)=>{
-      console.log("RESULT:",receipt)
-      if(this.state.modalHeight>=0){
-        this.closeModal()
-      }
-    })
-  }
-  async setBuyPrice(x,y,tile,tokenAddress,price){
-    console.log("setBuyPrice",x,y,tile,tokenAddress,price)
-    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
-    //setSellPrice(uint16 _x,uint16 _y,uint8 _tile,address _token,uint _price
-    console.log("setBuyPrice.....")
-    contracts["Market"].methods.setBuyPrice(x,y,tile,tokenAddress,price).send({
-      from: accounts[0],
-      gas:250000,
-      gasPrice:Math.round(this.state.GWEI * 1000000000)
-    }).on('error',this.handleError.bind(this)).then((receipt)=>{
-      console.log("RESULT:",receipt)
-      if(this.state.modalHeight>=0){
-        this.closeModal()
-      }
-    })
-  }
   async sendToken(name,amount,toAddress){
     console.log("sendToken",name,amount,toAddress)
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
@@ -1665,15 +1553,26 @@ class App extends Component {
   }
   async tileClick(name,index,px) {
     console.log("TILE CLICK",name,index,px)
+    this.openModal({loading:true})
     let tile = await contracts['Land'].methods.getTile(this.state.landX,this.state.landY,index).call();
     let modalObject = {
       name:name,
       contract:tile._contract,
       owner:tile._owner,
+      ownsTile:(this.state.account && tile._owner && this.state.account.toLowerCase()==tile._owner.toLowerCase()),
       price:tile._price,
       index:index,
       px:px,
       citizens:[],
+      inventoryTokens:inventoryTokens,
+      web3:web3,
+      contracts:contracts,
+      GWEI:this.state.GWEI,
+      landX:this.state.landX,
+      landY:this.state.landY,
+      handleError:this.handleError.bind(this),
+      closeModal:this.closeModal.bind(this),
+
     }
     for(let c in this.state.citizens){
       if( this.state.citizens[c].x==this.state.landX && this.state.citizens[c].y==this.state.landY && this.state.citizens[c].tile==index ){
@@ -1725,7 +1624,7 @@ class App extends Component {
 
 
     if(name=="Market"){
-      let marketTokens = ["Copper","Timber","Fillet","Greens"]
+      let marketTokens = inventoryTokens//["Copper","Timber","Fillet","Greens"]
       modalObject.sellPrices = {}
       modalObject.buyPrices = {}
       modalObject.tokenBalance = {}
@@ -2690,7 +2589,21 @@ return (
   {currentStyles => {
     //<div style={{zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
 
-    if(this.state.modalObject.simpleMessage){
+    if(this.state.modalObject.loading){
+      return (
+        <div style={{transform:"scale("+this.state.zoom+")",zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top-((1-this.state.zoom)*300),textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
+        <div style={{cursor:'pointer',position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
+        <img src="exit.png" />
+        </div>
+        <div style={{paddingBottom:100}}></div>
+        <div><img style={{
+          zIndex:-99,
+          opacity:0.5,
+        }} src="loading3.gif" /></div>
+
+        </div>
+      )
+    } else if(this.state.modalObject.simpleMessage){
       return (
         <div style={{transform:"scale("+this.state.zoom+")",zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top-((1-this.state.zoom)*300),textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
         <div style={{cursor:'pointer',position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
@@ -2902,112 +2815,54 @@ return (
           )
         }
 
+
+        /*
+
+            TODO
+
+            still trying to nail down what I want these to look like
+
+            I think I want modal components to have two sides, a loader and a display
+
+            the loader will be like a module that will get all the data prepared in the modal object
+
+            then the display will just take in the the modal object and display (this will be a component like in the modal folder )
+
+            I keep running into all these different things like landx landy OWNS_TILE that need to be passed in as props
+            those should all be in the modal object on the way in so this stuff below is cleaner
+
+            but there are also functions that should probably be built into the modal instead of the app
+            I think the problem there was gwei var or something, but that could be injected into the modalobject too
+
+
+         */
+
+
         if(this.state.modalObject.name == "Harbor"){
-          let buyArray = [{
-            amount: "1",
-            balance: this.state.modalObject.doggers,
-            first:"dogger",
-            price: web3.utils.fromWei(this.state.modalObject.doggerPrice,'ether'),
-            second:"ether",
-            clickFn: this.buyShip.bind(this),
-          }]
-          let sellArray = []
           content.push(
-            <BuySellTable buyArray={buyArray} sellArray={sellArray}/>
-          )
-          if(OWNS_TILE){
-            content.push(
-              <div style={{position:"absolute",left:190,top:105,cursor:"pointer"}} onClick={this.buildShip.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index)}>
-                <img style={{maxHeight:50,maxWidth:50}} src={"buildDogger.png"} />
-              </div>
-            )
-          }
-          content.push(
-            <div style={{position:"absolute",left:130,top:105,cursor:"pointer"}} onClick={this.disembark.bind(this)}>
-              <img style={{maxHeight:50,maxWidth:50}} src={"disembark.png"} />
-            </div>
+            <Harbor
+              {...this.state.modalObject}
+              buyShip={this.buyShip.bind(this)}
+              disembark={this.disembark.bind(this)}
+            />
           )
         }
         if(this.state.modalObject.name == "Fishmonger"){
-          let buyArray = [{
-            amount: "1",
-            balance: this.state.modalObject.filletBalance,
-            first:"fillet",
-            price: this.state.modalObject.filletPrice,
-            second:"copper",
-            clickFn: this.buyFillet.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index),
-          }]
-          let sellArray = []
-          for(let f in this.state.modalObject.fish){
-            sellArray[f] = {
-              amount:"1",
-              balance:false,
-              first:this.state.modalObject.fish[f],
-              price:this.state.modalObject.prices[this.state.modalObject.fish[f]],
-              second:"copper",
-              clickFn: this.sellFish.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,this.state.modalObject.fish[f],1),
-            }
-          }
           content.push(
-            <BuySellTable buyArray={buyArray} sellArray={sellArray}/>
-          )
-          content.push(
-            <SendToTile modalObject={this.state.modalObject} inventoryTokens={inventoryTokens} sendToTile={(contractName,amount,tokenName)=>{
-              console.log("SendToTile",contractName,amount,tokenName)
-              this.transferAndCall(this.state.landX,this.state.landY,this.state.modalObject.index,contractName,amount,tokenName);
-            }}/>
+            <Fishmonger
+              {...this.state.modalObject}
+              sellFish={this.sellFish.bind(this)}
+              transferAndCall={this.transferAndCall.bind(this)}
+            />
           )
         }
-
         if(this.state.modalObject.name == "Market"){
-          let buyArray = []
-            let sellArray = []
-          for(let i in inventoryTokens){
-            if(this.state.modalObject.sellPrices[inventoryTokens[i]]>0){
-              buyArray.push(
-                {
-                  amount: "1",
-                  balance: this.state.modalObject.timberBalance,
-                  first:inventoryTokens[i]/*.toLowerCase()*/,
-                  price: this.state.modalObject.sellPrices[inventoryTokens[i]],
-                  second:"copper",
-                  //buyFromMarket(x,y,i,tokenName,copperToSpend)
-                  clickFn: this.buyFromMarket.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,inventoryTokens[i],this.state.modalObject.sellPrices[inventoryTokens[i]]),//(x,y,i,tokenName,amountToBuy,copperToSpend)
-                }
-              )
-            }
-            if(this.state.modalObject.buyPrices[inventoryTokens[i]]){
-              sellArray.push(
-                {
-                  amount:"1",
-                  balance:false,
-                  first:inventoryTokens[i],
-                  price:this.state.modalObject.buyPrices[inventoryTokens[i]],
-                  second:"copper",
-                  clickFn: this.sellToMarket.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,inventoryTokens[i],1,this.state.modalObject.buyPrices[inventoryTokens[i]]),
-                }
-              )
-            }
-          }
           content.push(
-            <BuySellTable buyArray={buyArray} sellArray={sellArray}/>
+            <Market
+              {...this.state.modalObject}
+              transferAndCall={this.transferAndCall.bind(this)}
+            />
           )
-          content.push(
-            <SendToTile modalObject={this.state.modalObject} inventoryTokens={inventoryTokens} sendToTile={(contractName,amount,tokenName)=>{
-              console.log("SendToTile",contractName,amount,tokenName)
-              this.transferAndCall(this.state.landX,this.state.landY,this.state.modalObject.index,contractName,amount,tokenName);
-            }}/>
-          )
-         if(OWNS_TILE){
-           content.push(
-             <BuySellOwner setSellPrice={this.setSellPrice.bind(this)} setBuyPrice={this.setBuyPrice.bind(this)} landX={this.state.landX} landY={this.state.landY} {...this.state.modalObject}/*buyArray={buyArray} sellArray={sellArray}*//>
-           )
-           /*content.push(
-             <div style={{marginTop:60}}>
-               <CreateTable image={"buildTimberCamp"} clickFn={this.testMarket.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index)}/>
-             </div>
-           )*/
-         }
         }
 
         if(OWNS_TILE && this.state.modalObject.name == "Village"){

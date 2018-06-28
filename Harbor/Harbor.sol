@@ -15,7 +15,7 @@ import 'StandardTile.sol';
 
 contract Harbor is StandardTile {
 
-  uint16 public constant PRICEOFDOGGER = 2;
+  uint16 public constant TIMBERTOBUILDDOGGER = 2;
 
   //      land x            land y          land tile           model      array of ids
   mapping(uint16 => mapping(uint16 => mapping(uint8 => mapping (bytes32 => uint256[99])))) public shipStorage; //make ship storage very large for testnet (eventually this should be much smaller)
@@ -56,28 +56,29 @@ contract Harbor is StandardTile {
 
     if(_model=="Dogger"){
       //must send in enough timber to build
-      require( _amount >= PRICEOFDOGGER );
+      require( _amount >= TIMBERTOBUILDDOGGER );
       _buildShip(_x,_y,_tile,_model);
       return true;
     }else{
       return false;
     }
   }
-  event Debug(bytes32 _model,bytes32 shouldbe);
 
-  function buildShip(uint16 _x,uint16 _y,uint8 _tile,bytes32 _model) public isGalleasset("Harbor") isLandOwner(_x,_y,_tile) returns (uint) {
+  function buildShip(uint16 _x,uint16 _y,uint8 _tile,bytes32 _model) public isGalleasset("Harbor") isLandOwner(_x,_y,_tile) returns (bool) {
+    return true;
+    /*
     if(_model=="Dogger"){
-      require( getTokens(msg.sender,"Timber",PRICEOFDOGGER) );
+      require( getTokens(msg.sender,"Timber",TIMBERTOBUILDDOGGER) );
       return _buildShip(_x,_y,_tile,_model);
     }
-    revert();
+    revert();*/
   }
 
   function _buildShip(uint16 _x,uint16 _y,uint8 _tile,bytes32 _model) internal returns (uint) {
 
     address shipsContractAddress = getContract(_model);
     require( shipsContractAddress!=address(0) );
-    require( approveTokens("Timber",shipsContractAddress,PRICEOFDOGGER) );
+    require( approveTokens("Timber",shipsContractAddress,TIMBERTOBUILDDOGGER) );
     NFT shipContract = NFT(shipsContractAddress);
     uint256 shipId = shipContract.build();
     require( storeShip(_x,_y,_tile,shipId,_model) );
@@ -121,9 +122,13 @@ contract Harbor is StandardTile {
     return availableShip;
   }
 
+  //the land owner can adjust the price in Eth that players have to pay for a ship
   function setPrice(uint16 _x,uint16 _y,uint8 _tile,bytes32 model,uint256 amount) public isLandOwner(_x,_y,_tile) returns (bool) {
     currentPrice[_x][_y][_tile][model]=amount;
   }
+
+
+  // Internal functions dealing with ship/memory storage --- ////////////////////////////////////////////////////////////
 
   function getShipFromStorage(uint16 _x,uint16 _y,uint8 _tile,NFT shipsContract, bytes32 model) internal returns (uint256) {
     uint256 index = 0;
