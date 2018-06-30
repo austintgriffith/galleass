@@ -1,7 +1,6 @@
 const fs = require('fs');
 module.exports = {
   'zeppelin-solidity/contracts/ownership/Ownable.sol': fs.readFileSync('zeppelin-solidity/contracts/ownership/Ownable.sol', 'utf8'),
-  'zeppelin-solidity/contracts/ownership/HasNoEther.sol': fs.readFileSync('zeppelin-solidity/contracts/ownership/HasNoEther.sol', 'utf8'),
   'zeppelin-solidity/contracts/token/ERC20/MintableToken.sol': fs.readFileSync('zeppelin-solidity/contracts/token/ERC20/MintableToken.sol', 'utf8'),
   'zeppelin-solidity/contracts/token/ERC20/StandardToken.sol': fs.readFileSync('zeppelin-solidity/contracts/token/ERC20/StandardToken.sol', 'utf8'),
   'zeppelin-solidity/contracts/token/ERC20/BasicToken.sol': fs.readFileSync('zeppelin-solidity/contracts/token/ERC20/BasicToken.sol', 'utf8'),

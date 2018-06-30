@@ -216,7 +216,7 @@ module.exports = {
     });
   },
   setShipPrice:(accountindex,model,ether)=>{
-    describe('#buyShip()', function() {
+    describe('#setShipPrice()', function() {
       it('should buy ship from the Harbor', async function() {
         this.timeout(120000)
         const accounts = await clevis("accounts")

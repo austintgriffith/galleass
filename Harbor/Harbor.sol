@@ -38,10 +38,14 @@ contract Harbor is StandardTile {
     } else {
       revert("unknown action");
     }
+    return true;
   }
   event TokenTransfer(address token,address sender,uint amount,bytes data);
 
+
+
   function _build(address _sender, uint _amount, bytes _data) internal returns (bool) {
+
     uint16 _x = getX(_data);
     uint16 _y = getY(_data);
     uint8 _tile = getTile(_data);
@@ -57,34 +61,36 @@ contract Harbor is StandardTile {
     if(_model=="Dogger"){
       //must send in enough timber to build
       require( _amount >= TIMBERTOBUILDDOGGER );
-      _buildShip(_x,_y,_tile,_model);
+      require( _buildShip(_x,_y,_tile,_model) > 0);
       return true;
     }else{
       return false;
     }
+    return true;
   }
 
-  function buildShip(uint16 _x,uint16 _y,uint8 _tile,bytes32 _model) public isGalleasset("Harbor") isLandOwner(_x,_y,_tile) returns (bool) {
-    return true;
-    /*
+  //this is really only used for the scripts that build doggers
+  // I should carve this out and only use transfer and call because it is confusing to have two different build functions
+  function buildShip(uint16 _x,uint16 _y,uint8 _tile,bytes32 _model) public isGalleasset("Harbor") isLandOwner(_x,_y,_tile) returns (uint) {
     if(_model=="Dogger"){
       require( getTokens(msg.sender,"Timber",TIMBERTOBUILDDOGGER) );
       return _buildShip(_x,_y,_tile,_model);
+    }else{
+      return 0;
     }
-    revert();*/
   }
 
   function _buildShip(uint16 _x,uint16 _y,uint8 _tile,bytes32 _model) internal returns (uint) {
-
     address shipsContractAddress = getContract(_model);
     require( shipsContractAddress!=address(0) );
     require( approveTokens("Timber",shipsContractAddress,TIMBERTOBUILDDOGGER) );
     NFT shipContract = NFT(shipsContractAddress);
     uint256 shipId = shipContract.build();
     require( storeShip(_x,_y,_tile,shipId,_model) );
+    emit Debug(shipId);
     return shipId;
   }
-
+  event Debug(uint id);
 
   //this is old code, but it looks like you can sell ships back to the harbor
   // it also looks like you only get 9/10s of the price back if you sell it

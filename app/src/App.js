@@ -23,7 +23,7 @@ import CitizenFace from './tokens/CitizenFace.js'
 // -- modals --- //
 import BuySellTable from './modal/BuySellTable.js'
 import BuildTable from './modal/BuildTable.js'
-import CreateTable from './modal/CreateTable.js'
+import CreateCitizens from './modal/CreateCitizens.js'
 import ResourceTable from './modal/ResourceTable.js'
 import SendToken from './modal/SendToken.js'
 import SendToTile from './modal/SendToTile.js'
@@ -246,15 +246,15 @@ class App extends Component {
   }
   getGasPrice(){
     axios.get("https://ethgasstation.info/json/ethgasAPI.json")
-		.then((response)=>{
-			console.log("GAS",response.data)
-			if(response.data.average>0&&response.data.average<200){
-				response.data.average=response.data.average+2
-				let setMainGasTo = Math.round(response.data.average)/10
+    .then((response)=>{
+      console.log("GAS",response.data)
+      if(response.data.average>0&&response.data.average<200){
+        response.data.average=response.data.average+2
+        let setMainGasTo = Math.round(response.data.average)/10
         console.log("SET GAS ",setMainGasTo)
-				this.setState({GWEI:setMainGasTo})
-			}
-		})
+        this.setState({GWEI:setMainGasTo})
+      }
+    })
   }
 
   async updateDimensions() {
@@ -1037,10 +1037,10 @@ class App extends Component {
       }
     })
   }
-  async createCitizen(x,y,tile){
-    console.log("createCitizen")
+  async createCitizen(x,y,tile,food1,food2,food3){
+    console.log("createCitizen",x,y,tile,food1,food2,food3)
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
-    contracts["Village"].methods.createCitizen(x,y,tile).send({
+    contracts["Village"].methods.createCitizen(x,y,tile,web3.utils.fromAscii(food1),web3.utils.fromAscii(food2),web3.utils.fromAscii(food3)).send({
       from: accounts[0],
       gas:300000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
@@ -1505,392 +1505,394 @@ class App extends Component {
     //and you could return to the first one, but I haven't used it yet
     let modalObject = this.state.previousModalObject
     /*if(modalObject.name!="Loading..."){/////////// this stuff is for stacking modals.. skipping for now
-      this.setState({
-        modalObject:modalObject,
-        previousModalObject:{"name":"Loading..."}
-      })
-    }else{*/
-      this.setState({
-        //loaderOpacity:1,
-        modalHeight:-600,
-        clickScreenTop:-5000,
-        clickScreenOpacity:0,
-        previousModalObject:{"name":"Loading..."},
-        modalObject:{"name":"Loading..."}
-      })
-    //}
+    this.setState({
+    modalObject:modalObject,
+    previousModalObject:{"name":"Loading..."}
+  })
+}else{*/
+this.setState({
+  //loaderOpacity:1,
+  modalHeight:-600,
+  clickScreenTop:-5000,
+  clickScreenOpacity:0,
+  previousModalObject:{"name":"Loading..."},
+  modalObject:{"name":"Loading..."}
+})
+//}
+}
+titleClick(){
+  console.log("Clicked Title")
+  if(this.state.mapUp){
+    this.setState({
+      mapUp:false,
+      mapOverflow:"scroll",
+
+      cornerOpacity:0,
+      mapRight:this.state.mapRightStart,
+      mapBottom:this.state.mapBottomStart,
+      titleRight:this.state.titleRightStart,
+      titleBottom:this.state.titleBottomStart,
+      titleBottomFaster:this.state.titleBottomStart,
+      bottomBar:-80,
+    })
+  }else{
+    this.setState({
+      mapUp:true,
+      mapOverflow:"hidden",
+      cornerOpacity:1,
+      mapRight:0,
+      mapBottom:0,
+      titleRight:this.state.clientWidth/2-140,
+      titleBottom:this.state.clientHeight-68,
+      titleBottomFaster:this.state.clientHeight-68,
+      bottomBar:0,
+      bottomBarMessage:"Here be monsters on the blockchain...",
+      bottomBarSize:24
+    })
   }
-  titleClick(){
-    console.log("Clicked Title")
-    if(this.state.mapUp){
-      this.setState({
-        mapUp:false,
-        mapOverflow:"scroll",
+}
+async tileClick(name,index,px) {
+  console.log("TILE CLICK",name,index,px)
+  this.openModal({loading:true})
+  let tile = await contracts['Land'].methods.getTile(this.state.landX,this.state.landY,index).call();
+  let modalObject = {
+    name:name,
+    contract:tile._contract,
+    owner:tile._owner,
+    ownsTile:(this.state.account && tile._owner && this.state.account.toLowerCase()==tile._owner.toLowerCase()),
+    price:tile._price,
+    index:index,
+    px:px,
+    citizens:[],
+    inventoryTokens:inventoryTokens,
+    web3:web3,
+    contracts:contracts,
+    GWEI:this.state.GWEI,
+    landX:this.state.landX,
+    landY:this.state.landY,
+    handleError:this.handleError.bind(this),
+    closeModal:this.closeModal.bind(this),
 
-        cornerOpacity:0,
-        mapRight:this.state.mapRightStart,
-        mapBottom:this.state.mapBottomStart,
-        titleRight:this.state.titleRightStart,
-        titleBottom:this.state.titleBottomStart,
-        titleBottomFaster:this.state.titleBottomStart,
-        bottomBar:-80,
-      })
-    }else{
-      this.setState({
-        mapUp:true,
-        mapOverflow:"hidden",
-        cornerOpacity:1,
-        mapRight:0,
-        mapBottom:0,
-        titleRight:this.state.clientWidth/2-140,
-        titleBottom:this.state.clientHeight-68,
-        titleBottomFaster:this.state.clientHeight-68,
-        bottomBar:0,
-        bottomBarMessage:"Here be monsters on the blockchain...",
-        bottomBarSize:24
-      })
+  }
+  for(let c in this.state.citizens){
+    if( this.state.citizens[c].x==this.state.landX && this.state.citizens[c].y==this.state.landY && this.state.citizens[c].tile==index ){
+      let citizenObject = {
+        id:this.state.citizens[c].id,
+        owner:this.state.citizens[c].owner,
+        status:this.state.citizens[c].status,
+        data:this.state.citizens[c].data,
+        geneObject: await contracts["CitizensLib"].methods.getCitizenGenes(this.state.citizens[c].id).call()
+      };
+      modalObject.citizens.push(citizenObject)
     }
   }
-  async tileClick(name,index,px) {
-    console.log("TILE CLICK",name,index,px)
-    this.openModal({loading:true})
-    let tile = await contracts['Land'].methods.getTile(this.state.landX,this.state.landY,index).call();
-    let modalObject = {
-      name:name,
-      contract:tile._contract,
-      owner:tile._owner,
-      ownsTile:(this.state.account && tile._owner && this.state.account.toLowerCase()==tile._owner.toLowerCase()),
-      price:tile._price,
-      index:index,
-      px:px,
-      citizens:[],
-      inventoryTokens:inventoryTokens,
-      web3:web3,
-      contracts:contracts,
-      GWEI:this.state.GWEI,
-      landX:this.state.landX,
-      landY:this.state.landY,
-      handleError:this.handleError.bind(this),
-      closeModal:this.closeModal.bind(this),
 
-    }
-    for(let c in this.state.citizens){
-      if( this.state.citizens[c].x==this.state.landX && this.state.citizens[c].y==this.state.landY && this.state.citizens[c].tile==index ){
-        let citizenObject = {
-          id:this.state.citizens[c].id,
-          owner:this.state.citizens[c].owner,
-          status:this.state.citizens[c].status,
-          data:this.state.citizens[c].data,
-          geneObject: await contracts["CitizensLib"].methods.getCitizenGenes(this.state.citizens[c].id).call()
-        };
-        modalObject.citizens.push(citizenObject)
-      }
-    }
-
-    //sometimes each tile will have a different balance, show the local balance
-    //sometimes you will want to show the global balance of the contract backing the tile
-    //(probably if there is a single contract deployed for the tile)
-    let calculateBalanceGlobally = true;
+  //sometimes each tile will have a different balance, show the local balance
+  //sometimes you will want to show the global balance of the contract backing the tile
+  //(probably if there is a single contract deployed for the tile)
+  let calculateBalanceGlobally = true;
 
 
-    if(name=="Harbor"){
-      modalObject.doggers = await contracts["Harbor"].methods.countShips(this.state.landX,this.state.landY,this.state.harborIndex,web3.utils.asciiToHex("Dogger")).call();
-      modalObject.doggerPrice = await contracts["Harbor"].methods.currentPrice(this.state.landX,this.state.landY,this.state.harborIndex,web3.utils.asciiToHex("Dogger")).call();
-    }
-
-    if(name=="Fishmonger"){
-      modalObject.fish = [
-        "Pinner",
-        "Redbass",
-        "Catfish",
-        "Snark",
-        "Dangler",
-      ]
-      modalObject.prices = []
-      for(let f in modalObject.fish){
-        modalObject.prices[modalObject.fish[f]] = await contracts["Fishmonger"].methods.price(this.state.landX,this.state.landY,index,contracts[modalObject.fish[f]]._address).call();
-      }
-      modalObject.filletPrice = await contracts["Fishmonger"].methods.filletPrice(this.state.landX,this.state.landY,index).call();
-
-      let fishmongerTokens = ["Copper","Fillet"]
-      modalObject.tokenBalance = {}
-      for(let i in fishmongerTokens){
-        modalObject.tokenBalance[fishmongerTokens[i]] = parseInt(await contracts["Fishmonger"].methods.tokenBalance(this.state.landX,this.state.landY,index,contracts[fishmongerTokens[i]]._address).call());
-      }
-      //each tile will have a different balance, show the local balance
-      calculateBalanceGlobally=false;
-    }
-
-
-
-    if(name=="Market"){
-      let marketTokens = inventoryTokens//["Copper","Timber","Fillet","Greens"]
-      modalObject.sellPrices = {}
-      modalObject.buyPrices = {}
-      modalObject.tokenBalance = {}
-      for(let i in marketTokens){
-        modalObject.sellPrices[marketTokens[i]] = parseInt(await contracts["Market"].methods.sellPrices(this.state.landX,this.state.landY,index,contracts[marketTokens[i]]._address).call());
-        modalObject.buyPrices[marketTokens[i]] = parseInt(await contracts["Market"].methods.buyPrices(this.state.landX,this.state.landY,index,contracts[marketTokens[i]]._address).call());
-        modalObject.tokenBalance[marketTokens[i]] = parseInt(await contracts["Market"].methods.tokenBalance(this.state.landX,this.state.landY,index,contracts[marketTokens[i]]._address).call());
-      }
-      //each tile will have a different balance, show the local balance
-      calculateBalanceGlobally=false;
-    }
-
-    if(name=="Timber Camp"){
-      modalObject.resourceMin = (await contracts["TimberCamp"].methods.min().call()).replace(/[^a-z0-9]/gmi, "")
-      modalObject.resourceMax = (await contracts["TimberCamp"].methods.max().call()).replace(/[^a-z0-9]/gmi, "")
-      modalObject.resourceType = (web3.utils.hexToAscii(await contracts["TimberCamp"].methods.resource().call())).replace(/[^a-z0-9A-Z ]/gmi, "")
-    }
-
-
-    //if we have a contract for this tile, check the balance and display tokens that the contract owns
-    if(calculateBalanceGlobally){
-      let cleanName = name.replace(" ","")
-      if(contracts[cleanName]){
-        if(contracts[cleanName].methods.getBalance) modalObject.balance = await contracts[cleanName].methods.getBalance().call();
-        modalObject.copperBalance = await contracts["Copper"].methods.balanceOf(contracts[cleanName]._address).call();
-        modalObject.filletBalance = await contracts["Fillet"].methods.balanceOf(contracts[cleanName]._address).call();
-        modalObject.timberBalance = await contracts["Timber"].methods.balanceOf(contracts[cleanName]._address).call();
-        modalObject.doggerBalance = await contracts["Dogger"].methods.balanceOf(contracts[cleanName]._address).call();
-        console.log("copperBalance",contracts["Copper"]._address,cleanName,contracts[cleanName]._address,modalObject.copperBalance)
-      }
-    }
-
-    this.openModal(modalObject)
+  if(name=="Harbor"){
+    modalObject.doggers = await contracts["Harbor"].methods.countShips(this.state.landX,this.state.landY,this.state.harborIndex,web3.utils.asciiToHex("Dogger")).call();
+    modalObject.doggerPrice = await contracts["Harbor"].methods.currentPrice(this.state.landX,this.state.landY,this.state.harborIndex,web3.utils.asciiToHex("Dogger")).call();
   }
-  async invClick(name,contract) {
-    console.log("INV CLICK",name,contract)
-    let modalObject = {
-      name:name,
-      contract:contract._address,
-      balance: await contracts[name].methods.balanceOf(this.state.account).call(),
-      token:true
-    }
 
-
-    //check if the token is a fish and add in fish monger details
-    let fish = [
+  if(name=="Fishmonger"){
+    modalObject.fish = [
       "Pinner",
       "Redbass",
       "Catfish",
       "Snark",
       "Dangler",
     ]
-    console.log("ISNAME ",name,fish)
-    if(fish.indexOf(name)>=0){
-      modalObject.isFish = true
-      modalObject.prices = {}
-      for(let f in fish){
-        console.log("Getting price:",this.state.landX,this.state.landY,this.state.fishmongerIndex)
-        modalObject.prices[fish[f]] = await contracts["Fishmonger"].methods.price(this.state.landX,this.state.landY,this.state.fishmongerIndex,contracts[fish[f]]._address).call();
+    modalObject.prices = []
+    for(let f in modalObject.fish){
+      modalObject.prices[modalObject.fish[f]] = await contracts["Fishmonger"].methods.price(this.state.landX,this.state.landY,index,contracts[modalObject.fish[f]]._address).call();
+    }
+    modalObject.filletPrice = await contracts["Fishmonger"].methods.filletPrice(this.state.landX,this.state.landY,index).call();
+
+    let fishmongerTokens = ["Copper","Fillet"]
+    modalObject.tokenBalance = {}
+    for(let i in fishmongerTokens){
+      modalObject.tokenBalance[fishmongerTokens[i]] = parseInt(await contracts["Fishmonger"].methods.tokenBalance(this.state.landX,this.state.landY,index,contracts[fishmongerTokens[i]]._address).call());
+    }
+    //each tile will have a different balance, show the local balance
+    calculateBalanceGlobally=false;
+  }
+
+
+
+  if(name=="Market"){
+    let marketTokens = inventoryTokens//["Copper","Timber","Fillet","Greens"]
+    modalObject.sellPrices = {}
+    modalObject.buyPrices = {}
+    modalObject.tokenBalance = {}
+    for(let i in marketTokens){
+      modalObject.sellPrices[marketTokens[i]] = parseInt(await contracts["Market"].methods.sellPrices(this.state.landX,this.state.landY,index,contracts[marketTokens[i]]._address).call());
+      modalObject.buyPrices[marketTokens[i]] = parseInt(await contracts["Market"].methods.buyPrices(this.state.landX,this.state.landY,index,contracts[marketTokens[i]]._address).call());
+      modalObject.tokenBalance[marketTokens[i]] = parseInt(await contracts["Market"].methods.tokenBalance(this.state.landX,this.state.landY,index,contracts[marketTokens[i]]._address).call());
+    }
+    //each tile will have a different balance, show the local balance
+    calculateBalanceGlobally=false;
+  }
+
+  if(name=="Timber Camp"){
+    modalObject.resourceMin = (await contracts["TimberCamp"].methods.min().call()).replace(/[^a-z0-9]/gmi, "")
+    modalObject.resourceMax = (await contracts["TimberCamp"].methods.max().call()).replace(/[^a-z0-9]/gmi, "")
+    modalObject.resourceType = (web3.utils.hexToAscii(await contracts["TimberCamp"].methods.resource().call())).replace(/[^a-z0-9A-Z ]/gmi, "")
+  }
+
+
+  //if we have a contract for this tile, check the balance and display tokens that the contract owns
+  if(calculateBalanceGlobally){
+    let cleanName = name.replace(" ","")
+    if(contracts[cleanName]){
+      if(contracts[cleanName].methods.getBalance) modalObject.balance = await contracts[cleanName].methods.getBalance().call();
+      modalObject.copperBalance = await contracts["Copper"].methods.balanceOf(contracts[cleanName]._address).call();
+      modalObject.filletBalance = await contracts["Fillet"].methods.balanceOf(contracts[cleanName]._address).call();
+      modalObject.timberBalance = await contracts["Timber"].methods.balanceOf(contracts[cleanName]._address).call();
+      modalObject.doggerBalance = await contracts["Dogger"].methods.balanceOf(contracts[cleanName]._address).call();
+      console.log("copperBalance",contracts["Copper"]._address,cleanName,contracts[cleanName]._address,modalObject.copperBalance)
+    }
+  }
+
+  this.openModal(modalObject)
+}
+async invClick(name,contract) {
+  console.log("INV CLICK",name,contract)
+  let modalObject = {
+    name:name,
+    contract:contract._address,
+    balance: await contracts[name].methods.balanceOf(this.state.account).call(),
+    token:true
+  }
+
+
+  //check if the token is a fish and add in fish monger details
+  let fish = [
+    "Pinner",
+    "Redbass",
+    "Catfish",
+    "Snark",
+    "Dangler",
+  ]
+  console.log("ISNAME ",name,fish)
+  if(fish.indexOf(name)>=0){
+    modalObject.isFish = true
+    modalObject.prices = {}
+    for(let f in fish){
+      console.log("Getting price:",this.state.landX,this.state.landY,this.state.fishmongerIndex)
+      modalObject.prices[fish[f]] = await contracts["Fishmonger"].methods.price(this.state.landX,this.state.landY,this.state.fishmongerIndex,contracts[fish[f]]._address).call();
+    }
+  }
+
+  if(typeof contracts[name].methods.tokensOfOwner == "function"){
+    //erc721
+    modalObject.tokensOfOwner = await contracts[name].methods.tokensOfOwner(this.state.account).call()
+    modalObject.tokens = {}
+    for(let tokenId in modalObject.tokensOfOwner){
+      modalObject.tokens[modalObject.tokensOfOwner[tokenId]] = await contracts[name].methods.getToken(modalObject.tokensOfOwner[tokenId]).call()
+      console.log("GOT TOKEN DATA",modalObject.tokens[modalObject.tokensOfOwner[tokenId]])
+      //load specific functions for specific tokens
+      if(name=="Citizens"){
+        modalObject.tokens[modalObject.tokensOfOwner[tokenId]].geneObject = await contracts['CitizensLib'].methods.getCitizenGenes(modalObject.tokensOfOwner[tokenId]).call()
+        //modalObject.tokens[modalObject.tokensOfOwner[tokenId]].statusObject = await contracts[name].methods.getCitizenStatus(modalObject.tokensOfOwner[tokenId]).call()
+        modalObject.tokens[modalObject.tokensOfOwner[tokenId]].characteristicsObject = await contracts['CitizensLib'].methods.getCitizenCharacteristics(modalObject.tokensOfOwner[tokenId]).call()
       }
     }
+  }else{
+    //erc20
+  }
+  this.openModal(modalObject)
+}
+setHintMode(num){
+  //1 means take them to metamask install
+  //0 means just keep shaking the metamask hint
+  this.setState({hintMode:num})
+}
+clickScreenClick(event){
+  var userAgent = window.navigator.userAgent;
+  let clickXRatio = event.clientX/this.state.clickScreenWidth;
+  let clickYRatio = event.clientY/this.state.clickScreenHeight;
+  console.log("CLICK SCREEN CLICKED",clickXRatio,clickYRatio,userAgent)
 
-    if(typeof contracts[name].methods.tokensOfOwner == "function"){
-      //erc721
-      modalObject.tokensOfOwner = await contracts[name].methods.tokensOfOwner(this.state.account).call()
-      modalObject.tokens = {}
-      for(let tokenId in modalObject.tokensOfOwner){
-         modalObject.tokens[modalObject.tokensOfOwner[tokenId]] = await contracts[name].methods.getToken(modalObject.tokensOfOwner[tokenId]).call()
-         console.log("GOT TOKEN DATA",modalObject.tokens[modalObject.tokensOfOwner[tokenId]])
-         //load specific functions for specific tokens
-         if(name=="Citizens"){
-           modalObject.tokens[modalObject.tokensOfOwner[tokenId]].geneObject = await contracts['CitizensLib'].methods.getCitizenGenes(modalObject.tokensOfOwner[tokenId]).call()
-           //modalObject.tokens[modalObject.tokensOfOwner[tokenId]].statusObject = await contracts[name].methods.getCitizenStatus(modalObject.tokensOfOwner[tokenId]).call()
-           modalObject.tokens[modalObject.tokensOfOwner[tokenId]].characteristicsObject = await contracts['CitizensLib'].methods.getCitizenCharacteristics(modalObject.tokensOfOwner[tokenId]).call()
-         }
-      }
+  if(clickXRatio>0.73 && clickYRatio<0.15){
+    window.open('https://metamask.io', '_blank');
+  }
+
+  if(this.state.modalHeight>=0){
+    this.closeModal()
+  }else{
+    this.metamaskHint()
+  }
+}
+handleWhiskeyStart(){
+  this.setState({gweiOpacity:0.8})
+}
+handleWhiskeyStop(){
+  this.setState({gweiOpacity:0.3})
+}
+handleWhiskeyDrag(mouse,obj){
+  let currentPercent = obj.x + (STARTINGGWEI/MAXGWEI*100);
+  let actualGWEI = Math.round(currentPercent/100 * MAXGWEI*10,1)/10;
+  if(actualGWEI<MINGWEI) actualGWEI=MINGWEI;
+  if(actualGWEI>MAXGWEI) actualGWEI=MAXGWEI;
+  this.setState({GWEI:actualGWEI})
+}
+mapWheel(obj,b,c){
+  if(this.state.mapUp){
+    let scaleTo=1.0;
+    if(obj.deltaY>0){
+      scaleTo = Math.round((this.state.mapScale+0.05)*100)/100
     }else{
-      //erc20
+      scaleTo = Math.round((this.state.mapScale-0.05)*100)/100
     }
-    this.openModal(modalObject)
+    console.log("SCALE TO",scaleTo)
+    this.setState({mapScale:scaleTo})
+    obj.stopPropagation()
+    obj.preventDefault()
   }
-  setHintMode(num){
-    //1 means take them to metamask install
-    //0 means just keep shaking the metamask hint
-    this.setState({hintMode:num})
+}
+testSomething(){
+  console.log("TEST SOMETHING")
+  //this.waitForShipToFloatThenDoBlockieHint()
+}
+render() {
+  let buttons = [];
+  if(!this.state){
+    return (
+      <div key={"LOADING"}>Loading</div>
+    )
   }
-  clickScreenClick(event){
-    var userAgent = window.navigator.userAgent;
-    let clickXRatio = event.clientX/this.state.clickScreenWidth;
-    let clickYRatio = event.clientY/this.state.clickScreenHeight;
-    console.log("CLICK SCREEN CLICKED",clickXRatio,clickYRatio,userAgent)
 
-    if(clickXRatio>0.73 && clickYRatio<0.15){
-      window.open('https://metamask.io', '_blank');
-    }
-
-    if(this.state.modalHeight>=0){
-      this.closeModal()
-    }else{
-      this.metamaskHint()
-    }
+  let myShip
+  if(this.state/*&&this.state.shipsOfOwner*/){
+    myShip = this.state.ship;
   }
-  handleWhiskeyStart(){
-    this.setState({gweiOpacity:0.8})
+  //console.log("myShip",myShip)
+
+  //both of these are in sync and we need to test which is fastest
+  // one is all of the ship events while the other is doing a get ship
+  //let myShip = this.state.ship;
+  //console.log(myShip)
+  //myShip = this.state.ships[this.state.account];
+  //console.log("console.log(myShip)",myShip)
+
+  //if(myShip) console.log("myShip FISHING:",myShip.fishing)
+  //if(this.state.ship) console.log("FISHING this.state.ship:",this.state.ship.fishing,)
+
+  //console.log("ACCOUNT",this.state.account)
+  //console.log("SHIPS:",this.state.ships)
+  let buttonsTop = horizon-260;
+  let buttonPushDown = 30
+  let buttonsLeft = -1000;
+  let loadingBar = ""
+
+  if(this.state.harborLocation>0){
+    buttonsLeft = this.state.harborLocation
+  }else{
+    buttonsLeft=-1000;
   }
-  handleWhiskeyStop(){
-    this.setState({gweiOpacity:0.3})
+
+  if(myShip&&myShip.floating&&myShip.location){
+    buttonsLeft = this.state.myLocation
+    if(buttonsLeft<300) buttonsLeft=300
+    if(buttonsLeft>3700) buttonsLeft=3700
   }
-  handleWhiskeyDrag(mouse,obj){
-    let currentPercent = obj.x + (STARTINGGWEI/MAXGWEI*100);
-    let actualGWEI = Math.round(currentPercent/100 * MAXGWEI*10,1)/10;
-    if(actualGWEI<MINGWEI) actualGWEI=MINGWEI;
-    if(actualGWEI>MAXGWEI) actualGWEI=MAXGWEI;
-    this.setState({GWEI:actualGWEI})
+  if(!buttonsLeft) buttonsLeft=-2000
+
+  let buttonOpacity = 0.9
+  let buttonDisabled = false
+  if(this.state.loading){
+    buttonOpacity = 0.5
+    buttonDisabled = true
+    loadingBar = (
+      <a href={this.state.etherscan+"tx/"+this.state.currentTx} target='_blank'><img src={"preloader_"+this.state.loading+".png"} /></a>
+    )
+  } else if( this.state.waitingForTransaction || this.state.waitingForShipUpdate || this.state.waitingForInventoryUpdate){
+    buttonOpacity = 0.3
+    buttonDisabled = true
+    let timeSpentWaiting = Date.now() - this.state.waitingForTransactionTime
+    timeSpentWaiting = Math.floor(timeSpentWaiting/1200)+1;
+    //console.log("timeSpentWaiting",timeSpentWaiting)
+    if(timeSpentWaiting>30){
+      window.location.reload(true);
+    }
+    if(timeSpentWaiting>12) timeSpentWaiting=12
+    loadingBar = (
+      <a href={this.state.etherscan+"tx/"+this.state.currentTx} target='_blank'><img src={"loader_"+timeSpentWaiting+".png"} /></a>
+    )
   }
-  mapWheel(obj,b,c){
-    if(this.state.mapUp){
-      let scaleTo=1.0;
-      if(obj.deltaY>0){
-        scaleTo = Math.round((this.state.mapScale+0.05)*100)/100
-      }else{
-        scaleTo = Math.round((this.state.mapScale-0.05)*100)/100
-      }
-      console.log("SCALE TO",scaleTo)
-      this.setState({mapScale:scaleTo})
-      obj.stopPropagation()
-      obj.preventDefault()
-    }
-  }
-  testSomething(){
-    console.log("TEST SOMETHING")
-    //this.waitForShipToFloatThenDoBlockieHint()
-  }
-  render() {
-    let buttons = [];
-    if(!this.state){
-      return (
-        <div key={"LOADING"}>Loading</div>
-      )
-    }
 
-    let myShip
-    if(this.state/*&&this.state.shipsOfOwner*/){
-      myShip = this.state.ship;
-    }
-    //console.log("myShip",myShip)
-
-    //both of these are in sync and we need to test which is fastest
-    // one is all of the ship events while the other is doing a get ship
-    //let myShip = this.state.ship;
-    //console.log(myShip)
-    //myShip = this.state.ships[this.state.account];
-    //console.log("console.log(myShip)",myShip)
-
-    //if(myShip) console.log("myShip FISHING:",myShip.fishing)
-    //if(this.state.ship) console.log("FISHING this.state.ship:",this.state.ship.fishing,)
-
-    //console.log("ACCOUNT",this.state.account)
-    //console.log("SHIPS:",this.state.ships)
-    let buttonsTop = horizon-260;
-    let buttonPushDown = 30
-    let buttonsLeft = -1000;
-    let loadingBar = ""
-
-    if(this.state.harborLocation>0){
-      buttonsLeft = this.state.harborLocation
-    }else{
-      buttonsLeft=-1000;
-    }
-
-    if(myShip&&myShip.floating&&myShip.location){
-      buttonsLeft = this.state.myLocation
-      if(buttonsLeft<300) buttonsLeft=300
-      if(buttonsLeft>3700) buttonsLeft=3700
-    }
-    if(!buttonsLeft) buttonsLeft=-2000
-
-    let buttonOpacity = 0.9
-    let buttonDisabled = false
-    if(this.state.loading){
-      buttonOpacity = 0.5
-      buttonDisabled = true
-      loadingBar = (
-        <a href={this.state.etherscan+"tx/"+this.state.currentTx} target='_blank'><img src={"preloader_"+this.state.loading+".png"} /></a>
-      )
-    } else if( this.state.waitingForTransaction || this.state.waitingForShipUpdate || this.state.waitingForInventoryUpdate){
-      buttonOpacity = 0.3
-      buttonDisabled = true
-      let timeSpentWaiting = Date.now() - this.state.waitingForTransactionTime
-      timeSpentWaiting = Math.floor(timeSpentWaiting/1200)+1;
-      //console.log("timeSpentWaiting",timeSpentWaiting)
-      if(timeSpentWaiting>30){
-        window.location.reload(true);
-      }
-      if(timeSpentWaiting>12) timeSpentWaiting=12
-      loadingBar = (
-        <a href={this.state.etherscan+"tx/"+this.state.currentTx} target='_blank'><img src={"loader_"+timeSpentWaiting+".png"} /></a>
-      )
-    }
-
-    if(!myShip||!myShip.floating){
-      if(!this.state||!this.state.contractsLoaded){
-        //wait for contracts to load but for now let's preload some stuff off screen???
-      }else if(this.state.inventoryDetail && (!this.state.inventoryDetail['Dogger']||this.state.inventoryDetail['Dogger'].length<=0) && this.state.inventory['Dogger']<=0){
-        let clickFn = this.buyShip.bind(this)
-        if(buttonDisabled){clickFn=()=>{}}
-        buttons.push(
-          this.bumpableButton("buyship",buttonsTop,(animated) => {
-            if(animated.top>50) animated.top=50
-            let extraWidth = animated.top - buttonsTop
-            let theLeft = this.state.harborLocation-75+((extraWidth)/2)
-            if(!theLeft){
-              return (<div></div>)
-            }else{
-              return (
-                <div key={"buyship"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:theLeft,top:animated.top+buttonPushDown,opacity:buttonOpacity}} onClick={clickFn}>
-                <img src="buyship.png" style={{zIndex:700,maxWidth:150-(extraWidth)}}/>
-                </div>
-              )
-            }
-          }
-        )
-      )
-    }else if(this.state.inventory['Dogger']>0){
-      let clickFn = this.embark.bind(this,false)
+  if(!myShip||!myShip.floating){
+    if(!this.state||!this.state.contractsLoaded){
+      //wait for contracts to load but for now let's preload some stuff off screen???
+    }else if(this.state.inventoryDetail && (!this.state.inventoryDetail['Dogger']||this.state.inventoryDetail['Dogger'].length<=0) && this.state.inventory['Dogger']<=0){
+      let clickFn = this.buyShip.bind(this)
       if(buttonDisabled){clickFn=()=>{}}
-      if(this.state.inventoryDetail['Dogger'] && this.state.inventoryDetail['Dogger'].length>0){
-        buttons.push(
-          this.bumpableButton("approveandembark",buttonsTop,(animated) => {
-            if(animated.top>50) animated.top=50
-            let extraWidth = animated.top - buttonsTop
+      buttons.push(
+        this.bumpableButton("buyship",buttonsTop,(animated) => {
+          if(animated.top>50) animated.top=50
+          let extraWidth = animated.top - buttonsTop
+          let theLeft = this.state.harborLocation-75+((extraWidth)/2)
+          if(!theLeft){
+            return (<div></div>)
+          }else{
             return (
-              <div key={"approveAndEmbark"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top+buttonPushDown,opacity:buttonOpacity}} onClick={clickFn}>
-              <img src="approveAndEmbark.png" style={{maxWidth:150-(extraWidth)}}/>
+              <div key={"buyship"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:theLeft,top:animated.top+buttonPushDown,opacity:buttonOpacity}} onClick={clickFn}>
+              <img src="buyship.png" style={{zIndex:700,maxWidth:150-(extraWidth)}}/>
               </div>
             )
           }
-        )
+        }
       )
-    }else{
-      console.log("WAITING FOR INV DETAIL....")
-      buttons.push(
-        <div key={"waiting"}>
-        </div>
-      )
-    }
-  }else{
-    let clickFn = this.metamaskHint.bind(this)
+    )
+  }else if(this.state.inventory['Dogger']>0){
+    let clickFn = this.embark.bind(this,false)
     if(buttonDisabled){clickFn=()=>{}}
-    buttons.push(
-      this.bumpableButton("buyshipHolder",buttonsTop,(animated) => {
-        if(animated.top>50) animated.top=50
-        let extraWidth = animated.top - buttonsTop
-        let theLeft = this.state.harborLocation-75+((extraWidth)/2);
-        if(!theLeft){
-          return (<div></div>)
-        }else{
+    if(this.state.inventoryDetail['Dogger'] && this.state.inventoryDetail['Dogger'].length>0){
+      buttons.push(
+        this.bumpableButton("approveandembark",buttonsTop,(animated) => {
+          if(animated.top>50) animated.top=50
+          let extraWidth = animated.top - buttonsTop
           return (
-            <div key={"buyshipHolder"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:theLeft,top:animated.top+buttonPushDown,opacity:buttonOpacity}} onClick={clickFn}>
-            <img src="buyship.png" style={{maxWidth:150-(extraWidth)}}/>
+            <div key={"approveAndEmbark"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top+buttonPushDown,opacity:buttonOpacity}} onClick={clickFn}>
+            <img src="approveAndEmbark.png" style={{maxWidth:150-(extraWidth)}}/>
             </div>
           )
         }
-
-      }
+      )
     )
+  }else{
+    console.log("WAITING FOR INV DETAIL....")
+    buttons.push(
+      <div key={"waiting"}>
+      </div>
+    )
+  }
+}else{
+  let clickFn = this.metamaskHint.bind(this)
+  if(buttonDisabled){clickFn=()=>{}}
+  buttons.push(
+    this.bumpableButton("buyshipHolder",buttonsTop,(animated) => {
+      if(animated.top>50) animated.top=50
+      let extraWidth = animated.top - buttonsTop
+      let theLeft = this.state.harborLocation-75+((extraWidth)/2);
+      if(!theLeft){
+        return (
+          <div>
+          </div>
+        )
+      }else{
+        return (
+          <div key={"buyshipHolder"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:theLeft,top:animated.top+buttonPushDown,opacity:buttonOpacity}} onClick={clickFn}>
+          <img src="buyship.png" style={{maxWidth:150-(extraWidth)}}/>
+          </div>
+        )
+      }
+
+    })
   )
 }
 
@@ -1925,9 +1927,8 @@ class App extends Component {
         <img src="reelin.png" style={{maxWidth:150-(extraWidth)}}/>
         </div>
       )
-    }
+    })
   )
-)
 }else{
   let clickFn1 = this.setSail.bind(this,true)
   if(buttonDisabled){clickFn1=()=>{}}
@@ -1940,8 +1941,7 @@ class App extends Component {
         <img src="saileast.png" style={{maxWidth:150-(extraWidth)}}/>
         </div>
       )
-    }
-  )
+    })
 )
 let clickFn2 = this.castLine.bind(this,true)
 if(buttonDisabled){clickFn2=()=>{}}
@@ -1954,8 +1954,7 @@ buttons.push(
       <img src="castLine.png" style={{maxWidth:150-(extraWidth)}}/>
       </div>
     )
-  }
-)
+  })
 
 )
 let clickFn3 = this.setSail.bind(this,false)
@@ -1969,38 +1968,38 @@ buttons.push(
       <img src="sailwest.png" style={{maxWidth:150-(extraWidth)}}/>
       </div>
     )
-  }
+  })
 )
-)
+/*
 let clickFn = this.disembark.bind(this)
 buttons.push(
-  this.bumpableButton("disembark",buttonsTop,(animated) => {
-    if(animated.top>50) animated.top=50
-    let extraWidth = animated.top - buttonsTop
-    let theLeft = this.state.harborLocation-(50/2)+((extraWidth)/2)
-    let theOpacity = buttonOpacity
-    if(!this.state.ship.inRangeToDisembark){
-      theOpacity=0.25
-      clickFn=()=>{
-        this.setState({bottomBar:0,bottomBarMessage:"You must be closer to the harbor to disembark.",bottomBarSize:28})
-        clearTimeout(bottomBarTimeout)
-        bottomBarTimeout = setTimeout(()=>{
-          this.setState({bottomBar:-80})
-        },10000)
-      }
-    }
-    if(!theLeft){
-      return (<div></div>)
-    }else{
-      return (
-        <div key={"disembark"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:theLeft,top:animated.top+160,opacity:theOpacity}} onClick={clickFn}>
-        <img src="disembark.png" style={{maxWidth:50-(extraWidth)}}/>
-        </div>
-      )
-    }
-  }
+this.bumpableButton("disembark",buttonsTop,(animated) => {
+if(animated.top>50) animated.top=50
+let extraWidth = animated.top - buttonsTop
+let theLeft = this.state.harborLocation-(50/2)+((extraWidth)/2)
+let theOpacity = buttonOpacity
+if(!this.state.ship.inRangeToDisembark){
+theOpacity=0.25
+clickFn=()=>{
+this.setState({bottomBar:0,bottomBarMessage:"You must be closer to the harbor to disembark.",bottomBarSize:28})
+clearTimeout(bottomBarTimeout)
+bottomBarTimeout = setTimeout(()=>{
+this.setState({bottomBar:-80})
+},10000)
+}
+}
+if(!theLeft){
+return (<div></div>)
+}else{
+return (
+<div key={"disembark"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:theLeft,top:animated.top+160,opacity:theOpacity}} onClick={clickFn}>
+<img src="disembark.png" style={{maxWidth:50-(extraWidth)}}/>
+</div>
 )
+}
+}
 )
+)*/
 }
 buttons.push(
   <div style={{zIndex:701,position:'absolute',left:buttonsLeft-50,top:buttonsTop+50+buttonPushDown/2,opacity:0.7}}>
@@ -2022,23 +2021,23 @@ let menu = (
   >
   {currentStyles => {
     return (
-        <div style={currentStyles}>
-          <Metamask
-          clickBlockie={this.doBlockieHint.bind(this)}
-          setHintMode={this.setHintMode.bind(this)}
-          account={this.state.account}
-          init={this.init.bind(this)}
-          Blockies={Blockies}
-          blockNumber={this.state.blockNumber}
-          etherscan={this.state.etherscan}
-          setEtherscan={this.setEtherscan.bind(this)}
-          lastBlockWasAt={this.state.lastBlockWasAt}
-          avgBlockTime={this.state.avgBlockTime}
-          blockieRight={this.state.blockieRight}
-          blockieTop={this.state.blockieTop}
-          blockieSize={this.state.blockieSize}
-          />
-        </div>
+      <div style={currentStyles}>
+      <Metamask
+      clickBlockie={this.doBlockieHint.bind(this)}
+      setHintMode={this.setHintMode.bind(this)}
+      account={this.state.account}
+      init={this.init.bind(this)}
+      Blockies={Blockies}
+      blockNumber={this.state.blockNumber}
+      etherscan={this.state.etherscan}
+      setEtherscan={this.setEtherscan.bind(this)}
+      lastBlockWasAt={this.state.lastBlockWasAt}
+      avgBlockTime={this.state.avgBlockTime}
+      blockieRight={this.state.blockieRight}
+      blockieTop={this.state.blockieTop}
+      blockieSize={this.state.blockieSize}
+      />
+      </div>
     )
   }}
   </Motion>
@@ -2054,16 +2053,16 @@ let adjustedInvZoom = Math.min(1,this.state.zoom * 1.5)
 let rightOffset = ((1-adjustedInvZoom)*135)
 let inventory = (
   <div style={{transform:"scale("+adjustedInvZoom+")",position:"fixed",right:10-rightOffset,top:(100*(adjustedInvZoom))-35,width:200,border:"0px solid #a0aab5",color:"#DDDDDD",zIndex:99}} >
-    <div style={{marginRight:0}}>
-      <Inventory
-      invClick={this.invClick.bind(this)}
-      inventory={this.state.inventory}
-      Ships={this.state.Ships}
-      /*sellFish={this.sellFish.bind(this)}*/
-      contracts={contracts}
-      etherscan={this.state.etherscan}
-      />
-    </div>
+  <div style={{marginRight:0}}>
+  <Inventory
+  invClick={this.invClick.bind(this)}
+  inventory={this.state.inventory}
+  Ships={this.state.Ships}
+  /*sellFish={this.sellFish.bind(this)}*/
+  contracts={contracts}
+  etherscan={this.state.etherscan}
+  />
+  </div>
   </div>
 )
 let sea = (
@@ -2500,7 +2499,7 @@ return (
 
 
       <div style={{transform:"scale("+this.state.zoom+")",cursor:"pointer",zIndex:2,position:'absolute',opacity:this.state.cornerOpacity,right:0-((1-this.state.zoom)*90),bottom:-4-((1-this.state.zoom)*84)}} onClick={this.titleClick.bind(this)}>
-        <img src={"corner.png"} />
+      <img src={"corner.png"} />
       </div>
 
 
@@ -2509,26 +2508,26 @@ return (
 
 
       <div style={{zIndex:mapZ,transform:"scale("+this.state.zoom+")",marginLeft:-((1-this.state.zoom)*175),marginTop:-((1-this.state.zoom)*60)}}>
-        <a href="https://github.com/austintgriffith/galleass" target="_blank">
-        <img data-rh="Source" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:25+iconOffset,top:83,opacity:0.8}} src="github.png" />
-        </a>
-        <a href="http://austingriffith.com/portfolio/galleass/" target="_blank">
-        <img data-rh="Info" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:70+iconOffset,top:83,opacity:0.8}} src="moreinfo.png" />
-        </a>
-        <a href="contracts.html" target="_blank">
-        <img data-rh="Contracts" data-rh-at="bottom"  style={{maxHeight:36,position:"absolute",left:115+iconOffset,top:83,opacity:0.8}} src="smartcontract.png" />
-        </a>
-        <a href={decentralizedLink} target="_blank">
-        <img data-rh="IPFS" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:160+iconOffset,top:83,opacity:0.8}} src="ipfs.png" />
-        </a>
-        {gasDragger}
-        <img style={{zIndex:2}} src={"mapicon.png"} onClick={this.titleClick.bind(this)}/>
-        </div>
+      <a href="https://github.com/austintgriffith/galleass" target="_blank">
+      <img data-rh="Source" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:25+iconOffset,top:83,opacity:0.8}} src="github.png" />
+      </a>
+      <a href="http://austingriffith.com/portfolio/galleass/" target="_blank">
+      <img data-rh="Info" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:70+iconOffset,top:83,opacity:0.8}} src="moreinfo.png" />
+      </a>
+      <a href="contracts.html" target="_blank">
+      <img data-rh="Contracts" data-rh-at="bottom"  style={{maxHeight:36,position:"absolute",left:115+iconOffset,top:83,opacity:0.8}} src="smartcontract.png" />
+      </a>
+      <a href={decentralizedLink} target="_blank">
+      <img data-rh="IPFS" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:160+iconOffset,top:83,opacity:0.8}} src="ipfs.png" />
+      </a>
+      {gasDragger}
+      <img style={{zIndex:2}} src={"mapicon.png"} onClick={this.titleClick.bind(this)}/>
+      </div>
 
 
-        </div>
-        <div style={{position:'absolute',opacity:this.state.cornerOpacity,left:10,bottom:10}} onClick={this.titleClick.bind(this)}>
-        <img src={"compass.png"} style={{maxWidth:60}} />
+      </div>
+      <div style={{position:'absolute',opacity:this.state.cornerOpacity,left:10,bottom:10}} onClick={this.titleClick.bind(this)}>
+      <img src={"compass.png"} style={{maxWidth:60}} />
       </div>
 
 
@@ -2571,11 +2570,11 @@ return (
 
 
   <BottomBar
-    bottomBar={this.state.bottomBar}
-    zoom={this.state.zoom}
-    clientWidth={this.state.clientWidth}
-    bottomBarMessage={this.state.bottomBarMessage}
-    bottomBarSize={this.state.bottomBarSize}
+  bottomBar={this.state.bottomBar}
+  zoom={this.state.zoom}
+  clientWidth={this.state.clientWidth}
+  bottomBarMessage={this.state.bottomBarMessage}
+  bottomBarSize={this.state.bottomBarSize}
   />
 
   <Motion
@@ -2642,17 +2641,17 @@ return (
               //"head":"341","hair":"54678","eyes":"11577","nose":"47392","mouth":
               return (
                 <div>
-                  <Citizen size={50} id={id} web3={web3}
-                    setCitizenPrice={this.setCitizenPrice.bind(this)}
-                    moveCitizen={this.moveCitizen.bind(this)}
-                    genes={this.state.modalObject.tokens[id].geneObject}
-                    status={this.state.modalObject.tokens[id].status}
-                    data={this.state.modalObject.tokens[id].data}
-                    x={this.state.modalObject.tokens[id].x}
-                    y={this.state.modalObject.tokens[id].y}
-                    tile={this.state.modalObject.tokens[id].tile}
-                    characteristics={this.state.modalObject.tokens[id].characteristicsObject}
-                  />
+                <Citizen size={50} id={id} web3={web3}
+                setCitizenPrice={this.setCitizenPrice.bind(this)}
+                moveCitizen={this.moveCitizen.bind(this)}
+                genes={this.state.modalObject.tokens[id].geneObject}
+                status={this.state.modalObject.tokens[id].status}
+                data={this.state.modalObject.tokens[id].data}
+                x={this.state.modalObject.tokens[id].x}
+                y={this.state.modalObject.tokens[id].y}
+                tile={this.state.modalObject.tokens[id].tile}
+                characteristics={this.state.modalObject.tokens[id].characteristicsObject}
+                />
                 </div>
               )
             })
@@ -2660,7 +2659,7 @@ return (
             allTokens = this.state.modalObject.tokensOfOwner.map((id)=>{
               return (
                 <div>
-                  <Dogger id={id} {...this.state.modalObject.tokens[id]} embark={this.embark.bind(this)}/>
+                <Dogger id={id} {...this.state.modalObject.tokens[id]} embark={this.embark.bind(this)}/>
                 </div>
               )
             })
@@ -2668,7 +2667,7 @@ return (
             allTokens = this.state.modalObject.tokensOfOwner.map((token)=>{
               return (
                 <div>
-                  other NFT token stuff
+                other NFT token stuff
                 </div>
               )
             })
@@ -2676,20 +2675,20 @@ return (
 
           body = (
             <div style={{marginTop:100}}>
-              {allTokens}
+            {allTokens}
             </div>
           )
         }else{
           body = (
             <div style={{marginTop:100}}>
-              <SendToken
-                modalObject={this.state.modalObject}
-                sendToken={this.sendToken.bind(this)}
-                sellFish={(fishSellAmount)=>{
-                  console.log("SELLFISH",this.state.landX,this.state.landY,this.state.fishmongerIndex,this.state.modalObject.name,fishSellAmount)
-                  this.sellFish(this.state.landX,this.state.landY,this.state.fishmongerIndex,this.state.modalObject.name,fishSellAmount)
-                }}
-              />
+            <SendToken
+            modalObject={this.state.modalObject}
+            sendToken={this.sendToken.bind(this)}
+            sellFish={(fishSellAmount)=>{
+              console.log("SELLFISH",this.state.landX,this.state.landY,this.state.fishmongerIndex,this.state.modalObject.name,fishSellAmount)
+              this.sellFish(this.state.landX,this.state.landY,this.state.fishmongerIndex,this.state.modalObject.name,fishSellAmount)
+            }}
+            />
             </div>
           )
         }
@@ -2772,208 +2771,212 @@ return (
 
         /*
         if(this.state.modalObject.doggerBalance>0){
-          inventoryItems.push(
-            <span style={modalInvStyle}><img style={{maxHeight:invHeight}} src="dogger.png" />
-            <Writing string={this.state.modalObject.doggerBalance} size={invHeight+2}/>
-            </span>
-          )
-        }
-
-        if(this.state.modalObject.copperBalance>0){
-          inventoryItems.push(
-            <span style={modalInvStyle}><img style={{maxHeight:invHeight}} src="copper.png" />
-            <Writing string={this.state.modalObject.copperBalance} size={invHeight+2}/>
-            </span>
-          )
-        }
-        if(this.state.modalObject.filletBalance>0){
-          inventoryItems.push(
-            <span style={modalInvStyle}><img style={{maxHeight:invHeight}} src="fillet.png" />
-            <Writing string={this.state.modalObject.filletBalance} size={invHeight+2}/>
-            </span>
-          )
-        }
-        if(this.state.modalObject.timberBalance>0){
-          inventoryItems.push(
-            <span style={modalInvStyle}><img style={{maxHeight:invHeight}} src="timber.png" />
-            <Writing string={this.state.modalObject.timberBalance} size={invHeight+2}/>
-            </span>
-          )
-        }*/
-        content.push(
-          <div style={{position:'absolute',left:20,bottom:50}}>
-          {inventoryItems}
-          </div>
-        )
-
-        if(OWNS_TILE && this.state.modalObject.name == "Grass"){
-          let tileIndex = this.state.modalObject.index;
-          content.push(
-            <div>
-              <BuildTable tileIndex={tileIndex} clickFn={this.buildTile.bind(this)}/>
-            </div>
-          )
-        }
-
-
-        /*
-
-            TODO
-
-            still trying to nail down what I want these to look like
-
-            I think I want modal components to have two sides, a loader and a display
-
-            the loader will be like a module that will get all the data prepared in the modal object
-
-            then the display will just take in the the modal object and display (this will be a component like in the modal folder )
-
-            I keep running into all these different things like landx landy OWNS_TILE that need to be passed in as props
-            those should all be in the modal object on the way in so this stuff below is cleaner
-
-            but there are also functions that should probably be built into the modal instead of the app
-            I think the problem there was gwei var or something, but that could be injected into the modalobject too
-
-
-         */
-
-
-        if(this.state.modalObject.name == "Harbor"){
-          content.push(
-            <Harbor
-              {...this.state.modalObject}
-              buyShip={this.buyShip.bind(this)}
-              disembark={this.disembark.bind(this)}
-            />
-          )
-        }
-        if(this.state.modalObject.name == "Fishmonger"){
-          content.push(
-            <Fishmonger
-              {...this.state.modalObject}
-              sellFish={this.sellFish.bind(this)}
-              transferAndCall={this.transferAndCall.bind(this)}
-            />
-          )
-        }
-        if(this.state.modalObject.name == "Market"){
-          content.push(
-            <Market
-              {...this.state.modalObject}
-              transferAndCall={this.transferAndCall.bind(this)}
-            />
-          )
-        }
-
-        if(OWNS_TILE && this.state.modalObject.name == "Village"){
-          let tileIndex = this.state.modalObject.index;
-          content.push(
-            <div>
-              <CreateTable image={"createCitizen"} clickFn={this.createCitizen.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index)}/>
-            </div>
-          )
-        }else if(OWNS_TILE && this.state.modalObject.name == "Forest Resource"){
-          let citizen = false
-          if(this.state.modalObject.citizens[0]){
-            citizen = this.state.modalObject.citizens[0].id
-          }
-          content.push(
-            <ForestTile
-              modalObject={this.state.modalObject}
-              extractRawResource={this.extractRawResource.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,3)}
-              buildTimberCamp={this.buildTimberCamp.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,citizen)}
-            />
-          )
-        }else if(OWNS_TILE && this.state.modalObject.name == "Grass Resource"){
-          let citizen = false
-          if(this.state.modalObject.citizens[0]){
-            citizen = this.state.modalObject.citizens[0].id
-          }
-          content.push(
-            <GrassTile
-              modalObject={this.state.modalObject}
-              extractRawResource={this.extractRawResource.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,2)}
-            />
-          )
-        }else if(OWNS_TILE && this.state.modalObject.name == "Timber Camp"){
-          let tileIndex = this.state.modalObject.index;
-          content.push(
-            <div>
-              <ResourceTable
-                extractRawResource={this.extractRawResource.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,3)}
-                collect={(e)=>{
-                  this.collect("TimberCamp",this.state.modalObject.index)
-                  e.preventDefault()
-                  e.stopPropagation()
-                  return false
-                }} {...this.state.modalObject} web3={web3} blockNumber={this.state.blockNumber}
-              />
-            </div>
-          )
-        }
-
-        //  <div>Price: {this.state.modalObject.price}</div>
-        //
-        let tilePriceAndPurchase = ""
-        if(OWNS_TILE){
-          tilePriceAndPurchase = (
-            <div style={{float:'right',padding:10}}>
-            <Writing style={{verticalAlign:'middle',opacity:0.9}} string={"Sale Price: "} size={20}/>
-            <input style={{textAlign:'right',width:40,marginRight:3,maxHeight:20,padding:5,border:'2px solid #ccc',borderRadius:5}} type="text" name="landPurchasePrice" value={this.state.modalObject.price} onFocus={this.handleFocus} onChange={this.handleModalInput.bind(this)}/>
-            <img  style={{verticalAlign:'middle',maxHeight:20}} src="copper.png" />
-            <img data-rh={"Offer to sell land for "+this.state.modalObject.price+" Copper"} data-rh-at="right"
-            src="metamasksign.png"
-            style={{verticalAlign:'middle',maxHeight:20,marginLeft:10,cursor:"pointer"}} onClick={this.setLandPrice.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,this.state.modalObject.price)}
-            />
-            </div>
-          )
-        }else if(this.state.modalObject.price>0){
-          tilePriceAndPurchase = (
-            <div style={{float:'right',padding:10}}>
-            <Writing style={{opacity:0.9}} string={"Purchase Land: "+this.state.modalObject.price+" "} size={20}/>
-            <img  style={{maxHeight:20}} src="copper.png" />
-            <img data-rh={"Purchase land for  "+this.state.modalObject.price+" Copper"} data-rh-at="right"
-            src="metamasksign.png"
-            style={{maxHeight:20,marginLeft:10,cursor:"pointer"}} onClick={this.buyLand.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,this.state.modalObject.price)}
-            />
-            </div>
-          )
-        }
-
-        let contractAddress = ""
-        if(this.state.modalObject.contract&&this.state.modalObject.contract!="0x0000000000000000000000000000000000000000"){
-          contractAddress = (
-              <div>Contract: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.contract}>{this.state.modalObject.contract}</a></div>
-          )
-        }
-
-        return (
-          <div style={{transform:"scale("+this.state.zoom+")",zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top-((1-this.state.zoom)*300),textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
-          <div style={{cursor:'pointer',position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
-          <img src="exit.png" />
-          </div>
-          <div style={{position:'absolute',left:24,top:24,border:"3px solid #777777"}}>
-          <img style={{maxWidth:83}} src={image}/>
-          </div>
-          <div style={{position:'absolute',left:118,top:24,textAlign:"left"}}>
-          <div><Writing style={{opacity:0.9}} string={this.state.modalObject.name} size={28}/>  -  {this.state.modalObject.index} @ ({this.state.landX},{this.state.landY})</div>
-          {contractAddress}
-          <div>Owner: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.owner}>{this.state.modalObject.owner}</a></div>
-          {tilePriceAndPurchase}
-          </div>
-          {content}
-          </div>
-        )
-      }
-
-
+        inventoryItems.push(
+        <span style={modalInvStyle}><img style={{maxHeight:invHeight}} src="dogger.png" />
+        <Writing string={this.state.modalObject.doggerBalance} size={invHeight+2}/>
+        </span>
+      )
     }
 
-
-  }}
-  </Motion>
-  <img src="maptexturelightfaded.jpg" style={{position:'absolute',width:1,height:1,left:1,top:1}} />
+    if(this.state.modalObject.copperBalance>0){
+    inventoryItems.push(
+    <span style={modalInvStyle}><img style={{maxHeight:invHeight}} src="copper.png" />
+    <Writing string={this.state.modalObject.copperBalance} size={invHeight+2}/>
+    </span>
+  )
+}
+if(this.state.modalObject.filletBalance>0){
+inventoryItems.push(
+<span style={modalInvStyle}><img style={{maxHeight:invHeight}} src="fillet.png" />
+<Writing string={this.state.modalObject.filletBalance} size={invHeight+2}/>
+</span>
+)
+}
+if(this.state.modalObject.timberBalance>0){
+inventoryItems.push(
+<span style={modalInvStyle}><img style={{maxHeight:invHeight}} src="timber.png" />
+<Writing string={this.state.modalObject.timberBalance} size={invHeight+2}/>
+</span>
+)
+}*/
+content.push(
+  <div style={{position:'absolute',left:20,bottom:50}}>
+  {inventoryItems}
   </div>
+)
+
+if(OWNS_TILE && this.state.modalObject.name == "Grass"){
+  let tileIndex = this.state.modalObject.index;
+  content.push(
+    <div>
+    <BuildTable tileIndex={tileIndex} clickFn={this.buildTile.bind(this)}/>
+    </div>
+  )
+}
+
+
+/*
+
+TODO
+
+still trying to nail down what I want these to look like
+
+I think I want modal components to have two sides, a loader and a display
+
+the loader will be like a module that will get all the data prepared in the modal object
+
+then the display will just take in the the modal object and display (this will be a component like in the modal folder )
+
+I keep running into all these different things like landx landy OWNS_TILE that need to be passed in as props
+those should all be in the modal object on the way in so this stuff below is cleaner
+
+but there are also functions that should probably be built into the modal instead of the app
+I think the problem there was gwei var or something, but that could be injected into the modalobject too
+
+
+*/
+
+
+if(this.state.modalObject.name == "Harbor"){
+  content.push(
+    <Harbor
+    {...this.state.modalObject}
+    buyShip={this.buyShip.bind(this)}
+    disembark={this.disembark.bind(this)}
+    embark={this.embark.bind(this,false)}
+    />
+  )
+}
+if(this.state.modalObject.name == "Fishmonger"){
+  content.push(
+    <Fishmonger
+    {...this.state.modalObject}
+    sellFish={this.sellFish.bind(this)}
+    transferAndCall={this.transferAndCall.bind(this)}
+    />
+  )
+}
+if(this.state.modalObject.name == "Market"){
+  content.push(
+    <Market
+    {...this.state.modalObject}
+    transferAndCall={this.transferAndCall.bind(this)}
+    />
+  )
+}
+
+if(OWNS_TILE && this.state.modalObject.name == "Village"){
+  let tileIndex = this.state.modalObject.index;
+  content.push(
+    <div>
+      <CreateCitizens createCitizen={(food1,food2,food3)=>{
+        console.log("CREATE CITIZEN!",food1,food2,food3)
+        this.createCitizen(this.state.landX,this.state.landY,this.state.modalObject.index,food1,food2,food3)
+      }}/>
+    </div>
+  )
+}else if(OWNS_TILE && this.state.modalObject.name == "Forest Resource"){
+  let citizen = false
+  if(this.state.modalObject.citizens[0]){
+    citizen = this.state.modalObject.citizens[0].id
+  }
+  content.push(
+    <ForestTile
+    modalObject={this.state.modalObject}
+    extractRawResource={this.extractRawResource.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,3)}
+    buildTimberCamp={this.buildTimberCamp.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,citizen)}
+    />
+  )
+}else if(OWNS_TILE && this.state.modalObject.name == "Grass Resource"){
+  let citizen = false
+  if(this.state.modalObject.citizens[0]){
+    citizen = this.state.modalObject.citizens[0].id
+  }
+  content.push(
+    <GrassTile
+    modalObject={this.state.modalObject}
+    extractRawResource={this.extractRawResource.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,2)}
+    />
+  )
+}else if(OWNS_TILE && this.state.modalObject.name == "Timber Camp"){
+  let tileIndex = this.state.modalObject.index;
+  content.push(
+    <div>
+    <ResourceTable
+    extractRawResource={this.extractRawResource.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,3)}
+    collect={(e)=>{
+      this.collect("TimberCamp",this.state.modalObject.index)
+      e.preventDefault()
+      e.stopPropagation()
+      return false
+    }} {...this.state.modalObject} web3={web3} blockNumber={this.state.blockNumber}
+    />
+    </div>
+  )
+}
+
+//  <div>Price: {this.state.modalObject.price}</div>
+//
+let tilePriceAndPurchase = ""
+if(OWNS_TILE){
+  tilePriceAndPurchase = (
+    <div style={{float:'right',padding:10}}>
+    <Writing style={{verticalAlign:'middle',opacity:0.9}} string={"Sale Price: "} size={20}/>
+    <input style={{textAlign:'right',width:40,marginRight:3,maxHeight:20,padding:5,border:'2px solid #ccc',borderRadius:5}} type="text" name="landPurchasePrice" value={this.state.modalObject.price} onFocus={this.handleFocus} onChange={this.handleModalInput.bind(this)}/>
+    <img  style={{verticalAlign:'middle',maxHeight:20}} src="copper.png" />
+    <img data-rh={"Offer to sell land for "+this.state.modalObject.price+" Copper"} data-rh-at="right"
+    src="metamasksign.png"
+    style={{verticalAlign:'middle',maxHeight:20,marginLeft:10,cursor:"pointer"}} onClick={this.setLandPrice.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,this.state.modalObject.price)}
+    />
+    </div>
+  )
+}else if(this.state.modalObject.price>0){
+  tilePriceAndPurchase = (
+    <div style={{float:'right',padding:10}}>
+    <Writing style={{opacity:0.9}} string={"Purchase Land: "+this.state.modalObject.price+" "} size={20}/>
+    <img  style={{maxHeight:20}} src="copper.png" />
+    <img data-rh={"Purchase land for  "+this.state.modalObject.price+" Copper"} data-rh-at="right"
+    src="metamasksign.png"
+    style={{maxHeight:20,marginLeft:10,cursor:"pointer"}} onClick={this.buyLand.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,this.state.modalObject.price)}
+    />
+    </div>
+  )
+}
+
+let contractAddress = ""
+if(this.state.modalObject.contract&&this.state.modalObject.contract!="0x0000000000000000000000000000000000000000"){
+  contractAddress = (
+    <div>Contract: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.contract}>{this.state.modalObject.contract}</a></div>
+  )
+}
+
+return (
+  <div style={{transform:"scale("+this.state.zoom+")",zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top-((1-this.state.zoom)*300),textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
+  <div style={{cursor:'pointer',position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
+  <img src="exit.png" />
+  </div>
+  <div style={{position:'absolute',left:24,top:24,border:"3px solid #777777"}}>
+  <img style={{maxWidth:83}} src={image}/>
+  </div>
+  <div style={{position:'absolute',left:118,top:24,textAlign:"left"}}>
+  <div><Writing style={{opacity:0.9}} string={this.state.modalObject.name} size={28}/>  -  {this.state.modalObject.index} @ ({this.state.landX},{this.state.landY})</div>
+  {contractAddress}
+  <div>Owner: <a target="_blank" href={this.state.etherscan+"address/"+this.state.modalObject.owner}>{this.state.modalObject.owner}</a></div>
+  {tilePriceAndPurchase}
+  </div>
+  {content}
+  </div>
+)
+}
+
+
+}
+
+
+}}
+</Motion>
+<img src="maptexturelightfaded.jpg" style={{position:'absolute',width:1,height:1,left:1,top:1}} />
+</div>
 );
 }
 }

@@ -7,7 +7,7 @@ import 'zeppelin-solidity/contracts/token/ERC20/StandardToken.sol';
 
 contract ERC677Token is StandardToken {
 
-  event Transfer(address indexed from, address indexed to, uint value, bytes data);
+  event TransferAndCall(address indexed from, address indexed to, uint value, bytes data);
 
   function transferAndCall(address _to, uint _value, bytes _data)
     public
@@ -15,7 +15,7 @@ contract ERC677Token is StandardToken {
     returns (bool success)
   {
     super.transfer(_to, _value);
-    emit Transfer(msg.sender, _to, _value, _data);
+    emit TransferAndCall(msg.sender, _to, _value, _data);
     if (isContract(_to)) {
       contractFallback(_to, _value, _data);
     }

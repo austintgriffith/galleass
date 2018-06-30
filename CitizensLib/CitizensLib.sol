@@ -4,15 +4,33 @@ import 'Galleasset.sol';
 
 contract CitizensLib is Galleasset {
 
+  uint8 nonce = 0;
+
   constructor(address _galleass) Galleasset(_galleass) public { }
 
   //a citizen is created when food is provided to a village
-  function createCitizen(address owner, bytes32 food1, bytes32 food2, bytes32 food3, uint16 _x, uint16 _y, uint8 _tile) public isGalleasset("CitizensLib") returns (uint){
+  function createCitizen(address owner,uint16 _x, uint16 _y, uint8 _tile,bytes32 food1, bytes32 food2, bytes32 food3) public isGalleasset("CitizensLib") returns (uint){
     require(hasPermission(msg.sender,"createCitizens"));
 
     //eventually you will want to be able to use a standard contract interface
-    //instead of just grabbing 3 fillets
 
+    bytes32 characteristics = _convertFoodToCharacteristics(owner,food1,food2,food3);
+
+    //genes will at first be random but then maybe they will be mixed... like you might need
+    //to not only have food, but a couple citizens in the village too and you would use
+    //their existing genes to mix for the new genes
+    bytes32 genes = keccak256(nonce++,block.blockhash(block.number-1));
+
+    //internal function to reduce stack size
+    _createCitizen(owner,_x,_y,_tile,genes,characteristics);
+  }
+
+  function _createCitizen(address owner,uint16 _x,uint16 _y,uint8 _tile,bytes32 genes,bytes32 characteristics) internal {
+    Citizens citizensContract = Citizens(getContract("Citizens"));
+    citizensContract.createCitizen(owner,1,0,_x,_y,_tile,genes,characteristics);
+  }
+
+  function _convertFoodToCharacteristics(address owner,bytes32 food1,bytes32 food2,bytes32 food3) internal returns (bytes32 characteristics){
     /*
     i went back and forth for a while trying to decide if you send the fillet to the village
     then, this contract pulls from there. It's really cool to see the village contract "inventory"
@@ -21,22 +39,28 @@ contract CitizensLib is Galleasset {
     ...maybe that is okay? Maybe the bytecode could be compared or something...
     ..I think I've decided against that, I think it makes more sense to have one contract for all of the villages.
     */
-    require( getGalleassTokens(owner,"Fillet",3) );
-    /*require( getTokens(msg.sender,food1,1) );
-    require( getTokens(msg.sender,food2,1) );
-    require( getTokens(msg.sender,food3,1) );*/
+    if(food1=="Fillet"&&food2=="Fillet"&&food3=="Fillet"){
+      /*require( getTokens(msg.sender,food1,1) );
+      require( getTokens(msg.sender,food2,1) );
+      require( getTokens(msg.sender,food3,1) );*/
+      require( getGalleassTokens(owner,"Fillet",3) );
+      //for now there are only fillets, eventually a complex funtion will take in the food and output the characteristics
+      characteristics = 0x0002000200000000000000000000000000000000000000000000000000000000;
+    } else if(food1=="Greens"&&food2=="Fillet"&&food3=="Fillet"){
+      /*require( getTokens(msg.sender,food1,1) );
+      require( getTokens(msg.sender,food2,1) );
+      require( getTokens(msg.sender,food3,1) );*/
+      require( getGalleassTokens(owner,"Greens",1) );
+      require( getGalleassTokens(owner,"Fillet",2) );
+      //for now there are only fillets, eventually a complex funtion will take in the food and output the characteristics
+                       // str|sta|dex|int|amb|rig|ind|ing|
+      characteristics = 0x0001000200010005000100000000000100000000000000000000000000000000;
+    }else{
+      //unknown recipe
+      revert();
+    }
 
-    //for now there are only fillets, eventually a complex funtion will take in the food and output the characteristics
-    bytes32 characteristics = 0x0002000200000000000000000000000000000000000000000000000000000001;
-
-    Citizens citizensContract = Citizens(getContract("Citizens"));
-
-    //genes will at first be random but then maybe they will be mixed... like you might need
-    //to not only have food, but a couple citizens in the village too and you would use
-    //their existing genes to mix for the new genes
-    bytes32 genes = keccak256(citizensContract.totalSupply(),block.blockhash(block.number-1));
-
-    citizensContract.createCitizen(owner,1,0,_x,_y,_tile,genes,characteristics);
+    return characteristics;
   }
 
   function getCitizenGenes(uint256 _id) public view returns (uint16 head,uint16 hair,uint16 eyes,uint16 nose,uint16 mouth) {
@@ -51,7 +75,7 @@ contract CitizensLib is Galleasset {
     return (head,hair,eyes,nose,mouth);
   }
 
-  function getCitizenCharacteristics(uint256 _id) public view returns (uint16 strength,uint16 stamina,uint16 dexterity,uint16 intelligence,uint16 ambition,uint16 rigorous,uint16 industrious,uint16 ingenuity) {
+  function getCitizenCharacteristics(uint256 _id) public view returns (uint16 strength,uint16 stamina,uint16 dexterity,uint16 intelligence,uint16 ambition,uint16 rigorousness,uint16 industriousness,uint16 ingenuity) {
     Citizens citizensContract = Citizens(getContract("Citizens"));
     bytes32 characteristics;
     (,,,,,,,characteristics,) = citizensContract.getToken(_id);
@@ -60,10 +84,10 @@ contract CitizensLib is Galleasset {
     dexterity = uint16(characteristics[4]) << 8 | uint16(characteristics[5]);
     intelligence = uint16(characteristics[6]) << 8 | uint16(characteristics[7]);
     ambition = uint16(characteristics[8]) << 8 | uint16(characteristics[9]);
-    rigorous = uint16(characteristics[10]) << 8 | uint16(characteristics[11]);
-    industrious = uint16(characteristics[12]) << 8 | uint16(characteristics[13]);
+    rigorousness = uint16(characteristics[10]) << 8 | uint16(characteristics[11]);
+    industriousness = uint16(characteristics[12]) << 8 | uint16(characteristics[13]);
     ingenuity = uint16(characteristics[14]) << 8 | uint16(characteristics[15]);
-    return (strength, stamina, dexterity, intelligence, ambition, rigorous, industrious, ingenuity);
+    return (strength, stamina, dexterity, intelligence, ambition, rigorousness, industriousness, ingenuity);
   }
 
   function getCitizenStatus(uint256 _id) public view returns (uint8 status,uint16 x, uint16 y, uint8 tile,uint data) {

@@ -24,9 +24,13 @@ contract NFT {
           ownershipTokenCount[_from]--;
           delete tokenIndexToApproved[_tokenId];
       }
-      Transfer(_from, _to, _tokenId);
+      emit NFTTransfer(_from, _to, _tokenId);
   }
-  event Transfer(address from, address to, uint256 tokenId);
+  //
+  //for some reason transactions never return a receipt if this is "Transfer" even though there is no conflict with the name
+  // I have no effing clue what I'm doing wrong but I had to rename this to "NFTTransfer" and it works now :(
+  //
+  event NFTTransfer(address from, address to, uint256 tokenId);
 
   function transferFrom(address _from,address _to,uint256 _tokenId) external {
       require(_to != address(0));
@@ -49,9 +53,12 @@ contract NFT {
   function approve(address _to,uint256 _tokenId) external {
       require(_owns(msg.sender, _tokenId));
       _approve(_tokenId, _to);
-      Approval(msg.sender, _to, _tokenId);
+      emit NFTApproval(msg.sender, _to, _tokenId);
   }
-  event Approval(address owner, address approved, uint256 tokenId);
+  //
+  // see NFTTransfer for explanation on weird function name here
+  //
+  event NFTApproval(address owner, address approved, uint256 tokenId);
 
   function balanceOf(address _owner) public view returns (uint256 count) {
       return ownershipTokenCount[_owner];

@@ -5,7 +5,7 @@ pragma solidity ^0.4.15;
   https://galleass.io
   by Austin Thomas Griffith
 
-  Greens are picked from bare grass resources and provide need nutrition to Citizens 
+  Greens are picked from bare grass resources and provide need nutrition to Citizens
 
 */
 
@@ -25,17 +25,6 @@ contract Greens is Galleasset, MintableToken, ERC677Token {
     totalSupply_ = INITIAL_SUPPLY;
   }
 
-  function galleassTransferFrom(address _from, address _to, uint256 _value) public returns (bool) {
-    require(_to != address(0));
-    require(_value <= balances[_from]);
-    require(hasPermission(msg.sender,"transferGreens"));
-
-    balances[_from] = balances[_from].sub(_value);
-    balances[_to] = balances[_to].add(_value);
-    Transfer(_from, _to, _value);
-    return true;
-  }
-
   function galleassMint(address _to,uint _amount) public returns (bool){
     require(hasPermission(msg.sender,"mintGreens"));
     totalSupply_ = totalSupply_.add(_amount);
@@ -44,5 +33,17 @@ contract Greens is Galleasset, MintableToken, ERC677Token {
     Transfer(address(0), _to, _amount);
     return true;
   }
+
+  function galleassTransferFrom(address _from, address _to, uint256 _value) public returns (bool) {
+    require(_to != address(0));
+    require(_value <= balances[_from]);
+    require(hasPermission(msg.sender,"transferGreens") || hasPermission(msg.sender,"transferFood"));
+
+    balances[_from] = balances[_from].sub(_value);
+    balances[_to] = balances[_to].add(_value);
+    Transfer(_from, _to, _value);
+    return true;
+  }
+
 
 }

@@ -41,6 +41,8 @@ Harbor, Sea (Bay), and [x]FishMonger need to be moved over to landOwner system i
 More tokens in the Market by default
 Maybe grass and mountain tiles could also produce resources like the timbercamp?
 The Sea should become The Bay and a new "Sea" is more about moving from island to island (Bay is 1 dogger per address, but Sea will track by Galley address)
+The inventory should have an alpha background and should be above the ship sail buttons
+The left side of the fishmonger and harbor don't line up right
 ```
 
 ### Once staging

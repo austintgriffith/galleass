@@ -39,7 +39,7 @@ contract Fillet is Galleasset, MintableToken, ERC677Token {
   function galleassTransferFrom(address _from, address _to, uint256 _value) public returns (bool) {
     require(_to != address(0));
     require(_value <= balances[_from]);
-    require(hasPermission(msg.sender,"transferFood"));
+    require(hasPermission(msg.sender,"transferFillet") || hasPermission(msg.sender,"transferFood"));
 
     balances[_from] = balances[_from].sub(_value);
     balances[_to] = balances[_to].add(_value);
