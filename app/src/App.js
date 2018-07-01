@@ -29,6 +29,7 @@ import SendToken from './modal/SendToken.js'
 import SendToTile from './modal/SendToTile.js'
 import BuySellOwner from './modal/BuySellOwner.js'
 import ForestTile from './modal/ForestTile.js'
+import MountainTile from './modal/MountainTile.js'
 import GrassTile from './modal/GrassTile.js'
 import Harbor from './modal/Harbor.js'
 import Market from './modal/Market.js'
@@ -38,6 +39,7 @@ import Fishmonger from './modal/Fishmonger.js'
 import Inventory from './hud/Inventory.js'
 import BottomBar from './hud/BottomBar.js'
 import Social from './hud/Social.js'
+import Transactions from './hud/Transactions.js'
 
 /*
 assuming that galleassBlockNumber is the oldest block for all contracts
@@ -80,6 +82,7 @@ let loadContracts = [
   "Harbor",
   "Dogger",
   "Timber",
+  "Stone",
   "Greens",
   "Catfish",
   "Pinner",
@@ -94,6 +97,7 @@ let loadContracts = [
   "Fillet",
   "Ipfs",
   "Village",
+  "Castle",
   "Citizens",
   "CitizensLib",
   "TimberCamp",
@@ -104,6 +108,7 @@ let inventoryTokens = [
   "Citizens",
   "Dogger",
   "Copper",
+  "Stone",
   "Timber",
   "Greens",
   "Fillet",
@@ -197,6 +202,7 @@ class App extends Component {
       blockieSize:6,
       isEmbarking:false,
       previousModalObject:{name:"Loading..."},
+      transactions:[],
     }
 
     let timeoutLoader = 8000
@@ -244,6 +250,63 @@ class App extends Component {
     setInterval(this.getGasPrice.bind(this),45000)
     this.getGasPrice()
   }
+
+  transactionError(error){
+    console.log("~~~~~~~~ ERROR",error)
+    console.log("HANDLETHIS:",error)
+    if(error.toString().indexOf("Error: Transaction was not mined")>=0){
+      this.setState({loading:0,waitingForTransaction:false})
+      clearInterval(txWaitIntervals["loader"])
+      clearInterval(txWaitIntervals[this.state.currentTx])
+      this.setState({bottomBar:0,bottomBarMessage:"Warning: your transaction might not get mined, try increasing your #gas  gas price.",bottomBarSize:20})
+      clearTimeout(bottomBarTimeout)
+      bottomBarTimeout = setTimeout(()=>{
+        this.setState({bottomBar:-80})
+      },10000)
+      //ACTUALLY LET'S JUST RELOAD AT THIS POINT
+      //THIS NEEDS A LOT MORE WORK
+      /////////////////////////////////window.location.reload(true);
+    }
+  }
+  transactionHash(hash){
+    console.log("~~~~~~~~ transactionHash",hash)
+    let currentTransactions = this.state.transactions
+    currentTransactions.push({hash:hash,time:Date.now()})
+    this.setState({transactions:currentTransactions})
+  }
+  transactionReceipt(receipt){
+    console.log("~~~~~~~~ receipt",receipt)
+    let currentTransactions = this.state.transactions
+    for(let t in currentTransactions){
+      if(currentTransactions[t].hash == receipt.transactionHash){
+        currentTransactions[t].receipt = receipt
+        currentTransactions[t].time = Date.now()
+      }
+    }
+    this.setState({transactions:currentTransactions})
+  }
+  transactionThen(receipt,callback){
+      /*console.log("~~~~~~~~ .THEN",receipt,callback)
+      let currentTransactions = this.state.transactions
+      for(let t in currentTransactions){
+        if(currentTransactions[t].hash == receipt.transactionHash){
+          currentTransactions[t].finished = Date.now()
+        }
+      }
+      this.setState({transactions:currentTransactions})*/
+  }
+  transactionConfirmation(confirmationNumber,receipt){
+    let currentTransactions = this.state.transactions
+    for(let t in currentTransactions){
+      if(currentTransactions[t].hash == receipt.transactionHash){
+        if(!currentTransactions[t].confirmations) currentTransactions[t].confirmations=1
+        else currentTransactions[t].confirmations++
+      }
+    }
+    this.setState({transactions:currentTransactions})
+  }
+
+
   getGasPrice(){
     axios.get("https://ethgasstation.info/json/ethgasAPI.json")
     .then((response)=>{
@@ -775,13 +838,14 @@ class App extends Component {
             this.setState({currentTx:hash});
             if(!error) this.load()
             this.resetButton("buyship")
-          }).on('error',this.handleError.bind(this)).then((receipt)=>{
+          }).on('error',this.transactionError.bind(this))
+          .on('transactionHash',this.transactionHash.bind(this))
+          .on('receipt',this.transactionReceipt.bind(this))
+          .on('confirmation', this.transactionConfirmation.bind(this))
+          .then((receipt)=>{
             console.log("RESULT:",receipt)
             this.startWaiting(receipt.transactionHash,"inventoryUpdate")
-            if(this.state.modalHeight>=0){
-              //click screen is up for modal
-              this.setState({modalHeight:-600,clickScreenTop:-5000,clickScreenOpacity:0})
-            }
+            this.closeModal()
           })
         }
 
@@ -806,7 +870,10 @@ class App extends Component {
       this.setState({currentTx:hash});
       if(!error) this.load()
       this.resetButton("disembark")
-    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+    }).on('error',this.transactionError.bind(this))
+    .on('transactionHash',this.transactionHash.bind(this))
+    .on('receipt',this.transactionReceipt.bind(this))
+    .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       this.startWaiting(receipt.transactionHash)
       if(this.state.modalHeight>=0){
@@ -837,7 +904,10 @@ class App extends Component {
       if(this.state.modalHeight>=0){
         this.closeModal()
       }
-    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+    }).on('error',this.transactionError.bind(this))
+    .on('transactionHash',this.transactionHash.bind(this))
+    .on('receipt',this.transactionReceipt.bind(this))
+    .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       this.setState({isEmbarking:true})
       this.startWaiting(receipt.transactionHash)
@@ -856,7 +926,10 @@ class App extends Component {
       from: accounts[0],
       gas:180000+(amount*80000),
       gasPrice:Math.round(this.state.GWEI * 1000000000)
-    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+    }).on('error',this.transactionError.bind(this))
+    .on('transactionHash',this.transactionHash.bind(this))
+    .on('receipt',this.transactionReceipt.bind(this))
+    .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
         this.closeModal()
@@ -881,13 +954,17 @@ class App extends Component {
       from: accounts[0],
       gas:120000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
-    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+    }).on('error',this.transactionError.bind(this))
+    .on('transactionHash',this.transactionHash.bind(this))
+    .on('receipt',this.transactionReceipt.bind(this))
+    .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
         this.closeModal()
       }
     })
   }
+
   async extractRawResource(x,y,i,amountOfCopper){
     console.log("Extract raw resource from ",x,y,i)
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
@@ -902,14 +979,19 @@ class App extends Component {
     console.log("Sending "+amountOfCopper+" copper to LandLib with data:"+finalHex)
     contracts["Copper"].methods.transferAndCall(contracts["LandLib"]._address,amountOfCopper,finalHex).send({
       from: accounts[0],
-      gas:160000,
+      gas:200000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
-    }).on('error',this.handleError.bind(this)).then((receipt)=>{
-      console.log("RESULT:",receipt)
-      if(this.state.modalHeight>=0){
+    },(error, transactionHash)=>{
+      console.log(error,transactionHash)
+      if(!error){
         this.closeModal()
       }
-    })
+    }).on('error',this.transactionError.bind(this))
+    .on('transactionHash',this.transactionHash.bind(this))
+    .on('receipt',this.transactionReceipt.bind(this)).
+    on('confirmation', this.transactionConfirmation.bind(this))
+    .then(this.transactionThen.bind(this));
+
   }
   async testMarket(x,y,i){
     console.log("TEST MARKET")
@@ -938,7 +1020,10 @@ class App extends Component {
       from: accounts[0],
       gas:500000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
-    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+    }).on('error',this.transactionError.bind(this))
+    .on('transactionHash',this.transactionHash.bind(this))
+    .on('receipt',this.transactionReceipt.bind(this))
+    .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
         this.closeModal()
@@ -970,7 +1055,10 @@ class App extends Component {
       from: accounts[0],
       gas:500000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
-    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+    }).on('error',this.transactionError.bind(this))
+    .on('transactionHash',this.transactionHash.bind(this))
+    .on('receipt',this.transactionReceipt.bind(this))
+    .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
         this.closeModal()
@@ -985,7 +1073,10 @@ class App extends Component {
       from: accounts[0],
       gas:120000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
-    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+    }).on('error',this.transactionError.bind(this))
+    .on('transactionHash',this.transactionHash.bind(this))
+    .on('receipt',this.transactionReceipt.bind(this))
+    .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
         this.closeModal()
@@ -1001,7 +1092,10 @@ class App extends Component {
       from: accounts[0],
       gas:20000+75000*timberToCollect,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
-    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+    }).on('error',this.transactionError.bind(this))
+    .on('transactionHash',this.transactionHash.bind(this))
+    .on('receipt',this.transactionReceipt.bind(this))
+    .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
         this.closeModal()
@@ -1016,7 +1110,10 @@ class App extends Component {
       from: accounts[0],
       gas:95000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
-    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+    }).on('error',this.transactionError.bind(this))
+    .on('transactionHash',this.transactionHash.bind(this))
+    .on('receipt',this.transactionReceipt.bind(this))
+    .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
         this.closeModal()
@@ -1030,7 +1127,10 @@ class App extends Component {
       from: accounts[0],
       gas:90000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
-    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+    }).on('error',this.transactionError.bind(this))
+    .on('transactionHash',this.transactionHash.bind(this))
+    .on('receipt',this.transactionReceipt.bind(this))
+    .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
         this.closeModal()
@@ -1044,7 +1144,10 @@ class App extends Component {
       from: accounts[0],
       gas:300000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
-    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+    }).on('error',this.transactionError.bind(this))
+    .on('transactionHash',this.transactionHash.bind(this))
+    .on('receipt',this.transactionReceipt.bind(this))
+    .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
         this.closeModal()
@@ -1060,11 +1163,15 @@ class App extends Component {
     let mainX = await contracts["Land"].methods.mainX().call();
     let mainY = await contracts["Land"].methods.mainY().call();
     //buildTile(uint16 _x, uint16 _y,uint8 _tile,uint16 _newTileType)
-    contracts["Land"].methods.buildTile(mainX,mainY,tileIndex,newTileType).send({
+    console.log("BUILDTILE",mainX,mainY,tileIndex,newTileType)
+    contracts["LandLib"].methods.buildTile(mainX,mainY,tileIndex,newTileType).send({
       from: accounts[0],
-      gas:220000,
+      gas:400000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
-    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+    }).on('error',this.transactionError.bind(this))
+    .on('transactionHash',this.transactionHash.bind(this))
+    .on('receipt',this.transactionReceipt.bind(this))
+    .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
         this.closeModal()
@@ -1100,7 +1207,10 @@ class App extends Component {
       from: accounts[0],
       gas:400000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
-    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+    }).on('error',this.transactionError.bind(this))
+    .on('transactionHash',this.transactionHash.bind(this))
+    .on('receipt',this.transactionReceipt.bind(this))
+    .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
         this.closeModal()
@@ -1127,7 +1237,10 @@ class App extends Component {
       from: accounts[0],
       gas:320000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
-    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+    }).on('error',this.transactionError.bind(this))
+    .on('transactionHash',this.transactionHash.bind(this))
+    .on('receipt',this.transactionReceipt.bind(this))
+    .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
         this.closeModal()
@@ -1150,7 +1263,10 @@ class App extends Component {
       from: accounts[0],
       gas:120000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
-    }).on('error',this.handleError.bind(this)).then((receipt)=>{
+    }).on('error',this.transactionError.bind(this))
+    .on('transactionHash',this.transactionHash.bind(this))
+    .on('receipt',this.transactionReceipt.bind(this))
+    .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       if(this.state.modalHeight>=0){
         this.closeModal()
@@ -1174,7 +1290,10 @@ class App extends Component {
         if(!error) this.load()
         if(direction) this.resetButton("saileast")
         else this.resetButton("sailwest")
-      }).on('error',this.handleError.bind(this)).then((receipt)=>{
+      }).on('error',this.transactionError.bind(this))
+      .on('transactionHash',this.transactionHash.bind(this))
+      .on('receipt',this.transactionReceipt.bind(this))
+      .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
         console.log("RESULT:",receipt)
         this.startWaiting(receipt.transactionHash,"shipUpdate")
       })
@@ -1194,7 +1313,10 @@ class App extends Component {
         this.setState({currentTx:hash});
         if(!error) this.load()
         this.resetButton("dropanchor")
-      }).on('error',this.handleError.bind(this)).then((receipt)=>{
+      }).on('error',this.transactionError.bind(this))
+      .on('transactionHash',this.transactionHash.bind(this))
+      .on('receipt',this.transactionReceipt.bind(this))
+      .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
         console.log("RESULT:",receipt)
         this.startWaiting(receipt.transactionHash,"shipUpdate")
       })
@@ -1217,17 +1339,10 @@ class App extends Component {
         this.setState({currentTx:hash});
         if(!error) this.load()
         this.resetButton("castline")
-      }).on('error',this.handleError.bind(this))
-      .on('transactionHash', function(transactionHash){
-        console.log("transactionHash",transactionHash)
-      })
-      .on('receipt', function(receipt){
-        console.log("receipt",receipt) // contains the new contract address
-      })
-      .on('confirmation', function(confirmationNumber, receipt){
-        console.log("confirmation",confirmationNumber,receipt)
-      })
-      .then((receipt)=>{
+      }).on('error',this.transactionError.bind(this))
+      .on('transactionHash',this.transactionHash.bind(this))
+      .on('receipt',this.transactionReceipt.bind(this))
+      .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
         console.log("RESULT:",receipt)
         this.startWaiting(receipt.transactionHash,"shipUpdate")
       })
@@ -1288,7 +1403,10 @@ class App extends Component {
         this.setState({currentTx:hash});
         if(!error) this.load()
         this.resetButton("reelin")
-      }).on('error',this.handleError.bind(this)).then((receipt)=>{
+      }).on('error',this.transactionError.bind(this))
+      .on('transactionHash',this.transactionHash.bind(this))
+      .on('receipt',this.transactionReceipt.bind(this))
+      .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
         if(DEBUG_REEL_IN) console.log("RESULT:",receipt)
         this.startWaiting(receipt.transactionHash,"shipUpdate")
       })
@@ -1301,23 +1419,6 @@ class App extends Component {
         this.setState({metamaskDip:0})
       },550)
     })
-  }
-  handleError(error){
-    console.log("HANDLETHIS:",error)
-    if(error.toString().indexOf("Error: Transaction was not mined")>=0){
-      this.setState({loading:0,waitingForTransaction:false})
-      clearInterval(txWaitIntervals["loader"])
-      clearInterval(txWaitIntervals[this.state.currentTx])
-      this.setState({bottomBar:0,bottomBarMessage:"Warning: your transaction might not get mined, try increasing your #gas  gas price.",bottomBarSize:20})
-      clearTimeout(bottomBarTimeout)
-      bottomBarTimeout = setTimeout(()=>{
-        this.setState({bottomBar:-80})
-      },10000)
-
-      //ACTUALLY LET'S JUST RELOAD AT THIS POINT
-      //THIS NEEDS A LOT MORE WORK
-      window.location.reload(true);
-    }
   }
 
   updateLoader(){
@@ -1570,7 +1671,10 @@ async tileClick(name,index,px) {
     GWEI:this.state.GWEI,
     landX:this.state.landX,
     landY:this.state.landY,
-    handleError:this.handleError.bind(this),
+    transactionHash:this.transactionHash.bind(this),
+    transactionReceipt:this.transactionReceipt.bind(this),
+    transactionConfirmation:this.transactionConfirmation.bind(this),
+    transactionError:this.transactionError.bind(this),
     closeModal:this.closeModal.bind(this),
 
   }
@@ -1715,10 +1819,16 @@ clickScreenClick(event){
   var userAgent = window.navigator.userAgent;
   let clickXRatio = event.clientX/this.state.clickScreenWidth;
   let clickYRatio = event.clientY/this.state.clickScreenHeight;
-  console.log("CLICK SCREEN CLICKED",clickXRatio,clickYRatio,userAgent)
+  console.log("CLICK SCREEN CLICKED",this.state.account,event.clientX,event.clientY,clickXRatio,clickYRatio,userAgent)
 
-  if(clickXRatio>0.73 && clickYRatio<0.15){
-    window.open('https://metamask.io', '_blank');
+  if(!this.state.account){
+    if(clickXRatio>0.73 && clickYRatio<0.15){
+      window.open('https://metamask.io', '_blank');
+    }else if(clickXRatio<0.25 && clickYRatio<0.15){
+      window.open('https://austingriffith.com/portfolio/galleass/', '_blank');
+    }else if(clickXRatio>0.95 && clickYRatio>0.95){
+      window.open('https://join.slack.com/t/galleass/shared_invite/enQtMzg5MDk3ODg4NzQxLTRhYmVlZDZhMjRkZjIzYmFhZDc1MWE5ZGMyNjBiYzg1Y2I3M2FlYjlhMDI4NDkyNTFlZDAwM2QzMzhhMTM3MmQ', '_blank');
+    }
   }
 
   if(this.state.modalHeight>=0){
@@ -2172,6 +2282,8 @@ let clickScreen = (
 return (
   <div className="App">
   <ReactHint events delay={100} />
+
+  <Transactions zoom={this.state.zoom} etherscan={this.state.etherscan} avgBlockTime={this.state.avgBlockTime} transactions={this.state.transactions}/>
 
   {menu}
   {clickScreen}
@@ -2868,12 +2980,44 @@ if(this.state.modalObject.name == "Market"){
 if(OWNS_TILE && this.state.modalObject.name == "Village"){
   let tileIndex = this.state.modalObject.index;
   content.push(
+    <div style={{marginTop:0,cursor:"pointer",position:'absolute',left:22,height:0}}>
+      <img src="buildCastle.png" data-rh-at="right" data-rh={"Use 20 Stone to build a Castle"}
+        onClick={this.buildTile.bind(this,tileIndex,2010)}
+      />
+    </div>
+  )
+  content.push(
     <div>
       <CreateCitizens createCitizen={(food1,food2,food3)=>{
         console.log("CREATE CITIZEN!",food1,food2,food3)
         this.createCitizen(this.state.landX,this.state.landY,this.state.modalObject.index,food1,food2,food3)
       }}/>
     </div>
+  )
+
+}else if(OWNS_TILE && this.state.modalObject.name == "Castle"){
+  let tileIndex = this.state.modalObject.index;
+
+  content.push(
+    <div>
+      <CreateCitizens createCitizen={(food1,food2,food3)=>{
+        console.log("CREATE CITIZEN!",food1,food2,food3)
+        this.createCitizen(this.state.landX,this.state.landY,this.state.modalObject.index,food1,food2,food3)
+      }}/>
+    </div>
+  )
+
+}else if(OWNS_TILE && this.state.modalObject.name == "Mountain Resource"){
+  let citizen = false
+  if(this.state.modalObject.citizens[0]){
+    citizen = this.state.modalObject.citizens[0].id
+  }
+  content.push(
+    <MountainTile
+    modalObject={this.state.modalObject}
+    extractRawResource={this.extractRawResource.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,4)}
+  //  buildTimberCamp={this.buildTimberCamp.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,citizen)}
+    />
   )
 }else if(OWNS_TILE && this.state.modalObject.name == "Forest Resource"){
   let citizen = false

@@ -8,8 +8,10 @@ class Land extends Component {
     }
   }
   async componentDidMount() {
-    const accounts = await promisify(cb => this.props.web3.eth.getAccounts(cb));
-    this.setState({account:accounts[0]})
+    if(this.props.web3 && this.props.web3.eth){
+      const accounts = await promisify(cb => this.props.web3.eth.getAccounts(cb));
+      this.setState({account:accounts[0]})
+    }
   }
   edgeTile(location,direction){
     //if(direction=="left") location-=114;
@@ -481,6 +483,14 @@ class Land extends Component {
               tiles.push(
                 this.wrapLandTileWithLink("Village",islands[i][t].index,currentPixelLocation,
                   this.villageTile(currentPixelLocation,islands[i][t].owner,buttons)
+                )
+              )
+              currentPixelLocation+=120
+            }else if(islands[i][t].tile==2010){
+              //console.log("VILLAGE:",islands[i][t])
+              tiles.push(
+                this.wrapLandTileWithLink("Castle",islands[i][t].index,currentPixelLocation,
+                  this.castleTile(currentPixelLocation,islands[i][t].owner,buttons)
                 )
               )
               currentPixelLocation+=120

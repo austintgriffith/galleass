@@ -15,7 +15,7 @@ class ResourceTable extends Component {
     this.setState({blockHashes:blockHashes})
   }
   render(){
-    console.log(this.props)
+    //console.log(this.props)
 
     let blocks = ""
     if(this.state && this.state.blockHashes){

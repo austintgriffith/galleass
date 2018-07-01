@@ -973,6 +973,7 @@ module.exports = {
         loadAbi("Harbor")
         loadAbi("Dogger")
         loadAbi("Timber")
+        loadAbi("Stone")
         loadAbi("Greens")
         loadAbi("Catfish")
         loadAbi("Pinner")
@@ -986,6 +987,7 @@ module.exports = {
         loadAbi("Land")
         loadAbi("Ipfs")
         loadAbi("Village")
+        loadAbi("Castle")
         loadAbi("CitizensLib")
         loadAbi("Citizens")
         loadAbi("TimberCamp")
@@ -1017,6 +1019,7 @@ module.exports = {
         await clevis("sendTo","0.1","0","0xF11b9dCa0972e95b292891b027F5d8102e2cB8a5")
 
         module.exports.mintTo("Redbass",0,"0x2a906694d15df38f59e76ed3a5735f8aabcce9cb",5)
+        module.exports.mintTo("Stone",0,"0x2a906694d15df38f59e76ed3a5735f8aabcce9cb",50)
         module.exports.mintTo("Timber",0,"0x2a906694d15df38f59e76ed3a5735f8aabcce9cb",50)
         module.exports.mintTo("Copper",0,"0x2a906694d15df38f59e76ed3a5735f8aabcce9cb",10000)
         module.exports.mintTo("Fillet",0,"0x2a906694d15df38f59e76ed3a5735f8aabcce9cb",50)

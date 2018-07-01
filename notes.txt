@@ -33,13 +33,13 @@ Citizen status should probably be uint16
 
 ### Before Staging
 ```
-It can take a while when you click on a building for the modal to throw... may pop something above the building up that looks like a loader
-StandardToken inventory should be based on a per-tile basis... right now it show the inv for the contract.. it needs to also be withdrawal from the landowner
+x - It can take a while when you click on a building for the modal to throw... may pop something above the building up that looks like a loader
+x - StandardToken inventory should be based on a per-tile basis... right now it show the inv for the contract.. it needs to also be withdrawal from the landowner
     (When you send a token to a contract address it somehow needs to know which one (677 data?))
-Harbor, Sea (Bay), and [x]FishMonger need to be moved over to landOwner system instead of contract owner
+[x]Harbor, Sea (Bay), and [x]FishMonger need to be moved over to landOwner system instead of contract owner
 
 More tokens in the Market by default
-Maybe grass and mountain tiles could also produce resources like the timbercamp?
+[x]Maybe grass and mountain tiles could also produce resources like the timbercamp?
 The Sea should become The Bay and a new "Sea" is more about moving from island to island (Bay is 1 dogger per address, but Sea will track by Galley address)
 The inventory should have an alpha background and should be above the ship sail buttons
 The left side of the fishmonger and harbor don't line up right
@@ -60,8 +60,13 @@ fully decentralized means each iteration lives forever on ipfs (no backend serve
 main contract never change and if it does you use descendant system
 from there you have auth system getContract and hasPermission
 which brings up all the different ways to move tokens... authorize and then transfer (two tx, harbor does it to build ships), 667 transfer and call (parse data), give contract permission to transfer (soft/hard assets)
+  -- give examples of different ways to move... for instance, building a villages, the Landlib just *takes* 6 timber from you.. this might be frowned upon by contract auditors or players
+  -- this could easily be replace by a 677 method
 contract "library" so the contract only holds who owns what and all the business logic is in an upgradable contract (until production flag is set)
 the whole event triggered paradigm is really efficient... like how the clouds or resources or sailing works
 multiplayer so massive it comes down to what can be displayed ... with the ethereum blockchain as the only backend
 I'm building it with the assumption that tranastions will be 100x cheaper or it will run on a side chain or something... there is no way you would want to pay full mainnet costs
+citizens have different characteristics based on what you feed them, different genetics are random for now but will be based on bloodlines
+lots of (not)fun web2.0 problems like mobile responsiveness/service worker issues along with awesome web3.0 blockchain-as-backend leads to other issues like slow ui
+gitcoin and cent.co and how you can incentivize developers to help out .. build a fishing bot.. avsa's tweet about what a good game should have
 ```

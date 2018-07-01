@@ -117,6 +117,10 @@ contract Land is Galleasset {
   }
   event BuyTile(uint16 _x,uint16 _y,uint8 _tile,address _owner,uint _price,address _contract);
 
+/*
+
+  MOVED TO LANDLIB
+  
   function buildTile(uint16 _x, uint16 _y,uint8 _tile,uint16 _newTileType) public isGalleasset("Land") returns (bool) {
     require(msg.sender==ownerAt[_x][_y][_tile]);
     LandLib landLib = LandLib(getContract("LandLib"));
@@ -138,6 +142,7 @@ contract Land is Galleasset {
       return false;
     }
   }
+*/
 
   //erc677 receiver
   function onTokenTransfer(address _sender, uint _amount, bytes _data) public isGalleasset("Land") returns (bool) {

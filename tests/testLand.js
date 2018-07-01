@@ -12,7 +12,12 @@ galleass.deploy("LandLib",0)
 galleass.setContract("LandLib",0)
 galleass.setPermission("LandLib",0,"useCitizens","true")
 galleass.setPermission("LandLib",0,"mintTimber","true")
+galleass.setPermission("LandLib",0,"mintStone","true")
 galleass.setPermission("LandLib",0,"mintGreens","true")
+galleass.setPermission("LandLib",0,"transferStone","true")
+galleass.setPermission("LandLib",0,"transferGreens","true")
+galleass.setPermission("LandLib",0,"transferTimber","true")
+
 //----------------
 // galleass.compile("Citizens")
 // galleass.deploy("Citizens",0)

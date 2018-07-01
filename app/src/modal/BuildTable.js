@@ -5,7 +5,7 @@ class BuildTable extends Component {
   render(){
     return (
       <div onClick={this.props.clickFn.bind(this,this.props.tileIndex,2000)} style={{cursor:"pointer"}}>
-        <img src="/buyvillage.png" />
+        <img src="buyvillage.png" />
       </div>
     )
   }

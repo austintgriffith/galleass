@@ -15,12 +15,15 @@ galleass.deploy("LandLib",0)
 galleass.setContract("LandLib",0)
 galleass.setPermission("LandLib",0,"useCitizens","true")
 galleass.setPermission("LandLib",0,"mintTimber","true")
+galleass.setPermission("LandLib",0,"mintStone","true")
 galleass.setPermission("LandLib",0,"mintGreens","true")
+galleass.setPermission("LandLib",0,"transferStone","true")
+galleass.setPermission("LandLib",0,"transferGreens","true")
+galleass.setPermission("LandLib",0,"transferTimber","true")
 
 galleass.deploy("Land",0)
 galleass.setContract("Land",0)
-galleass.setPermission("Land",0,"transferTimber","true")
-galleass.setPermission("Land",0,"transferGreens","true")
+
 
 galleass.deploy("Dogger",0)
 galleass.setContract("Dogger",0)
@@ -31,6 +34,9 @@ galleass.setContract("Timber",0)
 galleass.deploy("TimberCamp",0)
 galleass.setContract("TimberCamp",0)
 galleass.setPermission("TimberCamp",0,"mintTimber","true")
+
+galleass.deploy("Stone",0)
+galleass.setContract("Stone",0)
 
 galleass.deploy("Greens",0)
 galleass.setContract("Greens",0)
@@ -81,6 +87,9 @@ galleass.deploy("Village",0)
 galleass.setContract("Village",0)
 galleass.setPermission("Village",0,"createCitizens","true")
 
+galleass.deploy("Castle",0)
+galleass.setContract("Castle",0)
+galleass.setPermission("Castle",0,"createCitizens","true")
 
 galleass.deploy("Citizens",0)
 galleass.setContract("Citizens",0)

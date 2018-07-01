@@ -15,7 +15,10 @@ class Market extends Component {
       from: accounts[0],
       gas:250000,
       gasPrice:Math.round(GWEI * 1000000000)
-    }).on('error',this.props.handleError).then((receipt)=>{
+    }).on('error',this.props.transactionError)
+    .on('transactionHash',this.props.transactionHash)
+    .on('receipt',this.props.transactionReceipt)
+    .on('confirmation', this.props.transactionConfirmation).then((receipt)=>{
       console.log("RESULT:",receipt)
       this.props.closeModal()
     })
@@ -30,7 +33,10 @@ class Market extends Component {
       from: accounts[0],
       gas:250000,
       gasPrice:Math.round(GWEI * 1000000000)
-    }).on('error',this.props.handleError).then((receipt)=>{
+    }).on('error',this.props.transactionError)
+    .on('transactionHash',this.props.transactionHash)
+    .on('receipt',this.props.transactionReceipt)
+    .on('confirmation', this.props.transactionConfirmation).then((receipt)=>{
       console.log("RESULT:",receipt)
       this.props.closeModal()
     })
@@ -61,7 +67,10 @@ class Market extends Component {
       from: accounts[0],
       gas:500000,
       gasPrice:Math.round(GWEI * 1000000000)
-    }).on('error',this.props.handleError).then((receipt)=>{
+    }).on('error',this.props.transactionError)
+    .on('transactionHash',this.props.transactionHash)
+    .on('receipt',this.props.transactionReceipt)
+    .on('confirmation', this.props.transactionConfirmation).then((receipt)=>{
       console.log("RESULT:",receipt)
       this.props.closeModal()
     })
@@ -84,7 +93,10 @@ class Market extends Component {
       from: accounts[0],
       gas:500000,
       gasPrice:Math.round(GWEI * 1000000000)
-    }).on('error',this.props.handleError).then((receipt)=>{
+    }).on('error',this.props.transactionError)
+    .on('transactionHash',this.props.transactionHash)
+    .on('receipt',this.props.transactionReceipt)
+    .on('confirmation', this.props.transactionConfirmation).then((receipt)=>{
       console.log("RESULT:",receipt)
       this.props.closeModal()
     })
