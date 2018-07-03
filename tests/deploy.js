@@ -6,10 +6,13 @@ galleass.deploy("Galleass",0)
 galleass.deploy("Experience",0)
 galleass.setContract("Experience",0)
 
-galleass.deploy("Sea",0)
-galleass.setContract("Sea",0)
-galleass.setPermission("Sea",0,"transferDogger","true")
-galleass.setPermission("Sea",0,"updateExperience","true")
+galleass.deploy("Bay",0)
+galleass.setContract("Bay",0)
+galleass.setPermission("Bay",0,"transferDogger","true")
+galleass.setPermission("Bay",0,"updateExperience","true")
+
+galleass.deploy("Sky",0)
+galleass.setContract("Sky",0)
 
 galleass.deploy("LandLib",0)
 galleass.setContract("LandLib",0)

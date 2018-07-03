@@ -402,8 +402,9 @@ module.exports = {
     describe('#allowSpecies() '+contract.magenta, function() {
       it('should allow species '+contract.magenta, async function() {
         this.timeout(120000)
+        let mainLand = await getMainLand();
         let contractAddress = localContractAddress(contract);
-        const result = await clevis("contract","allowSpecies","Sea",accountindex,contractAddress)
+        const result = await clevis("contract","allowSpecies","Bay",accountindex,mainLand[0],mainLand[1],contractAddress)
         console.log(tab,result.transactionHash.gray,contractAddress.blue,(""+result.gasUsed).yellow)
         assert(result.transactionHash,"No transaction hash!?")
       });
@@ -413,8 +414,10 @@ module.exports = {
     describe('#stock() '+species.magenta, function() {
       it('should stock '+amount+' '+species.magenta+' as account '+accountindex, async function() {
         this.timeout(120000)
+        let mainLand = await getMainLand();
         let speciesAddress = localContractAddress(species);
-        const result = await clevis("contract","stock","Sea",accountindex,speciesAddress,amount)
+        console.log(mainLand[0],mainLand[1],speciesAddress,amount)
+        const result = await clevis("contract","stock","Bay",accountindex,mainLand[0],mainLand[1],speciesAddress,amount)
         console.log(tab,result.transactionHash.gray,speciesAddress.blue,(""+result.gasUsed).yellow)
         assert(result.transactionHash,"No transaction hash!?")
         //console.log("RESULT:",result)
@@ -429,7 +432,7 @@ module.exports = {
         let speciesAddress = localContractAddress(species);
         let error = ""
         try{
-          const result = await clevis("contract","stock","Sea",accountindex,speciesAddress,amount)
+          const result = await clevis("contract","stock","Bay",accountindex,speciesAddress,amount)
           assert(!result.status,"Transaction status is 1, should be 0")
           if(result.status) console.log(tab,"WARNING".red,"WAS ABLE TO STOCK!".yellow)
         }catch(e){
@@ -444,9 +447,10 @@ module.exports = {
     describe('#cloud() ', function() {
       it('should add cloud', async function() {
         this.timeout(120000)
-        let width = await clevis("contract","width","Sea")
+        let mainLand = await getMainLand();
+        let width = await clevis("contract","width","Bay")
         let location = rand(0,width);
-        let result = await clevis("contract","addCloud","Sea",accountindex,location,speed,image)
+        let result = await clevis("contract","addCloud","Sky",accountindex,mainLand[0],mainLand[1],location,speed,image)
         console.log(tab,(""+location).white,(""+speed).gray,result.transactionHash.gray,(""+result.gasUsed).yellow)
       });
     });
@@ -455,10 +459,11 @@ module.exports = {
     describe('#embark() ', function() {
       it('should embark (transfer first ship to sea)', async function() {
         this.timeout(120000)
+        let mainLand = await getMainLand();
         const accounts = await clevis("accounts")
         let tokens = await clevis("contract","tokensOfOwner",model,accounts[accountindex])
         console.log(tab,"Embarking with ship id "+(""+tokens[0]).magenta+" (model "+model+")");
-        let result = await clevis("contract","embark","Sea",accountindex,tokens[0])
+        let result = await clevis("contract","embark","Bay",accountindex,mainLand[0],mainLand[1],tokens[0])
         console.log(tab,result.transactionHash.gray,(""+result.gasUsed).yellow)
       });
     });
@@ -468,20 +473,24 @@ module.exports = {
       it('should find a fish', async function() {
         this.timeout(120000)
 
+        let mainLand = await getMainLand();
+
         let accounts = await clevis("accounts")
         let myAddress = accounts[accountindex];
-        let myShip = await clevis("contract","getShip","Sea",myAddress);
+        let myShip = await clevis("contract","getShip","Bay",mainLand[0],mainLand[1],myAddress);
 
         console.log("\t\tFinding a fish for "+myAddress.magenta+" @ "+myShip.location+"...");
 
-        let result = await clevis("contract","eventFish","Sea")
+        let result = await clevis("contract","eventFish","Bay")
         let fish = [];
         for(let f in result){
-          let id = result[f].returnValues.id;
-          let timestamp = result[f].returnValues.timestamp;
-          let species = result[f].returnValues.species;
-          if( !fish[id] || fish[id].timestamp < timestamp){
-            fish[id] = {timestamp:timestamp,species:species}
+          if(result[f].returnValues.x==mainLand[0]&&result[f].returnValues.y==mainLand[1]){
+            let id = result[f].returnValues.id;
+            let timestamp = result[f].returnValues.timestamp;
+            let species = result[f].returnValues.species;
+            if( !fish[id] || fish[id].timestamp < timestamp){
+              fish[id] = {timestamp:timestamp,species:species}
+            }
           }
         }
 
@@ -491,7 +500,7 @@ module.exports = {
         for(let id in fish){
           let species = fish[id].species;
           if("0x0000000000000000000000000000000000000000"!=species){
-            let location = await clevis("contract","fishLocation","Sea",id);
+            let location = await clevis("contract","fishLocation","Bay",id);
             console.log(id.white,species.gray,location)
             let thisDistance = Math.abs( myShip.location - location[0])
             if( thisDistance < bestDistance){
@@ -503,7 +512,7 @@ module.exports = {
 
         assert(bestFish!=false,"NO FISH TO FIND!?")
 
-        let location = await clevis("contract","fishLocation","Sea",bestFish)
+        let location = await clevis("contract","fishLocation","Bay",bestFish)
 
         TARGET_LOCATION = location[0];
         TARGET_FISH = bestFish
@@ -518,15 +527,17 @@ module.exports = {
         this.timeout(120000)
         assert(TARGET_LOCATION>0,"We need to findFish before this function runs")
 
+        let mainLand = await getMainLand();
+
         let accounts = await clevis("accounts")
         let myAddress = accounts[accountindex];
-        let myShip = await clevis("contract","getShip","Sea",myAddress);
+        let myShip = await clevis("contract","getShip","Bay",mainLand[0],mainLand[1],myAddress);
 
         let direction = myShip.location < TARGET_LOCATION
 
         console.log("\t\t Heading "+direction+" because I'm at "+myShip.location+" and I need to get to "+TARGET_LOCATION)
 
-        let result = await clevis("contract","setSail","Sea",accountindex,""+direction)
+        let result = await clevis("contract","setSail","Bay",accountindex,mainLand[0],mainLand[1],""+direction)
         //console.log(result)
         console.log(tab,result.transactionHash.gray,(""+result.gasUsed).yellow)
         assert(result.transactionHash,"No transaction hash!?")
@@ -539,24 +550,26 @@ module.exports = {
       it('should add a new block to the chain', async function() {
         this.timeout(600000)
 
+        let mainLand = await getMainLand();
+
         let accounts = await clevis("accounts")
         let myAddress = accounts[accountindex];
         //console.log("My address:",myAddress)
-        let myShip = await clevis("contract","getShip","Sea",myAddress);
+        let myShip = await clevis("contract","getShip","Bay",mainLand[0],mainLand[1],myAddress);
         //console.log(myShip)
         console.log("\t\t Heading "+myShip.direction+" because ("+myAddress+") is at "+myShip.location+" and I need to get to "+TARGET_LOCATION)
 
         if(!myShip.direction){
           while( myShip.location > TARGET_LOCATION){
-            let result = await clevis("send","0.1","1","2")
+            let result = await clevis("send","0.0001","1","2")
             console.log(tab,result.transactionHash.gray,(""+result.gasUsed).yellow)
-            myShip = await clevis("contract","getShip","Sea",myAddress);
+            myShip = await clevis("contract","getShip","Bay",mainLand[0],mainLand[1],myAddress);
           }
         }else{
           while( myShip.location < TARGET_LOCATION){
-            let result = await clevis("send","0.1","1","2")
+            let result = await clevis("send","0.0001","1","2")
             console.log(tab,result.transactionHash.gray,(""+result.gasUsed).yellow)
-            myShip = await clevis("contract","getShip","Sea",myAddress);
+            myShip = await clevis("contract","getShip","Bay",mainLand[0],mainLand[1],myAddress);
           }
         }
       });
@@ -566,7 +579,9 @@ module.exports = {
     describe('#dropAnchor() ', function() {
       it('should dropAnchor', async function() {
         this.timeout(120000)
-        let result = await clevis("contract","dropAnchor","Sea",accountindex)
+        let mainLand = await getMainLand();
+
+        let result = await clevis("contract","dropAnchor","Bay",accountindex,mainLand[0],mainLand[1])
         console.log(tab,result.transactionHash.gray,(""+result.gasUsed).yellow)
       })
     })
@@ -575,12 +590,13 @@ module.exports = {
     describe('#castLine() ', function() {
       it('should castLine with random bait', async function() {
         this.timeout(120000)
+        let mainLand = await getMainLand();
         let web3 = new Web3()
         BAIT = web3.utils.sha3(Math.random()+Date.now()+"LIVEBAIT!");
         console.log(tab,"Using Bait:",BAIT.blue)
         let baitHash = web3.utils.sha3(BAIT);
         console.log(tab,"Bait hash:",baitHash.magenta)
-        let result = await clevis("contract","castLine","Sea",accountindex,baitHash)
+        let result = await clevis("contract","castLine","Bay",accountindex,mainLand[0],mainLand[1],baitHash)
         console.log(tab,result.transactionHash.gray,(""+result.gasUsed).yellow)
       })
     })
@@ -590,11 +606,11 @@ module.exports = {
       it('should reelIn TARGET_FISH', async function() {
         this.timeout(120000)
         //run one transaction to make sure it's the next block
-        let result = await clevis("send","0.1","1","2")
+        let result = await clevis("send","0.001","1","2")
         console.log(tab,result.transactionHash.gray,(""+result.gasUsed).yellow)
-
+        let mainLand = await getMainLand();
         console.log(tab,"Reeling in fish: ",TARGET_FISH.magenta)
-        result = await clevis("contract","reelIn","Sea",accountindex,TARGET_FISH,BAIT)
+        result = await clevis("contract","reelIn","Bay",accountindex,mainLand[0],mainLand[1],TARGET_FISH,BAIT)
         console.log(tab,result.transactionHash.gray,(""+result.gasUsed).yellow)
       })
     })
@@ -969,7 +985,8 @@ module.exports = {
 
         loadAbi("Galleass")
         loadAbi("Experience")
-        loadAbi("Sea")
+        loadAbi("Bay")
+        loadAbi("Sky")
         loadAbi("Harbor")
         loadAbi("Dogger")
         loadAbi("Timber")
@@ -1038,7 +1055,7 @@ module.exports = {
         console.log(tab,"Galleass contract address is "+(galleassAddress+"").magenta)
 
         let FishmongerAddress = await checkContractDeployment("Fishmonger")
-        let SeaAddress = await checkContractDeployment("Sea")
+        let SeaAddress = await checkContractDeployment("Bay")
 
         let PinnerAddress = await checkContractDeployment("Pinner")
         await checkFishPrice("Pinner",PinnerAddress)

@@ -69,4 +69,5 @@ I'm building it with the assumption that tranastions will be 100x cheaper or it 
 citizens have different characteristics based on what you feed them, different genetics are random for now but will be based on bloodlines
 lots of (not)fun web2.0 problems like mobile responsiveness/service worker issues along with awesome web3.0 blockchain-as-backend leads to other issues like slow ui
 gitcoin and cent.co and how you can incentivize developers to help out .. build a fishing bot.. avsa's tweet about what a good game should have
+Sky contract is stateless but allow for animation after a single event is triggered (cheap af to 'paint' clouds on the 'chain)
 ```

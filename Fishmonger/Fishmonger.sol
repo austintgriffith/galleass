@@ -56,10 +56,7 @@ contract Fishmonger is StandardTile {
     StandardToken fishContract = StandardToken(_species);
     require( fishContract.galleassTransferFrom(msg.sender,address(this),_amount) );
     //RESTOCK THE SEA WITH THE ORIGINAL FISH (not zero sum obviously because fillets will also be produced, the sea continues to produce fish to make fillets forever)
-    address seaContractAddress = getContract("Sea");
-    Sea seaContract = Sea(seaContractAddress);
-    require( fishContract.approve(seaContractAddress,_amount) );
-    require( seaContract.stock(_species,_amount) ); ////////            <--------------------  this will need x y tile too
+    _restockBay(fishContract,_x,_y,_species,_amount);
     //CONVERT THE FISH TO FILLETS (THE fishmonger then sells fillets for citizen food in later levels)
     StandardToken filletContract = StandardToken(getContract("Fillet"));
     require( filletContract.galleassMint(address(this),_amount*FILLETSPERFISH) ); //mint 1 fillet for each fish caught
@@ -76,6 +73,13 @@ contract Fishmonger is StandardTile {
 
     _updateExperience(msg.sender);
     return true;
+  }
+
+  function _restockBay(StandardToken fishContract,uint16 _x,uint16 _y,address _species,uint256 _amount) internal {
+    address bayContractAddress = getContract("Bay");
+    Bay bayContract = Bay(bayContractAddress);
+    require( fishContract.approve(bayContractAddress,_amount) );
+    require( bayContract.stock(_x,_y,_species,_amount) );
   }
 
   function onTokenTransfer(address _sender, uint _amount, bytes _data) public isGalleasset("Fishmonger") returns (bool){
@@ -127,8 +131,8 @@ contract Fishmonger is StandardTile {
 
 }
 
-  contract Sea{
-    function stock(address _species,uint256 _amount) public returns (bool) { }
+  contract Bay{
+    function stock(uint16 _x,uint16 _y,address _species,uint256 _amount) public returns (bool) { }
   }
 
   contract StandardToken {

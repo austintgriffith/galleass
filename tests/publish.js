@@ -12,7 +12,8 @@ let etherscan = "http://ropsten.etherscan.io"
 let loadContracts = [
   "Galleass",
   "Land",
-  "Sea",
+  "Bay",
+  "Sky",
   "Harbor",
   "Fishmonger",
   "Market",

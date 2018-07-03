@@ -1,17 +1,6 @@
 const galleass = require("./galleass.js")
 
-
-//galleass.compile("Sea")
-
-
-// galleass.deploy("Sea",0)
-// galleass.setContract("Sea",0)
-
-
-// galleass.buyShip(2,0)
-//
-
-galleass.approveFirst("Dogger",2,"Sea")
+galleass.approveFirst("Dogger",2,"Bay")
 galleass.embarkWithFirst(2,"Dogger")
 
 

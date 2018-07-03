@@ -78,7 +78,8 @@ let web3;
 let veryFirstLoad = true;
 
 let loadContracts = [
-  "Sea",
+  "Bay",
+  "Sky",
   "Harbor",
   "Dogger",
   "Timber",
@@ -361,10 +362,10 @@ class App extends Component {
     //this.scrollToMyShip()
   }
   async scrollToMyShip(){
-    if(contracts["Sea"]){
+    if(contracts["Bay"]){
       let myLocation = 2000;
       const accounts = await promisify(cb => web3.eth.getAccounts(cb));
-      let getMyShip = await contracts["Sea"].methods.getShip(accounts[0]).call();
+      let getMyShip = await contracts["Bay"].methods.getShip(accounts[0]).call();
       if(getMyShip&&getMyShip.floating){
         console.log("======Scrolling to MY myLocation",getMyShip.location)
         myLocation = 4000 * getMyShip.location / 65535
@@ -490,7 +491,9 @@ class App extends Component {
     let storedFish = []
     if(from<1) from=1
     if(DEBUG_SYNCFISH) console.log("Sync Fish Chunk: "+from+" to "+to)
-    let catchEvent = await contracts["Sea"].getPastEvents('Catch', {
+    let filter = {x:this.state.landX,y:this.state.landY}
+    let catchEvent = await contracts["Bay"].getPastEvents('Catch', {
+      filter: filter,
       fromBlock: from-1,
       toBlock: to
     })
@@ -505,7 +508,8 @@ class App extends Component {
       }
     }
     if(DEBUG_SYNCFISH) console.log("Sync Fish Chunk: "+from+" to "+to)
-    let fish = await contracts["Sea"].getPastEvents('Fish', {
+    let fish = await contracts["Bay"].getPastEvents('Fish', {
+      filter: filter,
       fromBlock: from-1,
       toBlock: to
     })
@@ -517,7 +521,7 @@ class App extends Component {
       let image = fish[f].returnValues.image
       if(!storedFish[id] || storedFish[id].timestamp < timestamp){
         if(DEBUG_SYNCFISH) console.log(id)
-        let result = await contracts["Sea"].methods.fishLocation(id).call()
+        let result = await contracts["Bay"].methods.fishLocation(id).call()
         storedFish[id]={timestamp:timestamp,species:species,x:result[0],y:result[1],dead:false,image:web3.utils.hexToUtf8(image)};
       }
     }
@@ -573,7 +577,10 @@ class App extends Component {
     let DEBUG_SYNCSHIPS = false;
     if(DEBUG_SYNCSHIPS) console.log("Sync ships")
     if(from<1) from=1
-    let ships = await contracts["Sea"].getPastEvents('ShipUpdate', {
+    let filter = {x:this.state.landX,y:this.state.landY}
+    //console.log("doSyncShips filter:",filter)
+    let ships = await contracts["Bay"].getPastEvents('ShipUpdate', {
+      filter: filter,
       fromBlock: from,
       toBlock: to
     })
@@ -609,7 +616,8 @@ class App extends Component {
     const DEBUG_SYNCCLOUDS = false;
     let storedClouds = []
     if(from<1) from=1
-    let clouds = await contracts["Sea"].getPastEvents('Cloud', {fromBlock: from,toBlock: to})
+    let filter = {x:this.state.landX,y:this.state.landY}
+    let clouds = await contracts["Sky"].getPastEvents('Cloud', {filter: filter,fromBlock: from,toBlock: to})
     for(let c in clouds){
       if(!storedClouds[clouds[c].transactionHash]){
         storedClouds[clouds[c].transactionHash] = clouds[c].returnValues
@@ -675,10 +683,14 @@ class App extends Component {
   async syncMyShip() {
     const DEBUG_SYNCMYSHIP = false;
     if(DEBUG_SYNCMYSHIP) console.log("SYNCING MY SHIP")
+    if(!this.state.landX||!this.state.landY){
+      console.log("WAITING FOR LAND X,Y")
+      return;
+    }
     let myship = this.state.ship;
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
     if(DEBUG_SYNCMYSHIP) console.log("Getting ship for account "+accounts[0])
-    let getMyShip = await contracts["Sea"].methods.getShip(accounts[0]).call();
+    let getMyShip = await contracts["Bay"].methods.getShip(this.state.landX,this.state.landY,accounts[0]).call();
     if(DEBUG_SYNCMYSHIP) console.log("COMPARE",this.state.ship,getMyShip)
     //if(JSON.stringify(this.state.ship)!=JSON.stringify(getMyShip)) {
     if(this.state.ship) getMyShip.inRangeToDisembark = this.state.ship.inRangeToDisembark
@@ -706,7 +718,7 @@ class App extends Component {
       }
       //console.log("SHIP UPDATE ",getMyShip)
       try{
-        getMyShip.inRangeToDisembark = await contracts["Sea"].methods.inRangeToDisembark(accounts[0]).call();
+        getMyShip.inRangeToDisembark = await contracts["Bay"].methods.inRangeToDisembark(this.state.landX,this.state.landY,accounts[0]).call();
         //console.log("getMyShip.inRangeToDisembark",getMyShip.inRangeToDisembark)
       }catch(e){console.log("ERROR checking inRangeToDisembark",e)}
       this.setState({/*zoom:HARDCODEDSCALE,*/loading:0,ship:getMyShip,waitingForShipUpdate:false,myLocation:myLocation},()=>{
@@ -861,7 +873,7 @@ class App extends Component {
 
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
 
-    contracts["Sea"].methods.disembark(this.state.ships[this.state.account].id).send({
+    contracts["Bay"].methods.disembark(this.state.landX,this.state.landY,this.state.ships[this.state.account].id).send({
       from: accounts[0],
       gas:200000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
@@ -892,7 +904,7 @@ class App extends Component {
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
     //console.log(accounts)
     //console.log("methods.embark(",this.state.inventoryDetail['Ships'][0])
-    contracts["Sea"].methods.embark(shipId).send({
+    contracts["Bay"].methods.embark(this.state.landX,this.state.landY,shipId).send({
       from: accounts[0],
       gas:200000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
@@ -1279,10 +1291,10 @@ class App extends Component {
     if(direction) this.bumpButton("saileast")
     else this.bumpButton("sailwest")
     window.web3.eth.getAccounts((err,_accounts)=>{
-      console.log(_accounts)
-      contracts["Sea"].methods.setSail(direction).send({
+      console.log(this.state.landX,this.state.landY,direction,_accounts[0])
+      contracts["Bay"].methods.setSail(this.state.landX,this.state.landY,direction).send({
         from: _accounts[0],
-        gas:40000,
+        gas:50000,
         gasPrice:Math.round(this.state.GWEI * 1000000000)
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
@@ -1304,9 +1316,9 @@ class App extends Component {
     this.bumpButton("dropanchor")
     window.web3.eth.getAccounts((err,_accounts)=>{
       console.log(_accounts)
-      contracts["Sea"].methods.dropAnchor().send({
+      contracts["Bay"].methods.dropAnchor(this.state.landX,this.state.landY).send({
         from: _accounts[0],
-        gas:40000,
+        gas:50000,
         gasPrice:Math.round(this.state.GWEI * 1000000000)
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
@@ -1330,9 +1342,9 @@ class App extends Component {
       console.log(bait)
       let baitHash = web3.utils.sha3(bait)
       this.setState({bait:bait,baitHash:baitHash})
-      contracts["Sea"].methods.castLine(baitHash).send({
+      contracts["Bay"].methods.castLine(this.state.landX,this.state.landY,baitHash).send({
         from: _accounts[0],
-        gas:60000,
+        gas:70000,
         gasPrice:Math.round(this.state.GWEI * 1000000000)
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
@@ -1394,9 +1406,9 @@ class App extends Component {
 
       if(DEBUG_REEL_IN) console.log("FINAL ID BAIT & ACCOUNT",bestId,baitToUse,_accounts[0])
 
-      contracts["Sea"].methods.reelIn(bestId,baitToUse).send({
+      contracts["Bay"].methods.reelIn(this.state.landX,this.state.landY,bestId,baitToUse).send({
         from: _accounts[0],
-        gas:200000,
+        gas:250000,
         gasPrice:Math.round(this.state.GWEI * 1000000000)
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
@@ -2175,7 +2187,7 @@ let inventory = (
   </div>
   </div>
 )
-let sea = (
+let bay = (
   <div style={{position:"absolute",left:0,top:0,width:width,height:height,overflow:'hidden'}} >
   <div style={{position:'absolute',left:0,top:0,opacity:1,backgroundImage:"url('sky.jpg')",backgroundRepeat:'no-repeat',height:horizon,width:width}}></div>
   <Clouds web3={web3} clouds={this.state.clouds} horizon={horizon} width={width} blockNumber={this.state.blockNumber}/>
@@ -2291,7 +2303,7 @@ return (
 
 
 
-  {sea}
+  {bay}
   {land}
 
 
