@@ -104,3 +104,6 @@ galleass.setPermission("CitizensLib",0,"transferFood","true")
 galleass.deploy("Market",0)
 galleass.setContract("Market",0)
 galleass.setPermission("Market",0,"transferTimber","true")
+
+galleass.deploy("Sea",0)
+galleass.setContract("Sea",0)
