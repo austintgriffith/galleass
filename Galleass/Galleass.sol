@@ -21,12 +21,15 @@ pragma solidity ^0.4.18;
 */
 
 
+
 import 'zeppelin-solidity/contracts/ownership/Contactable.sol';
-import 'zeppelin-solidity/contracts/ownership/HasNoEther.sol';
 import 'Staged.sol';
 import 'Predecessor.sol';
 
-contract Galleass is Staged, HasNoEther, Contactable, Predecessor{
+contract Galleass is Staged, Contactable, Predecessor{
+
+  string public constant name = "Galleass";
+  string public constant author = "Austin Thomas Griffith austin@concurrence.io";
 
   event UpgradeContract(address _contractAddress,address _descendant,address _whoDid);
   event SetContract(bytes32 _name,address _contractAddress,address _whoDid);
@@ -71,8 +74,23 @@ contract Galleass is Staged, HasNoEther, Contactable, Predecessor{
     }
   }
 
+  function withdraw(uint256 _amount) public onlyOwner returns (bool) {
+    require(address(this).balance >= _amount);
+    assert(owner.send(_amount));
+    return true;
+  }
+  function withdrawToken(address _token,uint256 _amount) public onlyOwner returns (bool) {
+    StandardTokenInterface token = StandardTokenInterface(_token);
+    token.transfer(msg.sender,_amount);
+    return true;
+  }
+
 }
 
 contract Galleasset {
   function upgradeGalleass(address _galleass) public returns (bool) { }
+}
+
+contract StandardTokenInterface {
+  function transfer(address _to, uint256 _value) public returns (bool) { }
 }

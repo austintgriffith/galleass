@@ -30,10 +30,10 @@ galleass.setContract("Land",0)
 
 galleass.deploy("Dogger",0)
 galleass.setContract("Dogger",0)
-
+//
 galleass.deploy("Timber",0)
 galleass.setContract("Timber",0)
-
+//
 galleass.deploy("TimberCamp",0)
 galleass.setContract("TimberCamp",0)
 galleass.setPermission("TimberCamp",0,"mintTimber","true")
