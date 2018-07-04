@@ -32,7 +32,6 @@ class Fishmonger extends Component {
     .on('receipt',this.props.transactionReceipt)
     .on('confirmation', this.props.transactionConfirmation).then((receipt)=>{
       console.log("RESULT:",receipt)
-      this.props.closeModal()
     })
   }
   render(){

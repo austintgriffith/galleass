@@ -7,6 +7,8 @@ class Transactions extends Component {
 
     let transactions = []
 
+    let largerThanZoom = Math.min(1,this.props.zoom*1.5)
+
     this.props.transactions.map((tx)=>{
       let shortHash = tx.hash.substring(0,6)
       let timePassed = Date.now()-tx.time
@@ -14,7 +16,7 @@ class Transactions extends Component {
 
       let loaderImage = 24
       let loaderType = "preloader"
-      if(tx.receipt){
+      if(tx.receipt||tx.polledreceipt){
         loaderImage = 12
         loaderType = "loader"
       }
@@ -41,7 +43,7 @@ class Transactions extends Component {
         >
         {currentStyles => {
           let height = 50
-          let fixedOffset = ((1-this.props.zoom) * height)*-1
+          let fixedOffset = ((1-largerThanZoom) * height)*-1
           return (
             <div style={{position:"relative",backgroundImage:"url('plank2.png')",backgroundRepeat:'no-repeat',width:144,height:31,marginTop:5,left:currentStyles.left}}>
               <a href={this.props.etherscan+"tx/"+tx.hash} target='_blank'>
@@ -70,12 +72,17 @@ class Transactions extends Component {
     }}
     </Motion>
 
+
     */
+
+
+
    let height = 36*transactions.length
-   let fixedOffset = ((1-this.props.zoom) * height)*-1
+   let fixedOffset = ((1-largerThanZoom) * height)*-1
+   let leftZoomOffset = ((1-largerThanZoom) * 59)*-1
     return (
 
-      <div style={{transform:"scale("+this.props.zoom+")",zIndex:780,position:'fixed',left:0,paddingTop:30,marginBottom:fixedOffset,textAlign:"left",bottom:100,opacity:1,height:height,width:120}}>
+      <div style={{transform:"scale("+largerThanZoom+")",zIndex:780,position:'fixed',left:leftZoomOffset,paddingTop:30,marginBottom:fixedOffset,textAlign:"left",bottom:100,opacity:1,height:height,width:120}}>
         {transactions}
       </div>
 
