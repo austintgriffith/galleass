@@ -5,11 +5,11 @@ pragma solidity ^0.4.15;
   https://galleass.io
   by Austin Thomas Griffith
 
-  The Village is where food is consumed and citizens are created
+  A standard tile has mapping for land owners and inventory hodl/send etc
 */
 
 import 'Galleasset.sol';
-import 'DataParser.sol'; 
+import 'DataParser.sol';
 
 contract StandardTile is Galleasset, DataParser{
 

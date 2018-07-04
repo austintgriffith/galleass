@@ -1,5 +1,14 @@
 pragma solidity ^0.4.15;
 
+/*
+
+  https://galleass.io
+  by Austin Thomas Griffith
+
+  IPFS contract is used to track deployments
+
+*/
+
 import 'Galleasset.sol';
 
 contract Ipfs is Galleasset {

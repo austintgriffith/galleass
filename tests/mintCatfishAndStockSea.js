@@ -7,7 +7,7 @@ const galleass = require("./galleass.js")
 //
 //
 
-
+//
 galleass.allowSpecies("Catfish",0)
 galleass.testMint("Catfish",0,1,15)
 galleass.approveContract("Catfish",1,"Bay",15)

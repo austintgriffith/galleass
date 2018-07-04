@@ -421,7 +421,7 @@ module.exports = {
         console.log(tab,result.transactionHash.gray,speciesAddress.blue,(""+result.gasUsed).yellow)
         assert(result.transactionHash,"No transaction hash!?")
         //console.log("RESULT:",result)
-        assert(result.status=="0x01","Failed Transaction?")
+        assert(result.status=="0x01"||result.status=="0x1","Failed Transaction?")
       });
     });
   },

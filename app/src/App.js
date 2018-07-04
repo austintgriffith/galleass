@@ -875,7 +875,7 @@ class App extends Component {
 
     contracts["Bay"].methods.disembark(this.state.landX,this.state.landY,this.state.ships[this.state.account].id).send({
       from: accounts[0],
-      gas:200000,
+      gas:250000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
@@ -906,7 +906,7 @@ class App extends Component {
     //console.log("methods.embark(",this.state.inventoryDetail['Ships'][0])
     contracts["Bay"].methods.embark(this.state.landX,this.state.landY,shipId).send({
       from: accounts[0],
-      gas:200000,
+      gas:250000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
