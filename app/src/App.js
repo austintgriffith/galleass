@@ -62,7 +62,7 @@ const ReactHint = ReactHintFactory(React)
 
 const UPGRADING = false;
 
-
+const RECEIPTPOLL = 333;
 //last hardcoded ipfs, from here on out we load from an Ipfs contract
 let IPFSADDRESS = "Qmb5fNbSZ6zooVQjKqccEsq33nVX1RaCg9zd2Wm3qhQjrT";
 
@@ -274,6 +274,7 @@ class App extends Component {
     let currentTransactions = this.state.transactions
     currentTransactions.push({hash:hash,time:Date.now()})
     this.setState({transactions:currentTransactions})
+    this.closeModal()
   }
   transactionReceipt(receipt){
     console.log("~~~~~~~~ receipt",receipt)
@@ -857,7 +858,6 @@ class App extends Component {
           .then((receipt)=>{
             console.log("RESULT:",receipt)
             this.startWaiting(receipt.transactionHash,"inventoryUpdate")
-            this.closeModal()
           })
         }
 
@@ -888,9 +888,6 @@ class App extends Component {
     .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
       this.startWaiting(receipt.transactionHash)
-      if(this.state.modalHeight>=0){
-        this.closeModal()
-      }
     })
   }
   async embark(shipId) {
@@ -913,9 +910,6 @@ class App extends Component {
       this.setState({currentTx:hash});
       if(!error) this.load()
       this.resetButton("approveandembark")
-      if(this.state.modalHeight>=0){
-        this.closeModal()
-      }
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
@@ -923,7 +917,6 @@ class App extends Component {
       console.log("RESULT:",receipt)
       this.setState({isEmbarking:true})
       this.startWaiting(receipt.transactionHash)
-
     })
   }
   async sellFish(x,y,i,fish,amount){
@@ -943,9 +936,6 @@ class App extends Component {
     .on('receipt',this.transactionReceipt.bind(this))
     .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
-      if(this.state.modalHeight>=0){
-        this.closeModal()
-      }
     })
   }
   async transferAndCall(x,y,i,contractName,amount,tokenName){
@@ -971,9 +961,6 @@ class App extends Component {
     .on('receipt',this.transactionReceipt.bind(this))
     .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
-      if(this.state.modalHeight>=0){
-        this.closeModal()
-      }
     })
   }
 
@@ -995,9 +982,6 @@ class App extends Component {
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error, transactionHash)=>{
       console.log(error,transactionHash)
-      if(!error){
-        this.closeModal()
-      }
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this)).
@@ -1037,9 +1021,6 @@ class App extends Component {
     .on('receipt',this.transactionReceipt.bind(this))
     .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
-      if(this.state.modalHeight>=0){
-        this.closeModal()
-      }
     })
   }
   async buyFromMarket(x,y,i,tokenName,copperToSpend){
@@ -1072,9 +1053,6 @@ class App extends Component {
     .on('receipt',this.transactionReceipt.bind(this))
     .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
-      if(this.state.modalHeight>=0){
-        this.closeModal()
-      }
     })
   }
 
@@ -1090,9 +1068,6 @@ class App extends Component {
     .on('receipt',this.transactionReceipt.bind(this))
     .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
-      if(this.state.modalHeight>=0){
-        this.closeModal()
-      }
     })
   }
   async collect(name,tile){
@@ -1109,9 +1084,6 @@ class App extends Component {
     .on('receipt',this.transactionReceipt.bind(this))
     .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
-      if(this.state.modalHeight>=0){
-        this.closeModal()
-      }
     })
   }
   async setCitizenPrice(id,price){
@@ -1127,9 +1099,6 @@ class App extends Component {
     .on('receipt',this.transactionReceipt.bind(this))
     .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
-      if(this.state.modalHeight>=0){
-        this.closeModal()
-      }
     })
   }
   async moveCitizen(id,tile){
@@ -1144,9 +1113,6 @@ class App extends Component {
     .on('receipt',this.transactionReceipt.bind(this))
     .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
-      if(this.state.modalHeight>=0){
-        this.closeModal()
-      }
     })
   }
   async createCitizen(x,y,tile,food1,food2,food3){
@@ -1161,9 +1127,6 @@ class App extends Component {
     .on('receipt',this.transactionReceipt.bind(this))
     .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
-      if(this.state.modalHeight>=0){
-        this.closeModal()
-      }
     })
   }
   async buildTile(tileIndex,newTileType){
@@ -1185,9 +1148,6 @@ class App extends Component {
     .on('receipt',this.transactionReceipt.bind(this))
     .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
-      if(this.state.modalHeight>=0){
-        this.closeModal()
-      }
     })
   }
   async buildTimberCamp(x,y,i,citizenId){
@@ -1224,9 +1184,6 @@ class App extends Component {
     .on('receipt',this.transactionReceipt.bind(this))
     .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
-      if(this.state.modalHeight>=0){
-        this.closeModal()
-      }
     })
 
   }
@@ -1254,9 +1211,6 @@ class App extends Component {
     .on('receipt',this.transactionReceipt.bind(this))
     .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
-      if(this.state.modalHeight>=0){
-        this.closeModal()
-      }
     })
   }
   handleFocus(event) {
@@ -1280,9 +1234,6 @@ class App extends Component {
     .on('receipt',this.transactionReceipt.bind(this))
     .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
-      if(this.state.modalHeight>=0){
-        this.closeModal()
-      }
     })
   }
 
@@ -1447,21 +1398,32 @@ class App extends Component {
     this.setState({loading:0})
     clearInterval(txWaitIntervals["loader"])
 
-    console.log("WAITING FOR TRANSACTION ",hash,this.state.waitingForTransaction,this.state.waitingForTransactionTime)
+    console.log(" ~~~~ WAITING FOR TRANSACTION ",hash,this.state.waitingForTransaction,this.state.waitingForTransactionTime)
     try {
       var receipt = await web3.eth.getTransactionReceipt(this.state.waitingForTransaction);
-      console.log("TIME SPENT:"+Date.now()-this.state.waitingForTransactionTime)
+      console.log("~~ TIME SPENT:"+Date.now()-this.state.waitingForTransactionTime)
       if (receipt == null) {
         //keep waiting
 
       } else {
         //DONE
         //DONE
-        console.log("DONE WITH TX",receipt)
+        console.log("~~~ DONE WITH TX",receipt)
+
+        console.log("~~~~~~~~ polled receipt",receipt)
+        let currentTransactions = this.state.transactions
+        for(let t in currentTransactions){
+          if(currentTransactions[t].hash == receipt.transactionHash){
+            currentTransactions[t].polledreceipt = receipt
+            currentTransactions[t].time = Date.now()
+          }
+        }
+        this.setState({transactions:currentTransactions})
+
         clearInterval(txWaitIntervals[hash])
         txWaitIntervals[hash]=null
         clearInterval(txWaitIntervals["loader"])
-        if(receipt.status=="0x0"){
+        if(receipt.status=="0x0"||receipt.status=="0x00"){
           //this.state.waitingForTransaction || this.state.waitingForShipUpdate || this.state.waitingForInventoryUpdate
           this.setState({loading:0,waitingForTransaction:false,waitingForShipUpdate:false,waitingForInventoryUpdate:false})
           this.setState({bottomBar:0,bottomBarMessage:"Warning: Transaction failed. Try again with a higher #gas  gas price.",bottomBarSize:24})
@@ -1538,7 +1500,7 @@ class App extends Component {
         update.waitingForShipUpdate=true
       }
       this.setState(update,()=>{
-        txWaitIntervals[hash] = setInterval(this.startWaitingForTransaction.bind(this,hash),1200)
+        txWaitIntervals[hash] = setInterval(this.startWaitingForTransaction.bind(this,hash),RECEIPTPOLL)
         this.startWaitingForTransaction(hash)
         setTimeout(()=>{
           console.log("CHECKING BACK ON TX ",hash,txWaitIntervals[hash])
@@ -1687,7 +1649,6 @@ async tileClick(name,index,px) {
     transactionReceipt:this.transactionReceipt.bind(this),
     transactionConfirmation:this.transactionConfirmation.bind(this),
     transactionError:this.transactionError.bind(this),
-    closeModal:this.closeModal.bind(this),
 
   }
   for(let c in this.state.citizens){
@@ -1980,7 +1941,7 @@ render() {
           let extraWidth = animated.top - buttonsTop
           return (
             <div key={"approveAndEmbark"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top+buttonPushDown,opacity:buttonOpacity}} onClick={clickFn}>
-            <img src="approveAndEmbark.png" style={{maxWidth:150-(extraWidth)}}/>
+            <img src="approveAndEmbark.png" style={{transform:"scale("+adjustedInvZoom+")",maxWidth:150-(extraWidth)}}/>
             </div>
           )
         }
@@ -2009,7 +1970,7 @@ render() {
       }else{
         return (
           <div key={"buyshipHolder"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:theLeft,top:animated.top+buttonPushDown,opacity:buttonOpacity}} onClick={clickFn}>
-          <img src="buyship.png" style={{maxWidth:150-(extraWidth)}}/>
+          <img src="buyship.png" style={{transform:"scale("+adjustedInvZoom+")",maxWidth:150-(extraWidth)}}/>
           </div>
         )
       }
@@ -2028,7 +1989,7 @@ render() {
       let extraWidth = animated.top - buttonsTop
       return (
         <div key={"dropanchor"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top+buttonPushDown,opacity:buttonOpacity}} onClick={clickFn}>
-        <img src="dropanchor.png" style={{maxWidth:150-(extraWidth)}}/>
+        <img src="dropanchor.png" style={{transform:"scale("+adjustedInvZoom+")",maxWidth:150-(extraWidth)}}/>
         </div>
       )
     }
@@ -2046,7 +2007,7 @@ render() {
       let extraWidth = animated.top - buttonsTop
       return (
         <div key={"reelin"} style={{cursor:"pointer",zIndex:700,position:'absolute',top:animated.top+buttonPushDown,left:buttonsLeft-75+((extraWidth)/2),opacity:buttonOpacity}} onClick={clickFn}>
-        <img src="reelin.png" style={{maxWidth:150-(extraWidth)}}/>
+        <img src="reelin.png" style={{transform:"scale("+adjustedInvZoom+")",maxWidth:150-(extraWidth)}}/>
         </div>
       )
     })
@@ -2059,8 +2020,8 @@ render() {
       if(animated.top>50) animated.top=50
       let extraWidth = animated.top - buttonsTop
       return (
-        <div key={"saileast"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:buttonsLeft+180-75+((extraWidth)/2),top:animated.top+buttonPushDown,opacity:buttonOpacity}} onClick={clickFn1}>
-        <img src="saileast.png" style={{maxWidth:150-(extraWidth)}}/>
+        <div key={"saileast"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:buttonsLeft+180*adjustedInvZoom-75+((extraWidth)/2),top:animated.top+buttonPushDown,opacity:buttonOpacity}} onClick={clickFn1}>
+        <img src="saileast.png" style={{transform:"scale("+adjustedInvZoom+")",maxWidth:150-(extraWidth)}}/>
         </div>
       )
     })
@@ -2073,7 +2034,7 @@ buttons.push(
     let extraWidth = animated.top - buttonsTop
     return (
       <div key={"castLine"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:buttonsLeft-75+((extraWidth)/2),top:animated.top+buttonPushDown,opacity:buttonOpacity}} onClick={clickFn2}>
-      <img src="castLine.png" style={{maxWidth:150-(extraWidth)}}/>
+      <img src="castLine.png" style={{transform:"scale("+adjustedInvZoom+")",maxWidth:150-(extraWidth)}}/>
       </div>
     )
   })
@@ -2086,8 +2047,8 @@ buttons.push(
     if(animated.top>50) animated.top=50
     let extraWidth = animated.top - buttonsTop
     return (
-      <div key={"sailwest"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:buttonsLeft-180-75+((extraWidth)/2),top:animated.top+buttonPushDown,opacity:buttonOpacity}} onClick={clickFn3}>
-      <img src="sailwest.png" style={{maxWidth:150-(extraWidth)}}/>
+      <div key={"sailwest"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:buttonsLeft-180*adjustedInvZoom-75+((extraWidth)/2),top:animated.top+buttonPushDown,opacity:buttonOpacity}} onClick={clickFn3}>
+      <img src="sailwest.png" style={{transform:"scale("+adjustedInvZoom+")",maxWidth:150-(extraWidth)}}/>
       </div>
     )
   })
@@ -2712,9 +2673,11 @@ return (
   {currentStyles => {
     //<div style={{zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
 
+    let largerModalThanZoom = Math.min(this.state.zoom*1.27,1)
+
     if(this.state.modalObject.loading){
       return (
-        <div style={{transform:"scale("+this.state.zoom+")",zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top-((1-this.state.zoom)*300),textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
+        <div style={{transform:"scale("+largerModalThanZoom+")",zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top-((1-largerModalThanZoom)*300),textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
         <div style={{cursor:'pointer',position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
         <img src="exit.png" />
         </div>
@@ -2728,7 +2691,7 @@ return (
       )
     } else if(this.state.modalObject.simpleMessage){
       return (
-        <div style={{transform:"scale("+this.state.zoom+")",zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top-((1-this.state.zoom)*300),textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
+        <div style={{transform:"scale("+largerModalThanZoom+")",zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top-((1-largerModalThanZoom)*300),textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
         <div style={{cursor:'pointer',position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
         <img src="exit.png" />
         </div>
@@ -2819,7 +2782,7 @@ return (
 
         //<div style={{zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top,textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
         return (
-          <div style={{transform:"scale("+this.state.zoom+")",zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top-((1-this.state.zoom)*300),textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
+          <div style={{transform:"scale("+largerModalThanZoom+")",zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top-((1-largerModalThanZoom)*300),textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
           <div style={{cursor:'pointer',position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
           <img src="exit.png" />
           </div>
@@ -3107,7 +3070,7 @@ if(this.state.modalObject.contract&&this.state.modalObject.contract!="0x00000000
 }
 
 return (
-  <div style={{transform:"scale("+this.state.zoom+")",zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top-((1-this.state.zoom)*300),textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
+  <div style={{transform:"scale("+largerModalThanZoom+")",zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top-((1-largerModalThanZoom)*300),textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
   <div style={{cursor:'pointer',position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
   <img src="exit.png" />
   </div>

@@ -4,7 +4,7 @@ import BuySellTable from './BuySellTable.js'
 
 class Harbor extends Component {
   async buildShip(x,y,i){
-    let {web3,contracts,GWEI,closeModal} = this.props
+    let {web3,contracts,GWEI} = this.props
     console.log("BUILD DOGGER ",x,y,i)
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
 
@@ -37,7 +37,6 @@ class Harbor extends Component {
     .on('receipt',this.props.transactionReceipt)
     .on('confirmation', this.props.transactionConfirmation).then((receipt)=>{
       console.log("~~~~~BUILD DOGGER RESULT:",receipt)
-      this.props.closeModal()
     })
 
     // contracts["Timber"].methods.transferAndCall(contracts["Harbor"]._address,doggerPrice,data).send({

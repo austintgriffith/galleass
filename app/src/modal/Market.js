@@ -20,7 +20,6 @@ class Market extends Component {
     .on('receipt',this.props.transactionReceipt)
     .on('confirmation', this.props.transactionConfirmation).then((receipt)=>{
       console.log("RESULT:",receipt)
-      this.props.closeModal()
     })
   }
   async setBuyPrice(x,y,tile,tokenAddress,price){
@@ -38,7 +37,6 @@ class Market extends Component {
     .on('receipt',this.props.transactionReceipt)
     .on('confirmation', this.props.transactionConfirmation).then((receipt)=>{
       console.log("RESULT:",receipt)
-      this.props.closeModal()
     })
   }
   async buyFromMarket(x,y,i,tokenName,copperToSpend){
@@ -72,7 +70,6 @@ class Market extends Component {
     .on('receipt',this.props.transactionReceipt)
     .on('confirmation', this.props.transactionConfirmation).then((receipt)=>{
       console.log("RESULT:",receipt)
-      this.props.closeModal()
     })
   }
   async sellToMarket(x,y,i,tokenName,amountOfTokenToSend){
@@ -98,7 +95,6 @@ class Market extends Component {
     .on('receipt',this.props.transactionReceipt)
     .on('confirmation', this.props.transactionConfirmation).then((receipt)=>{
       console.log("RESULT:",receipt)
-      this.props.closeModal()
     })
   }
   render(){
