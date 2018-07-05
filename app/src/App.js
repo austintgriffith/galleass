@@ -681,11 +681,11 @@ class App extends Component {
 
       if(update){
         console.log("INVENTORY UPDATE....")
-        this.setState({loading:0,inventory:inventory,waitingForInventoryUpdate:false})
+        this.setState({loading:0,inventory:inventory,waitingForUpdate:false})
       }
       if(updateDetail){
         console.log("DETAIL INVENTORY UPDATE....")
-        this.setState({loading:0,inventoryDetail:inventoryDetail,waitingForInventoryUpdate:false})
+        this.setState({loading:0,inventoryDetail:inventoryDetail,waitingForUpdate:false})
       }
     }
   }
@@ -730,14 +730,14 @@ class App extends Component {
         getMyShip.inRangeToDisembark = await contracts["Bay"].methods.inRangeToDisembark(this.state.landX,this.state.landY,accounts[0]).call();
         //console.log("getMyShip.inRangeToDisembark",getMyShip.inRangeToDisembark)
       }catch(e){console.log("ERROR checking inRangeToDisembark",e)}
-      this.setState({/*zoom:HARDCODEDSCALE,*/loading:0,ship:getMyShip,waitingForShipUpdate:false,myLocation:myLocation},()=>{
+      this.setState({/*zoom:HARDCODEDSCALE,*/loading:0,ship:getMyShip,waitingForUpdate:false,myLocation:myLocation},()=>{
         //if(DEBUG_SYNCMYSHIP)
         //console.log("SET getMyShip",this.state.ship)
       })
     }
   }
   async syncLand() {
-    const DEBUG_SYNCLAND = true;
+    const DEBUG_SYNCLAND = false;
     if(DEBUG_SYNCLAND) console.log("SYNCING LAND")
     if(!this.state.landX || !this.state.landY){
       let mainX = await contracts["Land"].methods.mainX().call();
@@ -784,7 +784,7 @@ class App extends Component {
         console.log("LAND UPDATE",land,landOwners)
         this.setState({land:land,landOwners:landOwners})
       }
-      console.log("Loading Harbor Location",this.state.landX,this.state.landY,contracts["Harbor"]._address)
+      //console.log("Loading Harbor Location",this.state.landX,this.state.landY,contracts["Harbor"]._address)
       let harborLocation = await contracts["Land"].methods.getTileLocation(this.state.landX,this.state.landY,contracts["Harbor"]._address).call();
       if(harborLocation!=this.state.harborLocation){
         this.setState({harborLocation:parseInt(harborLocation),scrollLeft:parseInt(harborLocation)-(document.documentElement.clientWidth/2)})
@@ -998,6 +998,7 @@ class App extends Component {
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error, transactionHash)=>{
       console.log(error,transactionHash)
+      this.startWaiting(transactionHash)
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this)).
@@ -1032,6 +1033,9 @@ class App extends Component {
       from: accounts[0],
       gas:500000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      this.startWaiting(hash)
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
@@ -1064,6 +1068,9 @@ class App extends Component {
       from: accounts[0],
       gas:500000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      this.startWaiting(hash)
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
@@ -1079,6 +1086,9 @@ class App extends Component {
       from: accounts[0],
       gas:120000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      this.startWaiting(hash)
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
@@ -1095,6 +1105,9 @@ class App extends Component {
       from: accounts[0],
       gas:20000+75000*timberToCollect,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      this.startWaiting(hash)
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
@@ -1110,6 +1123,9 @@ class App extends Component {
       from: accounts[0],
       gas:95000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      this.startWaiting(hash)
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
@@ -1124,6 +1140,9 @@ class App extends Component {
       from: accounts[0],
       gas:90000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      this.startWaiting(hash)
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
@@ -1138,6 +1157,9 @@ class App extends Component {
       from: accounts[0],
       gas:300000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      this.startWaiting(hash)
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
@@ -1159,6 +1181,9 @@ class App extends Component {
       from: accounts[0],
       gas:400000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      this.startWaiting(hash)
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
@@ -1195,6 +1220,9 @@ class App extends Component {
       from: accounts[0],
       gas:400000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      this.startWaiting(hash)
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
@@ -1222,6 +1250,9 @@ class App extends Component {
       from: accounts[0],
       gas:320000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      this.startWaiting(hash)
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
@@ -1245,6 +1276,9 @@ class App extends Component {
       from: accounts[0],
       gas:120000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      this.startWaiting(hash)
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
@@ -1471,14 +1505,14 @@ class App extends Component {
         clearInterval(txWaitIntervals["loader"])
 
         if(receipt.status=="0x0"||receipt.status=="0x00"){
-          this.setState({loading:0,waitingForTransaction:false,waitingForShipUpdate:false,waitingForInventoryUpdate:false})
+          this.setState({loading:0,waitingForTransaction:false,waitingForUpdate:false})
           this.setState({bottomBar:0,bottomBarMessage:"Warning: Transaction failed. Try again with a higher #gas  gas price.",bottomBarSize:24})
           clearTimeout(bottomBarTimeout)
           bottomBarTimeout = setTimeout(()=>{
             this.setState({bottomBar:-80})
           },10000)
         }else{
-          this.setState({loading:0,waitingForTransaction:false,waitingForShipUpdate:true,waitingForTransactionTime:Date.now()},()=>{
+          this.setState({loading:0,waitingForTransaction:false,waitingForUpdate:true,waitingForTransactionTime:Date.now()},()=>{
             if(DEBUGWAITINGFORTX) console.log("CALL A SYNC OF EVERYTHING!!")
             this.syncEverythingOnce()
             if(DEBUGWAITINGFORTX) console.log("IS EMBARKING",this.state.isEmbarking)
@@ -1538,10 +1572,8 @@ class App extends Component {
     if(hash){
       console.log("STARTWAITING",hash,nextPhase)
       let update = {waitingForTransaction:hash,waitingForTransactionTime:Date.now()}
-      if(nextPhase=="lockShipButtons"){
-        update.waitingForShipUpdate=true
-      }else if(nextPhase=="inventoryUpdate"){
-        update.waitingForInventoryUpdate=true
+      if(nextPhase=="lockShipButtons"||nextPhase=="inventoryUpdate"){
+        update.waitingForUpdate=true
       }
 
       this.setState(update,()=>{
@@ -1694,7 +1726,7 @@ async tileClick(name,index,px) {
     transactionReceipt:this.transactionReceipt.bind(this),
     transactionConfirmation:this.transactionConfirmation.bind(this),
     transactionError:this.transactionError.bind(this),
-
+    startWaiting:this.startWaiting.bind(this),
   }
   for(let c in this.state.citizens){
     if( this.state.citizens[c].x==this.state.landX && this.state.citizens[c].y==this.state.landY && this.state.citizens[c].tile==index ){
@@ -1932,14 +1964,14 @@ render() {
 
   let buttonOpacity = 0.9
   let buttonDisabled = false
-  console.log("loading:",this.state.loading,"waitingForShipUpdate:",this.state.waitingForShipUpdate)
+  //console.log("loading:",this.state.loading,"waitingForUpdate:",this.state.waitingForUpdate)
   if(this.state.loading){
     buttonOpacity = 0.5
     buttonDisabled = true
     loadingBar = (
-      <a href={this.state.etherscan+"tx/"+this.state.currentTx} target='_blank'><img src={"preloader_"+this.state.loading+".png"} /></a>
+      <img src={"preloader_"+this.state.loading+".png"} />
     )
-  } else if( this.state.waitingForShipUpdate || this.state.waitingForInventoryUpdate){
+  } else if( this.state.waitingForUpdate){
     buttonOpacity = 0.3
     buttonDisabled = true
     let timeSpentWaiting = Date.now() - this.state.waitingForTransactionTime
@@ -1950,7 +1982,7 @@ render() {
     }*/
     if(timeSpentWaiting>12) timeSpentWaiting=12
     loadingBar = (
-      <a href={this.state.etherscan+"tx/"+this.state.currentTx} target='_blank'><img src={"loader_"+timeSpentWaiting+".png"} /></a>
+      <img src={"loader_"+timeSpentWaiting+".png"} />
     )
   }
 
@@ -1994,7 +2026,7 @@ render() {
       )
     )
   }else{
-    console.log("WAITING FOR INV DETAIL....")
+    //console.log("WAITING FOR INV DETAIL....")
     buttons.push(
       <div key={"waiting"}>
       </div>
