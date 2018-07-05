@@ -16,20 +16,54 @@ class Transactions extends Component {
 
       let loaderImage = 24
       let loaderType = "preloader"
-      if(tx.receipt||tx.polledreceipt){
-        loaderImage = 12
-        loaderType = "loader"
+      if(tx.polledreceipt){
+        if(tx.polledreceipt.status){
+          loaderImage = 12
+          loaderType = "loader"
+        }else{
+          loaderImage = 0
+          loaderType = "failedloader"
+        }
+      }else{
+        if(loadedPercent<=1){
+          loaderImage=Math.round(loadedPercent*loaderImage)
+        }
+        if(loaderImage<=0) loaderImage=1;
       }
-      if(loadedPercent<=1){
-        loaderImage=Math.round(loadedPercent*loaderImage)
-      }
-      if(loaderImage<=0) loaderImage=1;
+
 
       let left = -24
-      if(tx.confirmations){
+      if(tx.closed){
         left = -150
-        loaderImage = 12
-        loaderType = "loader"
+      }
+
+      let body = (
+        <div>
+          <div style={{position:"absolute",left:25,top:8,opacity:0.8}}>
+            <img style={{maxWidth:38}} src={loaderType+"_"+loaderImage+".png"} />
+          </div>
+          <div style={{position:"absolute",left:62,top:4}}>
+            <Writing string={shortHash} size={20}/>
+          </div>
+        </div>
+      )
+
+
+      if(tx.polledreceipt && tx.polledreceipt.status && tx.done ){
+
+
+       let gasCost =   Math.round(tx.polledreceipt.gasUsed * this.props.GWEI / 1000000000 * 10000000) / 10000000
+
+        body = (
+          <div>
+            <div style={{position:"absolute",left:30,top:6,opacity:0.8}}>
+              <img style={{maxHeight:20}} src={"ether.png"} />
+            </div>
+            <div style={{position:"absolute",left:43,top:4}}>
+              <Writing string={gasCost} size={20}/>
+            </div>
+          </div>
+        )
       }
 
       transactions.push(
@@ -47,12 +81,7 @@ class Transactions extends Component {
           return (
             <div style={{position:"relative",backgroundImage:"url('plank2.png')",backgroundRepeat:'no-repeat',width:144,height:31,marginTop:5,left:currentStyles.left}}>
               <a href={this.props.etherscan+"tx/"+tx.hash} target='_blank'>
-                <div style={{position:"absolute",left:25,top:8,opacity:0.8}}>
-                  <img style={{maxWidth:38}} src={loaderType+"_"+loaderImage+".png"} />
-                </div>
-                <div style={{position:"absolute",left:62,top:4}}>
-                  <Writing string={shortHash} size={20}/>
-                </div>
+                {body}
               </a>
             </div>
           )
