@@ -1487,7 +1487,7 @@ class App extends Component {
             }
           }
           this.setState({transactions:currentTransactions})
-        },2000)
+        },5000)
         setTimeout(()=>{
           let currentTransactions = this.state.transactions
           for(let t in currentTransactions){
@@ -1497,7 +1497,7 @@ class App extends Component {
             }
           }
           this.setState({transactions:currentTransactions})
-        },8000)
+        },15000)
 
 
         clearInterval(txWaitIntervals[hash])
