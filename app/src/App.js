@@ -566,7 +566,7 @@ class App extends Component {
       }
     }
     if(hasElements(storedCitizens)){
-      storedCitizens = mergeByBlockNumber(storedCitizens,this.state.citizens)
+      storedCitizens = mergeByTimestamp(storedCitizens,this.state.citizens)
       if(DEBUG_SYNCCITIZENS) console.log("SETSTATE storedCitizens",storedCitizens)
       this.setState({citizens:storedCitizens})
     }
@@ -2256,7 +2256,13 @@ return (
   <div className="App">
   <ReactHint events delay={100} />
 
-  <Transactions zoom={this.state.zoom} etherscan={this.state.etherscan} avgBlockTime={this.state.avgBlockTime} transactions={this.state.transactions}/>
+  <Transactions
+    zoom={this.state.zoom}
+    etherscan={this.state.etherscan}
+    avgBlockTime={this.state.avgBlockTime}
+    transactions={this.state.transactions}
+    web3={web3}
+  />
 
   {menu}
   {clickScreen}
@@ -3147,22 +3153,6 @@ function waitForAllContracts(){
   }
 }
 
-
-
-function mergeByBlockNumber(a,b) {
-  for(let i in a) {
-    if(a[i]&&b[i]&& a[i].blockNumber && b[i].blockNumber){
-      if(a[i].blockNumber>b[i].blockNumber){
-        b[i] = a[i];
-      }else{
-        a[i] = b[i];
-      }
-    }else{
-      b[i] = a[i];
-    }
-  }
-  return b;
-}
 function mergeByTimestamp(a,b) {
   for(let i in a) {
     if(a[i]&&b[i]&& a[i].timestamp && b[i].timestamp){

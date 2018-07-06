@@ -11,6 +11,7 @@ class Transactions extends Component {
 
     this.props.transactions.map((tx)=>{
       let shortHash = tx.hash.substring(0,6)
+      let randomPlank = 1+(this.props.web3.utils.hexToNumber(shortHash)%5)
       let timePassed = Date.now()-tx.time
       let loadedPercent = Math.round(timePassed*100/this.props.avgBlockTime)/100
 
@@ -45,7 +46,7 @@ class Transactions extends Component {
           let height = 50
           let fixedOffset = ((1-largerThanZoom) * height)*-1
           return (
-            <div style={{position:"relative",backgroundImage:"url('plank2.png')",backgroundRepeat:'no-repeat',width:144,height:31,marginTop:5,left:currentStyles.left}}>
+            <div style={{position:"relative",backgroundImage:"url('plank"+randomPlank+".png')",backgroundRepeat:'no-repeat',width:144,height:31,marginTop:5,left:currentStyles.left}}>
               <a href={this.props.etherscan+"tx/"+tx.hash} target='_blank'>
                 <div style={{position:"absolute",left:25,top:8,opacity:0.8}}>
                   <img style={{maxWidth:38}} src={loaderType+"_"+loaderImage+".png"} />

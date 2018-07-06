@@ -31,6 +31,11 @@ Citizen chars are uint16 but you could have more if you use uint8
 Citizen status should probably be uint16
 ```
 
+### TODO
+```
+citizen with greens sends 3 copper and 1 greens and it doesn't seem to work
+```
+
 ### Before Staging
 ```
 x - It can take a while when you click on a building for the modal to throw... may pop something above the building up that looks like a loader

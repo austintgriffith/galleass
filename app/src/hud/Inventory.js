@@ -7,9 +7,9 @@ const config = { stiffness: 100, damping: 7 };
 class Inventory extends Component {
   constructor(props) {
     super(props);
-  }
-  componentDidMount(){
-
+    this.state = {
+      bg: 0.0
+    }
   }
   sellForCopper(item){
     console.log("sellForCopperCLICK",item)
@@ -80,9 +80,19 @@ class Inventory extends Component {
     }
 
     return (
-      <div style={{float:'right',padding:2,paddingRight:10,textAlign:'right'}} >
-        {display}
-      </div>
+      <Motion
+         defaultStyle={{ opacity: 0 }}
+         style={{ opacity: spring(this.state.bg, { stiffness: 60, damping: 6 }) }}
+      >
+        {
+          (currentStyles) => (
+            <div style={{float:'right',position:'relative',padding:8,paddingRight:30,marginTop:40,marginRight:-20,textAlign:'right'}} onMouseOver={()=>{this.setState({bg:0.25})}} onMouseOut={()=>{this.setState({bg:0.0})}} >
+              {display}
+              <div style={{zIndex:-10,position:'absolute',left:0,top:0,width:"100%",height:"100%",background:"#fee6c4",opacity:currentStyles.opacity}}></div>
+            </div>
+          )
+        }
+      </Motion>
     )
   }
 }
