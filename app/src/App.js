@@ -255,6 +255,7 @@ class App extends Component {
   transactionError(error){
     console.log("~~~~~~~~ ERROR",error)
     console.log("HANDLETHIS:",error)
+      //this.setState({bottomBar:0,bottomBarMessage:"error:"+JSON.stringify(error),bottomBarSize:20})
     if(error.toString().indexOf("Error: Transaction was not mined")>=0){
       this.setState({loading:0,waitingForTransaction:false})
       clearInterval(txWaitIntervals["loader"])
@@ -271,13 +272,17 @@ class App extends Component {
   }
   transactionHash(hash){
     console.log("~~~~~~~~ transactionHash",hash)
+    //this.setState({bottomBar:0,bottomBarMessage:"hash:"+hash,bottomBarSize:20})
     let currentTransactions = this.state.transactions
     currentTransactions.push({hash:hash,time:Date.now()})
     this.setState({transactions:currentTransactions})
     this.closeModal()
   }
   transactionReceipt(receipt){
+    //not using these because they don't work on mobile !!?
+    /*
     console.log("~~~~~~~~ receipt",receipt)
+    this.setState({bottomBar:0,bottomBarMessage:"receipt:"+JSON.stringify(receipt),bottomBarSize:20})
     let currentTransactions = this.state.transactions
     for(let t in currentTransactions){
       if(currentTransactions[t].hash == receipt.transactionHash){
@@ -286,8 +291,10 @@ class App extends Component {
       }
     }
     this.setState({transactions:currentTransactions})
+    */
   }
   transactionThen(receipt,callback){
+
       /*console.log("~~~~~~~~ .THEN",receipt,callback)
       let currentTransactions = this.state.transactions
       for(let t in currentTransactions){
@@ -298,6 +305,7 @@ class App extends Component {
       this.setState({transactions:currentTransactions})*/
   }
   transactionConfirmation(confirmationNumber,receipt){
+    /*this.setState({bottomBar:0,bottomBarMessage:"confirmationNumber:"+confirmationNumber,bottomBarSize:20})
     let currentTransactions = this.state.transactions
     for(let t in currentTransactions){
       if(currentTransactions[t].hash == receipt.transactionHash){
@@ -305,7 +313,7 @@ class App extends Component {
         else currentTransactions[t].confirmations++
       }
     }
-    this.setState({transactions:currentTransactions})
+    this.setState({transactions:currentTransactions})*/
   }
 
 
@@ -673,11 +681,11 @@ class App extends Component {
 
       if(update){
         console.log("INVENTORY UPDATE....")
-        this.setState({loading:0,inventory:inventory,waitingForInventoryUpdate:false})
+        this.setState({loading:0,inventory:inventory,waitingForUpdate:false})
       }
       if(updateDetail){
         console.log("DETAIL INVENTORY UPDATE....")
-        this.setState({loading:0,inventoryDetail:inventoryDetail,waitingForInventoryUpdate:false})
+        this.setState({loading:0,inventoryDetail:inventoryDetail,waitingForUpdate:false})
       }
     }
   }
@@ -722,14 +730,14 @@ class App extends Component {
         getMyShip.inRangeToDisembark = await contracts["Bay"].methods.inRangeToDisembark(this.state.landX,this.state.landY,accounts[0]).call();
         //console.log("getMyShip.inRangeToDisembark",getMyShip.inRangeToDisembark)
       }catch(e){console.log("ERROR checking inRangeToDisembark",e)}
-      this.setState({/*zoom:HARDCODEDSCALE,*/loading:0,ship:getMyShip,waitingForShipUpdate:false,myLocation:myLocation},()=>{
+      this.setState({/*zoom:HARDCODEDSCALE,*/loading:0,ship:getMyShip,waitingForUpdate:false,myLocation:myLocation},()=>{
         //if(DEBUG_SYNCMYSHIP)
         //console.log("SET getMyShip",this.state.ship)
       })
     }
   }
   async syncLand() {
-    const DEBUG_SYNCLAND = true;
+    const DEBUG_SYNCLAND = false;
     if(DEBUG_SYNCLAND) console.log("SYNCING LAND")
     if(!this.state.landX || !this.state.landY){
       let mainX = await contracts["Land"].methods.mainX().call();
@@ -776,7 +784,7 @@ class App extends Component {
         console.log("LAND UPDATE",land,landOwners)
         this.setState({land:land,landOwners:landOwners})
       }
-      console.log("Loading Harbor Location",this.state.landX,this.state.landY,contracts["Harbor"]._address)
+      //console.log("Loading Harbor Location",this.state.landX,this.state.landY,contracts["Harbor"]._address)
       let harborLocation = await contracts["Land"].methods.getTileLocation(this.state.landX,this.state.landY,contracts["Harbor"]._address).call();
       if(harborLocation!=this.state.harborLocation){
         this.setState({harborLocation:parseInt(harborLocation),scrollLeft:parseInt(harborLocation)-(document.documentElement.clientWidth/2)})
@@ -851,13 +859,14 @@ class App extends Component {
             this.setState({currentTx:hash});
             if(!error) this.load()
             this.resetButton("buyship")
+            this.startWaiting(hash,"inventoryUpdate")
           }).on('error',this.transactionError.bind(this))
           .on('transactionHash',this.transactionHash.bind(this))
           .on('receipt',this.transactionReceipt.bind(this))
           .on('confirmation', this.transactionConfirmation.bind(this))
           .then((receipt)=>{
             console.log("RESULT:",receipt)
-            this.startWaiting(receipt.transactionHash,"inventoryUpdate")
+
           })
         }
 
@@ -875,19 +884,19 @@ class App extends Component {
 
     contracts["Bay"].methods.disembark(this.state.landX,this.state.landY,this.state.ships[this.state.account].id).send({
       from: accounts[0],
-      gas:200000,
+      gas:250000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
       this.setState({currentTx:hash});
       if(!error) this.load()
       this.resetButton("disembark")
+      this.startWaiting(hash,"lockShipButtons")
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
     .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
-      this.startWaiting(receipt.transactionHash)
     })
   }
   async embark(shipId) {
@@ -903,20 +912,21 @@ class App extends Component {
     //console.log("methods.embark(",this.state.inventoryDetail['Ships'][0])
     contracts["Bay"].methods.embark(this.state.landX,this.state.landY,shipId).send({
       from: accounts[0],
-      gas:200000,
+      gas:250000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
       this.setState({currentTx:hash});
       if(!error) this.load()
       this.resetButton("approveandembark")
+      this.setState({isEmbarking:true})
+      this.startWaiting(hash,"lockShipButtons")
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
     .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
       console.log("RESULT:",receipt)
-      this.setState({isEmbarking:true})
-      this.startWaiting(receipt.transactionHash)
+
     })
   }
   async sellFish(x,y,i,fish,amount){
@@ -931,6 +941,9 @@ class App extends Component {
       from: accounts[0],
       gas:180000+(amount*80000),
       gasPrice:Math.round(this.state.GWEI * 1000000000)
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      this.startWaiting(hash)
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
@@ -954,8 +967,11 @@ class App extends Component {
 
     contracts[tokenName].methods.transferAndCall(contracts[contractName]._address,amount,data).send({
       from: accounts[0],
-      gas:120000,
+      gas:200000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      this.startWaiting(hash)
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
@@ -982,6 +998,7 @@ class App extends Component {
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error, transactionHash)=>{
       console.log(error,transactionHash)
+      this.startWaiting(transactionHash)
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this)).
@@ -1016,6 +1033,9 @@ class App extends Component {
       from: accounts[0],
       gas:500000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      this.startWaiting(hash)
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
@@ -1048,6 +1068,9 @@ class App extends Component {
       from: accounts[0],
       gas:500000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      this.startWaiting(hash)
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
@@ -1063,6 +1086,9 @@ class App extends Component {
       from: accounts[0],
       gas:120000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      this.startWaiting(hash)
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
@@ -1079,6 +1105,9 @@ class App extends Component {
       from: accounts[0],
       gas:20000+75000*timberToCollect,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      this.startWaiting(hash)
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
@@ -1094,6 +1123,9 @@ class App extends Component {
       from: accounts[0],
       gas:95000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      this.startWaiting(hash)
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
@@ -1108,6 +1140,9 @@ class App extends Component {
       from: accounts[0],
       gas:90000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      this.startWaiting(hash)
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
@@ -1122,6 +1157,9 @@ class App extends Component {
       from: accounts[0],
       gas:300000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      this.startWaiting(hash)
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
@@ -1143,6 +1181,9 @@ class App extends Component {
       from: accounts[0],
       gas:400000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      this.startWaiting(hash)
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
@@ -1179,6 +1220,9 @@ class App extends Component {
       from: accounts[0],
       gas:400000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      this.startWaiting(hash)
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
@@ -1206,6 +1250,9 @@ class App extends Component {
       from: accounts[0],
       gas:320000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      this.startWaiting(hash)
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
@@ -1229,6 +1276,9 @@ class App extends Component {
       from: accounts[0],
       gas:120000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      this.startWaiting(hash)
     }).on('error',this.transactionError.bind(this))
     .on('transactionHash',this.transactionHash.bind(this))
     .on('receipt',this.transactionReceipt.bind(this))
@@ -1253,12 +1303,13 @@ class App extends Component {
         if(!error) this.load()
         if(direction) this.resetButton("saileast")
         else this.resetButton("sailwest")
+        this.startWaiting(hash,"lockShipButtons")
       }).on('error',this.transactionError.bind(this))
       .on('transactionHash',this.transactionHash.bind(this))
       .on('receipt',this.transactionReceipt.bind(this))
       .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
         console.log("RESULT:",receipt)
-        this.startWaiting(receipt.transactionHash,"shipUpdate")
+
       })
     })
   }
@@ -1276,12 +1327,13 @@ class App extends Component {
         this.setState({currentTx:hash});
         if(!error) this.load()
         this.resetButton("dropanchor")
+        this.startWaiting(hash,"lockShipButtons")
       }).on('error',this.transactionError.bind(this))
       .on('transactionHash',this.transactionHash.bind(this))
       .on('receipt',this.transactionReceipt.bind(this))
       .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
         console.log("RESULT:",receipt)
-        this.startWaiting(receipt.transactionHash,"shipUpdate")
+
       })
     })
   }
@@ -1302,12 +1354,13 @@ class App extends Component {
         this.setState({currentTx:hash});
         if(!error) this.load()
         this.resetButton("castline")
+        this.startWaiting(hash,"lockShipButtons")
       }).on('error',this.transactionError.bind(this))
       .on('transactionHash',this.transactionHash.bind(this))
       .on('receipt',this.transactionReceipt.bind(this))
       .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
         console.log("RESULT:",receipt)
-        this.startWaiting(receipt.transactionHash,"shipUpdate")
+
       })
     })
   }
@@ -1366,12 +1419,13 @@ class App extends Component {
         this.setState({currentTx:hash});
         if(!error) this.load()
         this.resetButton("reelin")
+        this.startWaiting(hash,"lockShipButtons")
       }).on('error',this.transactionError.bind(this))
       .on('transactionHash',this.transactionHash.bind(this))
       .on('receipt',this.transactionReceipt.bind(this))
       .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
         if(DEBUG_REEL_IN) console.log("RESULT:",receipt)
-        this.startWaiting(receipt.transactionHash,"shipUpdate")
+
       })
     })
   }
@@ -1385,6 +1439,7 @@ class App extends Component {
   }
 
   updateLoader(){
+    console.log("UPDATE LOADER")
     let next = parseInt(this.state.loading)+1;
     if(next>24) {
       next=23;
@@ -1394,23 +1449,22 @@ class App extends Component {
     }
   }
   async startWaitingForTransaction(hash){
+    //this.setState({bottomBar:0,bottomBarMessage:"Polling",bottomBarSize:24})
+    //this.setState({loading:0}
+    let DEBUGWAITINGFORTX = false
+    //clearInterval(txWaitIntervals["loader"])
 
-    this.setState({loading:0})
-    clearInterval(txWaitIntervals["loader"])
-
-    console.log(" ~~~~ WAITING FOR TRANSACTION ",hash,this.state.waitingForTransaction,this.state.waitingForTransactionTime)
+    if(DEBUGWAITINGFORTX) console.log(" ~~~~ WAITING FOR TRANSACTION ",hash,this.state.waitingForTransaction,this.state.waitingForTransactionTime)
     try {
-      var receipt = await web3.eth.getTransactionReceipt(this.state.waitingForTransaction);
-      console.log("~~ TIME SPENT:"+Date.now()-this.state.waitingForTransactionTime)
+      var receipt = await web3.eth.getTransactionReceipt(hash);
+      //this.setState({bottomBar:0,bottomBarMessage:"Polled:"+JSON.stringify(receipt),bottomBarSize:24})
+
+      if(DEBUGWAITINGFORTX) console.log("~~ TIME SPENT:"+Date.now()-this.state.waitingForTransactionTime)
       if (receipt == null) {
         //keep waiting
-
       } else {
-        //DONE
-        //DONE
-        console.log("~~~ DONE WITH TX",receipt)
-
-        console.log("~~~~~~~~ polled receipt",receipt)
+        if(DEBUGWAITINGFORTX) console.log("~~~ DONE WITH TX",receipt)
+        if(DEBUGWAITINGFORTX) console.log("~~~~~~~~ polled receipt",receipt)
         let currentTransactions = this.state.transactions
         for(let t in currentTransactions){
           if(currentTransactions[t].hash == receipt.transactionHash){
@@ -1420,39 +1474,62 @@ class App extends Component {
         }
         this.setState({transactions:currentTransactions})
 
+
+        let thisHashToWatch = hash
+        console.log("------------------------- setting timeout to finish ",thisHashToWatch)
+        setTimeout(()=>{
+          console.log("+++++++++++++++++++++============= finishing trans ",thisHashToWatch)
+          let currentTransactions = this.state.transactions
+          for(let t in currentTransactions){
+            if(currentTransactions[t].hash == thisHashToWatch){
+              currentTransactions[t].done = true
+              currentTransactions[t].time = Date.now()
+            }
+          }
+          this.setState({transactions:currentTransactions})
+        },2000)
+        setTimeout(()=>{
+          let currentTransactions = this.state.transactions
+          for(let t in currentTransactions){
+            if(currentTransactions[t].hash == thisHashToWatch){
+              currentTransactions[t].closed = true
+              currentTransactions[t].time = Date.now()
+            }
+          }
+          this.setState({transactions:currentTransactions})
+        },8000)
+
+
         clearInterval(txWaitIntervals[hash])
         txWaitIntervals[hash]=null
         clearInterval(txWaitIntervals["loader"])
+
         if(receipt.status=="0x0"||receipt.status=="0x00"){
-          //this.state.waitingForTransaction || this.state.waitingForShipUpdate || this.state.waitingForInventoryUpdate
-          this.setState({loading:0,waitingForTransaction:false,waitingForShipUpdate:false,waitingForInventoryUpdate:false})
+          this.setState({loading:0,waitingForTransaction:false,waitingForUpdate:false})
           this.setState({bottomBar:0,bottomBarMessage:"Warning: Transaction failed. Try again with a higher #gas  gas price.",bottomBarSize:24})
           clearTimeout(bottomBarTimeout)
           bottomBarTimeout = setTimeout(()=>{
             this.setState({bottomBar:-80})
           },10000)
         }else{
-          this.setState({waitingForTransaction:false})
-          ////do this to skip green loader (don't)
-          //this.setState({loading:0,waitingForTransaction:false,waitingForShipUpdate:false,waitingForInventoryUpdate:false})
-          console.log("CALL A SYNC OF EVERYTHING!!")
-          this.syncEverythingOnce()
-
-          console.log("IS EMBARKING",this.state.isEmbarking)
-          if(this.state.isEmbarking){
-            //hint by animating the blockie down
-            this.waitForShipToFloatThenDoBlockieHint()
-          }
+          this.setState({loading:0,waitingForTransaction:false,waitingForUpdate:true,waitingForTransactionTime:Date.now()},()=>{
+            if(DEBUGWAITINGFORTX) console.log("CALL A SYNC OF EVERYTHING!!")
+            this.syncEverythingOnce()
+            if(DEBUGWAITINGFORTX) console.log("IS EMBARKING",this.state.isEmbarking)
+            if(this.state.isEmbarking){
+              //hint by animating the blockie down
+              this.waitForShipToFloatThenDoBlockieHint()
+            }
+          })
 
         }
-
       }
     } catch(e) {
       console.log("ERROR WAITING FOR TX",e)
       clearInterval(txWaitIntervals[hash]);
       this.setState({loading:0,waitingForTransaction:false})
     }
-    console.log("DONE WAITING ON TRANSACTION")
+    if(DEBUGWAITINGFORTX) console.log("DONE WAITING ON TRANSACTION")
   }
   waitForShipToFloatThenDoBlockieHint(){
     if(this.state.ship&&this.state.ship.floating){
@@ -1487,6 +1564,7 @@ class App extends Component {
   load(){
     console.log("LOAD!")
     this.setState({loading:1},()=>{
+      console.log("SET INTERVALE")
       txWaitIntervals["loader"] = setInterval(this.updateLoader.bind(this),LOADERSPEED)
     })
   }
@@ -1494,15 +1572,14 @@ class App extends Component {
     if(hash){
       console.log("STARTWAITING",hash,nextPhase)
       let update = {waitingForTransaction:hash,waitingForTransactionTime:Date.now()}
-      if(nextPhase=="inventoryUpdate"){
-        update.waitingForInventoryUpdate=true
-      }else{
-        update.waitingForShipUpdate=true
+      if(nextPhase=="lockShipButtons"||nextPhase=="inventoryUpdate"){
+        update.waitingForUpdate=true
       }
+
       this.setState(update,()=>{
         txWaitIntervals[hash] = setInterval(this.startWaitingForTransaction.bind(this,hash),RECEIPTPOLL)
         this.startWaitingForTransaction(hash)
-        setTimeout(()=>{
+        /*setTimeout(()=>{
           console.log("CHECKING BACK ON TX ",hash,txWaitIntervals[hash])
           if(txWaitIntervals[hash]){
             clearInterval(txWaitIntervals[hash]);
@@ -1515,7 +1592,7 @@ class App extends Component {
             },10000)
           }
 
-        },this.state.avgBlockTime*2)
+        },this.state.avgBlockTime*2)*/
       })
     }
   }
@@ -1649,7 +1726,7 @@ async tileClick(name,index,px) {
     transactionReceipt:this.transactionReceipt.bind(this),
     transactionConfirmation:this.transactionConfirmation.bind(this),
     transactionError:this.transactionError.bind(this),
-
+    startWaiting:this.startWaiting.bind(this),
   }
   for(let c in this.state.citizens){
     if( this.state.citizens[c].x==this.state.landX && this.state.citizens[c].y==this.state.landY && this.state.citizens[c].tile==index ){
@@ -1887,24 +1964,25 @@ render() {
 
   let buttonOpacity = 0.9
   let buttonDisabled = false
+  //console.log("loading:",this.state.loading,"waitingForUpdate:",this.state.waitingForUpdate)
   if(this.state.loading){
     buttonOpacity = 0.5
     buttonDisabled = true
     loadingBar = (
-      <a href={this.state.etherscan+"tx/"+this.state.currentTx} target='_blank'><img src={"preloader_"+this.state.loading+".png"} /></a>
+      <img src={"preloader_"+this.state.loading+".png"} />
     )
-  } else if( this.state.waitingForTransaction || this.state.waitingForShipUpdate || this.state.waitingForInventoryUpdate){
+  } else if( this.state.waitingForUpdate){
     buttonOpacity = 0.3
     buttonDisabled = true
     let timeSpentWaiting = Date.now() - this.state.waitingForTransactionTime
     timeSpentWaiting = Math.floor(timeSpentWaiting/1200)+1;
     //console.log("timeSpentWaiting",timeSpentWaiting)
-    if(timeSpentWaiting>30){
+    /*if(timeSpentWaiting>30){
       window.location.reload(true);
-    }
+    }*/
     if(timeSpentWaiting>12) timeSpentWaiting=12
     loadingBar = (
-      <a href={this.state.etherscan+"tx/"+this.state.currentTx} target='_blank'><img src={"loader_"+timeSpentWaiting+".png"} /></a>
+      <img src={"loader_"+timeSpentWaiting+".png"} />
     )
   }
 
@@ -1924,7 +2002,7 @@ render() {
           }else{
             return (
               <div key={"buyship"} style={{cursor:"pointer",zIndex:700,position:'absolute',left:theLeft,top:animated.top+buttonPushDown,opacity:buttonOpacity}} onClick={clickFn}>
-              <img src="buyship.png" style={{zIndex:700,maxWidth:150-(extraWidth)}}/>
+              <img src="buyship.png" style={{transform:"scale("+adjustedInvZoom+")",zIndex:700,maxWidth:150-(extraWidth)}}/>
               </div>
             )
           }
@@ -1948,7 +2026,7 @@ render() {
       )
     )
   }else{
-    console.log("WAITING FOR INV DETAIL....")
+    //console.log("WAITING FOR INV DETAIL....")
     buttons.push(
       <div key={"waiting"}>
       </div>
@@ -2257,6 +2335,7 @@ return (
   <ReactHint events delay={100} />
 
   <Transactions
+    GWEI={this.state.GWEI}
     zoom={this.state.zoom}
     etherscan={this.state.etherscan}
     avgBlockTime={this.state.avgBlockTime}

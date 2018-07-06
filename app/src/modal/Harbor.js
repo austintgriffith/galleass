@@ -32,6 +32,9 @@ class Harbor extends Component {
       from: accounts[0],
       gas:1000000,
       gasPrice:Math.round(GWEI * 1000000000)
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      this.props.startWaiting(hash)
     }).on('error',this.props.transactionError)
     .on('transactionHash',this.props.transactionHash)
     .on('receipt',this.props.transactionReceipt)
