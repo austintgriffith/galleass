@@ -14,6 +14,8 @@ import 'NFT.sol';
 
 contract Galley is Galleasset, NFT {
 
+    uint16 public constant TIMBERTOBUILDGALLEY = 5;
+
     string public constant name = "Galleass Galley";
     string public constant symbol = "G_GALLEY";
 
@@ -46,7 +48,7 @@ contract Galley is Galleasset, NFT {
 
     function build() public isGalleasset("Galley") returns (uint){
       require( hasPermission(msg.sender,"buildGallet") );
-      require( getTokens(msg.sender,"Timber",5) );
+      require( getTokens(msg.sender,"Timber",TIMBERTOBUILDGALLEY) );
 
       //when citizens are introduced to the game,
       //their level of craftsmanship will play a role

@@ -41,6 +41,7 @@ galleass.setFishPrice(0,"Redbass",4)
 galleass.setFishPrice(0,"Catfish",5)
 galleass.setFishPrice(0,"Snark",8)
 galleass.setFishPrice(0,"Dangler",9)
+galleass.createCitizenAtTileType(0,"0x9129a6fbb3298ba8452a7c7948133c0138c0a6114af88226d6fd0ecdc7640d83","0x000f000f000f000f000f00000000000f00000000000000000000000000000000","Fishmonger")
 
 
 

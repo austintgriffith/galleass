@@ -35,12 +35,14 @@ import Harbor from './modal/Harbor.js'
 import Market from './modal/Market.js'
 import Fishmonger from './modal/Fishmonger.js'
 
+import Message from './modal/renderers/Message.js'
+
 // -- hud--- //
 import Inventory from './hud/Inventory.js'
 import BottomBar from './hud/BottomBar.js'
 import Social from './hud/Social.js'
 import Transactions from './hud/Transactions.js'
-
+import Messages from './hud/Messages.js'
 /*
 assuming that galleassBlockNumber is the oldest block for all contracts
 that means if you redeploy the galleass contract you have to redeploy ALL
@@ -204,6 +206,7 @@ class App extends Component {
       isEmbarking:false,
       previousModalObject:{name:"Loading..."},
       transactions:[],
+      messages:[]
     }
 
     let timeoutLoader = 8000
@@ -424,6 +427,18 @@ class App extends Component {
       })
     }else{
       this.setState({account:account})
+
+
+      setTimeout(()=>{
+        this.setState({messages:[
+          {
+            id:'introfromfishmonger',
+            from:'',
+            data:'Salutations  #0x9319bbb4e2652411be15bb74f339b7f6218b2508 0x9319bbb4, \n \n Welcome to Galleass, a charming, hand painted world filled with delightful anachronisms like blockchain in the age of sail. \n \n I am the humble Fishmonger of this island, but my friends refer to me as  #0x068d775f6503ce28D1781244040576f0d6E7b7BE 0x068d775f.   I purchase #fish  Fish to sell as #fillet  Fillets to feed your growing population of #citizen  Citizens. \n \n If you would like to try your hand at fishing, purchase a #dogger  Dogger at the #harbor  Harbor. When you catch fish, bring them to me at the #fishmonger  Fishmonger and I will reward you handsomely with #copper  Copper. \n \n                      Sincerely Yours,  #0x068d775f6503ce28D1781244040576f0d6E7b7BE 0x068d775f \n \n '
+          }
+        ]})
+      },8000)
+
       this.setState({bottomBar:0,bottomBarMessage:"Stage 1: Use a #Dogger  Dogger to catch #Fish  Fish and sell them for #Copper  Copper.",bottomBarSize:23})
       clearTimeout(bottomBarTimeout)
       bottomBarTimeout = setTimeout(()=>{
@@ -652,6 +667,12 @@ class App extends Component {
       if(this.state.experienceBuyShip!=experienceBuyShip){
         console.log("experienceBuyShip update",experienceBuyShip);
         this.setState({experienceBuyShip:experienceBuyShip})
+      }
+
+      let experienceCatchFish = await contracts["Experience"].methods.experience(this.state.account,2).call()
+      if(this.state.experienceCatchFish!=experienceCatchFish){
+        console.log("experienceCatchFish update",experienceCatchFish);
+        this.setState({experienceCatchFish:experienceCatchFish})
       }
 
       if(inventory['Dogger']>0){
@@ -1448,7 +1469,7 @@ class App extends Component {
       this.setState({loading:next})
     }
   }
-  async startWaitingForTransaction(hash){
+  async startWaitingForTransaction(hash,waitAfterFirstStage){
     //this.setState({bottomBar:0,bottomBarMessage:"Polling",bottomBarSize:24})
     //this.setState({loading:0}
     let DEBUGWAITINGFORTX = false
@@ -1512,16 +1533,24 @@ class App extends Component {
             this.setState({bottomBar:-80})
           },10000)
         }else{
-          this.setState({loading:0,waitingForTransaction:false,waitingForUpdate:true,waitingForTransactionTime:Date.now()},()=>{
-            if(DEBUGWAITINGFORTX) console.log("CALL A SYNC OF EVERYTHING!!")
-            this.syncEverythingOnce()
-            if(DEBUGWAITINGFORTX) console.log("IS EMBARKING",this.state.isEmbarking)
-            if(this.state.isEmbarking){
-              //hint by animating the blockie down
-              this.waitForShipToFloatThenDoBlockieHint()
-            }
-          })
-
+          if(waitAfterFirstStage){
+            console.log(" ~~~~ This is a ship transaction so make sure we wait for an update with green bar....")
+            this.setState({loading:0,waitingForTransaction:false,waitingForUpdate:true,waitingForTransactionTime:Date.now()},()=>{
+              if(DEBUGWAITINGFORTX) console.log("CALL A SYNC OF EVERYTHING!!")
+              this.syncEverythingOnce()
+              if(DEBUGWAITINGFORTX) console.log("IS EMBARKING",this.state.isEmbarking)
+              if(this.state.isEmbarking){
+                //hint by animating the blockie down
+                this.waitForShipToFloatThenDoBlockieHint()
+              }
+            })
+          }else{
+            console.log(" ~~~~ This is a simple transaction don't wait for ship update with green bar....")
+            this.setState({loading:0,waitingForTransaction:false},()=>{
+              if(DEBUGWAITINGFORTX) console.log("CALL A SYNC OF EVERYTHING!!")
+              this.syncEverythingOnce()
+            })
+          }
         }
       }
     } catch(e) {
@@ -1574,11 +1603,13 @@ class App extends Component {
       let update = {waitingForTransaction:hash,waitingForTransactionTime:Date.now()}
       if(nextPhase=="lockShipButtons"||nextPhase=="inventoryUpdate"){
         update.waitingForUpdate=true
+      }else{
+        update.waitingForUpdate=false
       }
 
       this.setState(update,()=>{
         txWaitIntervals[hash] = setInterval(this.startWaitingForTransaction.bind(this,hash),RECEIPTPOLL)
-        this.startWaitingForTransaction(hash)
+        this.startWaitingForTransaction(hash,update.waitingForUpdate)
         /*setTimeout(()=>{
           console.log("CHECKING BACK ON TX ",hash,txWaitIntervals[hash])
           if(txWaitIntervals[hash]){
@@ -1641,6 +1672,9 @@ class App extends Component {
       {fn}
       </Motion>
     )
+  }
+  deleteMessages(){
+    this.setState({messages:[]})
   }
   openModal(modalObject){
     this.setState({
@@ -2343,6 +2377,14 @@ return (
     web3={web3}
   />
 
+  <Messages
+    zoom={this.state.zoom}
+    messages={this.state.messages}
+    contracts={contracts}
+    openModal={this.openModal.bind(this)}
+    deleteMessages={this.deleteMessages.bind(this)}
+  />
+
   {menu}
   {clickScreen}
   {inventory}
@@ -2785,6 +2827,15 @@ return (
         <div><Writing style={{opacity:0.9}} string={this.state.modalObject.simpleMessage2} size={22}/></div>
         <div><Writing style={{opacity:0.9}} string={this.state.modalObject.simpleMessage3} size={22}/></div>
 
+        </div>
+      )
+    }else if(this.state.modalObject.message){
+      return (
+        <div style={{transform:"scale("+largerModalThanZoom+")",zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top-((1-largerModalThanZoom)*300),textAlign:"left",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
+          <div style={{cursor:'pointer',position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
+            <img src="exit.png" />
+          </div>
+          {Message(this.state.modalObject)}
         </div>
       )
     }else{

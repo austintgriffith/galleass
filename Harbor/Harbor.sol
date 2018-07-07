@@ -16,6 +16,7 @@ import 'StandardTile.sol';
 contract Harbor is StandardTile {
 
   uint16 public constant TIMBERTOBUILDDOGGER = 2;
+  uint16 public constant TIMBERTOBUILDGALLEY = 5;
 
   //      land x            land y          land tile           model      array of ids
   mapping(uint16 => mapping(uint16 => mapping(uint8 => mapping (bytes32 => uint256[99])))) public shipStorage; //make ship storage very large for testnet (eventually this should be much smaller)
@@ -63,6 +64,11 @@ contract Harbor is StandardTile {
       require( _amount >= TIMBERTOBUILDDOGGER );
       require( _buildShip(_x,_y,_tile,_model) > 0);
       return true;
+    }else if(_model=="Galley"){
+      //must send in enough timber to build
+      require( _amount >= TIMBERTOBUILDGALLEY );
+      require( _buildShip(_x,_y,_tile,_model) > 0);
+      return true;
     }else{
       return false;
     }
@@ -75,6 +81,9 @@ contract Harbor is StandardTile {
     if(_model=="Dogger"){
       require( getTokens(msg.sender,"Timber",TIMBERTOBUILDDOGGER) );
       return _buildShip(_x,_y,_tile,_model);
+    }else if(_model=="Galley"){
+      require( getTokens(msg.sender,"Timber",TIMBERTOBUILDGALLEY) );
+      return _buildShip(_x,_y,_tile,_model);
     }else{
       return 0;
     }
@@ -83,14 +92,18 @@ contract Harbor is StandardTile {
   function _buildShip(uint16 _x,uint16 _y,uint8 _tile,bytes32 _model) internal returns (uint) {
     address shipsContractAddress = getContract(_model);
     require( shipsContractAddress!=address(0) );
-    require( approveTokens("Timber",shipsContractAddress,TIMBERTOBUILDDOGGER) );
+    if(_model=="Dogger"){
+      require( approveTokens("Timber",shipsContractAddress,TIMBERTOBUILDDOGGER) );
+    }else if(_model=="Galley"){
+      require( approveTokens("Timber",shipsContractAddress,TIMBERTOBUILDGALLEY) );
+    }else{
+      return 0;
+    }
     NFT shipContract = NFT(shipsContractAddress);
     uint256 shipId = shipContract.build();
     require( storeShip(_x,_y,_tile,shipId,_model) );
-    emit Debug(shipId);
     return shipId;
   }
-  event Debug(uint id);
 
   //this is old code, but it looks like you can sell ships back to the harbor
   // it also looks like you only get 9/10s of the price back if you sell it

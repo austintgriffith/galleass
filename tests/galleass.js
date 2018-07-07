@@ -215,6 +215,25 @@ module.exports = {
       });
     });
   },
+  //ownerCreateCitizen(address owner,uint16 _x, uint16 _y, uint8 _tile,bytes32 genes, bytes32 characteristics)
+  //createCitizenAtTileType:(0,genes,characteristics,building)
+  createCitizenAtTileType:(accountindex,genes,characteristics,building,status)=>{
+    describe('#createCitizenAtTileType() ', function() {
+      it('should create a citizen at a specific tile...', async function() {
+        this.timeout(120000)
+        const accounts = await clevis("accounts")
+        let mainLand = await getMainLand();
+        const contractAddress = await clevis("contract","getContract","Galleass",web3.utils.fromAscii(building))
+        let tile = await clevis("contract","tileTypes","LandLib",web3.utils.fromAscii(building))
+        let found = await searchLandFromCenterOut(mainLand,9,tile)
+        console.log(tab,"Found "+building+" tile at:",mainLand[0],mainLand[1],found)
+        const result = await clevis("contract","ownerCreateCitizen","CitizensLib",accountindex,contractAddress,mainLand[0],mainLand[1],found,genes,characteristics)
+        printTxResult(result)
+        //const result = await clevis("contract","ownerSetStatus","CitizensLib",accountindex,1,tile)
+        //printTxResult(result)
+      });
+    });
+  },
   setShipPrice:(accountindex,model,ether)=>{
     describe('#setShipPrice()', function() {
       it('should buy ship from the Harbor', async function() {

@@ -41,7 +41,7 @@ class Ships extends Component {
     }
 
     for(let b in ships){
-      console.log("SHIP "+b,ships[b],b)
+    //  console.log("SHIP "+b,ships[b],b)
       if(ships[b].floating){
         let translatedX
         let image = "fishingboat";

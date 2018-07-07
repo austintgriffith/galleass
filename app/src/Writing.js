@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Blockies from 'react-blockies';
 
 class Writing extends Component {
   render(){
@@ -51,9 +52,23 @@ class Writing extends Component {
       }
       let finalStyle = {maxHeight:size,marginRight:letterSpacing+extraKern(character,letterSpacing+extraSpace)}
       if(this.props.verticalAlign) finalStyle.verticalAlign=this.props.verticalAlign
-      word.push(
-        <img key={"w"+i} style={finalStyle} src={image} />
-      )
+
+      if(image[0]=='0'&&image[1]=="x"){
+        image=image.replace(".png","").toLowerCase()
+        word.push(
+          <span style={{verticalAlign:'middle'}}>
+            <Blockies
+              seed={image}
+              scale={3}
+            />
+          </span>
+        )
+      }else{
+        word.push(
+          <img key={"w"+i} style={finalStyle} src={image} />
+        )
+      }
+
       usedChars.push(character);
     }
 

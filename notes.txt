@@ -33,7 +33,12 @@ Citizen status should probably be uint16
 
 ### TODO
 ```
-citizen with greens sends 3 copper and 1 greens and it doesn't seem to work
+citizen with greens sends 3 copper and 1 greens and it doesn't seem to work!?
+function to create and move citizen in build mode without doing all the stuff
+  -- create fishmonger on build
+present message from fishmonger that welcomes to the world of galleass and let's the know he's buying fish
+  -- this means as soon as you read user doesn't have certain experience you have a letter show up in the top left
+  --letter system should stack in form the top left like the tx system stacks in on the bottom left
 ```
 
 ### Before Staging
@@ -58,6 +63,45 @@ Make sure all things link to etherscan correctly
 Update your portfolio page for Galleass to basically be a wiki... explain everything... tokens, loader bars, event based actions like sailing and collecting, citizens, etc
 Any click to the top left click screen when not fully logged in should take you to the wiki and links to the contracts etc should be at the top of the wiki
 ```
+
+### notes for a video
+```
+start at galleass.io and introduce the project
+  - fully open source
+  - fully decentralized
+    - meaining you can look at the old ipfs version that shows all the boats from the last version
+     (and someone can play with just the repo even making calls directly to the contracts https://galleass.io/contracts.html )
+    - multiplayer so massive it comes down to what can be displayed ... with the ethereum blockchain as the only backend
+jump to dev env and explain how land is procedurally generated and we can get something brand new each time
+pull up the first message you get from the fish monger and read it
+  - then visit and explain different pieces of land
+  - explain resource tiles vs building tiles
+buy a dogger and go fishing and sell your fish
+  - fish are ERC20s and the Dogger is an ERC721 - stats based on the Citizen that crafted it
+  - this is the foundation of the economy
+  - commit reveal on-chain for randomness plus distance to fish determines if you catch
+mint yourself some copper so you can cheat a little to speed things up (clevis contract mint Copper 0 0x9319bbb4e2652411be15bb74f339b7f6218b2508 5000)
+(Also mention how there are fishing bots and others that will act as NPCs etc just like the fishmoner, I hope to have user generated story lines)
+
+Citizens: created from food, recipes are key... you find you might be a glorified blockchain chef
+  - genetics determine how they look and will soon be passed down from generation to generation
+
+get into the smart contracts a little bit...
+  - predecessor system on main contract
+  - just an index of contract address and permissions each has (easily upgrading with logic and storage separated)
+    (for instance, the village and castle can create citizens on behalf of their owners if food is supplied)
+  - a lot of this is still in discovery mode... which brings up all the different ways to move tokens... authorize and then transfer (two tx, harbor does it to build ships), 667 transfer and call (parse data), give contract permission to transfer (soft/hard assets)
+      -- give examples of different ways to move... for instance, building a villages, the Landlib just *takes* 6 timber from you.. this might be frowned upon by contract auditors or players
+      -- this could easily be replace by a 677 method
+  - the whole event triggered paradigm is really efficient... like how the clouds or resources or sailing works
+   EVEN THE DAMN CLOUDS ARE IN A SMART CONTRACT --- Ethereum IS the backend
+
+lots of (not)fun web2.0 problems like mobile responsiveness/service worker issues along with awesome web3.0 blockchain-as-backend leads to other issues like slow ui
+gitcoin and cent.co and how you can incentivize developers to help out .. build a fishing bot..
+Would love for it to be ready for a mainnet deployment for a big conference like devcon4
+I can use all the help I can get, play it and shoot me feedback, jump in the slack, look for me on github and even gitcoin... it's all open source! 
+```
+
 
 ### Neat things to write about
 ```

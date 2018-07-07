@@ -8,6 +8,16 @@ contract CitizensLib is Galleasset {
 
   constructor(address _galleass) Galleasset(_galleass) public { }
 
+  function ownerCreateCitizen(address owner,uint16 _x, uint16 _y, uint8 _tile,bytes32 genes, bytes32 characteristics) onlyOwner isBuilding public returns (uint){
+    //function used at world build time to populate certain buildings like the fishmonger with a Citizen
+    _createCitizen(owner,_x,_y,_tile,genes,characteristics);
+  }
+
+  function ownerSetStatus(uint _id,uint8 _status) onlyOwner isBuilding public returns (bool){
+    Citizens citizensContract = Citizens(getContract("Citizens"));
+    return citizensContract.setStatus(_id,_status);
+  }
+
   //a citizen is created when food is provided to a village
   function createCitizen(address owner,uint16 _x, uint16 _y, uint8 _tile,bytes32 food1, bytes32 food2, bytes32 food3) public isGalleasset("CitizensLib") returns (uint){
     require(hasPermission(msg.sender,"createCitizens"));
