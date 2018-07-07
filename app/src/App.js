@@ -429,16 +429,6 @@ class App extends Component {
       this.setState({account:account})
 
 
-      setTimeout(()=>{
-        this.setState({messages:[
-          {
-            id:'introfromfishmonger',
-            from:'',
-            data:'Salutations  #0x9319bbb4e2652411be15bb74f339b7f6218b2508 0x9319bbb4, \n \n Welcome to Galleass, a charming, hand painted world filled with delightful anachronisms like blockchain in the age of sail. \n \n I am the humble Fishmonger of this island, but my friends refer to me as  #0x068d775f6503ce28D1781244040576f0d6E7b7BE 0x068d775f.   I purchase #fish  Fish to sell as #fillet  Fillets to feed your growing population of #citizen  Citizens. \n \n If you would like to try your hand at fishing, purchase a #dogger  Dogger at the #harbor  Harbor. When you catch fish, bring them to me at the #fishmonger  Fishmonger and I will reward you handsomely with #copper  Copper. \n \n                      Sincerely Yours,  #0x068d775f6503ce28D1781244040576f0d6E7b7BE 0x068d775f \n \n '
-          }
-        ]})
-      },8000)
-
       this.setState({bottomBar:0,bottomBarMessage:"Stage 1: Use a #Dogger  Dogger to catch #Fish  Fish and sell them for #Copper  Copper.",bottomBarSize:23})
       clearTimeout(bottomBarTimeout)
       bottomBarTimeout = setTimeout(()=>{
@@ -667,6 +657,17 @@ class App extends Component {
       if(this.state.experienceBuyShip!=experienceBuyShip){
         console.log("experienceBuyShip update",experienceBuyShip);
         this.setState({experienceBuyShip:experienceBuyShip})
+      }
+      if(!experienceBuyShip&&this.state.messages.length<=0){
+        setTimeout(()=>{
+          this.setState({messages:[
+            {
+              id:'introfromfishmonger',
+              from:'Fishmonger',
+              data:'Salutations  #0x9319bbb4e2652411be15bb74f339b7f6218b2508 0x9319bbb4, \n \n Welcome to Galleass, a charming, hand painted world filled with delightful anachronisms like blockchain in the age of sail. \n \n I am the humble Fishmonger of this island, but my friends refer to me as  #0x068d775f6503ce28D1781244040576f0d6E7b7BE 0x068d775f.   I purchase #fish  Fish to sell as #fillet  Fillets to feed your growing population of #citizen  Citizens. \n \n If you would like to try your hand at fishing, purchase a #dogger  Dogger at the #harbor  Harbor. When you catch fish, bring them to me at the #fishmonger  Fishmonger and I will reward you handsomely with #copper  Copper. \n \n                      Sincerely Yours,  #0x068d775f6503ce28D1781244040576f0d6E7b7BE 0x068d775f \n \n '
+            }
+          ]})
+        },4000)
       }
 
       let experienceCatchFish = await contracts["Experience"].methods.experience(this.state.account,2).call()
@@ -1176,7 +1177,7 @@ class App extends Component {
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
     contracts["Village"].methods.createCitizen(x,y,tile,web3.utils.fromAscii(food1),web3.utils.fromAscii(food2),web3.utils.fromAscii(food3)).send({
       from: accounts[0],
-      gas:300000,
+      gas:400000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
@@ -1673,8 +1674,8 @@ class App extends Component {
       </Motion>
     )
   }
-  deleteMessages(){
-    this.setState({messages:[]})
+  updateMessages(messages){
+    this.setState({messages:messages})
   }
   openModal(modalObject){
     this.setState({
@@ -2368,6 +2369,12 @@ return (
   <div className="App">
   <ReactHint events delay={100} />
 
+
+
+  {menu}
+  {clickScreen}
+  {inventory}
+
   <Transactions
     GWEI={this.state.GWEI}
     zoom={this.state.zoom}
@@ -2382,13 +2389,8 @@ return (
     messages={this.state.messages}
     contracts={contracts}
     openModal={this.openModal.bind(this)}
-    deleteMessages={this.deleteMessages.bind(this)}
+    updateMessages={this.updateMessages.bind(this)}
   />
-
-  {menu}
-  {clickScreen}
-  {inventory}
-
 
 
   {bay}

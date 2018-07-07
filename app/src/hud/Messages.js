@@ -44,8 +44,13 @@ class Messages extends Component {
                   message:msg.data
                 })
                 setTimeout(()=>{
-                  this.props.deleteMessages()
-                },10000)
+                  this.props.updateMessages([
+                    {
+                      id:'introfromfishmonger',
+                      read:true
+                    }
+                  ])
+                },3000)
               }}
             >
             </div>
