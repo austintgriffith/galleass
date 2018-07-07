@@ -404,9 +404,6 @@ class App extends Component {
   }
   componentDidMount() {
     this.updateDimensions();
-    setTimeout(()=>{
-      this.updateDimensions();
-    },2500)
     window.addEventListener("resize", this.updateDimensions.bind(this));
     document.addEventListener('keydown', this.handleKeyPress);
   }
@@ -2370,6 +2367,10 @@ let clickScreen = (
   </Motion>
 )
 
+
+let titlescaleoffsetleft = (-5+(1-this.state.zoom)*-145)+document.scrollingElement.scrollLeft;
+let titlescaleoffsettop = 20+(1-this.state.zoom)*-57+document.scrollingElement.scrollTop;
+
 return (
   <div className="App">
   <ReactHint events delay={100} />
@@ -2386,9 +2387,17 @@ return (
 
 
 
+
   {menu}
+
+  <div style={{transform:"scale("+this.state.zoom+")",zIndex:701, width:300,position:'absolute',left:titlescaleoffsetleft,top:titlescaleoffsettop}} onClick={this.titleClick.bind(this)}>
+    <Writing string={"Galleass.io"} size={60} space={5} letterSpacing={29}/>
+  </div>
+
   {clickScreen}
   {inventory}
+
+
 
   <Transactions
     GWEI={this.state.GWEI}
@@ -2694,8 +2703,11 @@ return (
       mapZ = 750
     }
 
+    let galleassRight = currentStyles.titleRight+((1-this.state.zoom)*120)
+    let galleassBottom = currentStyles.titleBottom+((1-this.state.zoom)*54)
 
-
+    //margins marginBottom:-20,marginRight:-10
+    //width:300,transform:"scale("+this.state.zoom+")",cursor:"pointer",zIndex:2,
     return (
 
       <div style={{
@@ -2716,9 +2728,7 @@ return (
 
 
 
-      <div style={{width:300,transform:"scale("+this.state.zoom+")",cursor:"pointer",zIndex:2,marginBottom:-20,marginRight:-10,position:'absolute',right:currentStyles.titleRight+((1-this.state.zoom)*120),bottom:currentStyles.titleBottom+((1-this.state.zoom)*54)}} onClick={this.titleClick.bind(this)}>
-      <Writing string={"Galleass.io"} size={60} space={5} letterSpacing={29}/>
-      </div>
+
       <div style={{position:'absolute',opacity:this.state.cornerOpacity,left:0,top:0}}>
       <img style={{maxWidth:(this.state.clientWidth/5)}} src={"topleftcorner.png"} />
       </div>
@@ -2805,6 +2815,8 @@ return (
   bottomBarMessage={this.state.bottomBarMessage}
   bottomBarSize={this.state.bottomBarSize}
   />
+
+
 
   <Motion
   defaultStyle={{
