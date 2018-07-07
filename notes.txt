@@ -33,6 +33,7 @@ Citizen status should probably be uint16
 
 ### TODO
 ```
+the Galleass.io title freaks out when you resize the screen on mobile.. figure that out and it will start looking great 
 the transactions are on top of the menu so you can't click the last few buttons
 the fishmonger message isn't to the current account it is to a hardcoded account
 citizen with greens sends 3 copper and 1 greens and it doesn't seem to work!?

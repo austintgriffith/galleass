@@ -404,6 +404,9 @@ class App extends Component {
   }
   componentDidMount() {
     this.updateDimensions();
+    setTimeout(()=>{
+      this.updateDimensions();
+    },2500)
     window.addEventListener("resize", this.updateDimensions.bind(this));
     document.addEventListener('keydown', this.handleKeyPress);
   }
