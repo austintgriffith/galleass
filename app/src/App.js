@@ -262,7 +262,7 @@ class App extends Component {
     if(error.toString().indexOf("Error: Transaction was not mined")>=0){
       this.setState({loading:0,waitingForTransaction:false})
       clearInterval(txWaitIntervals["loader"])
-      clearInterval(txWaitIntervals[this.state.currentTx])
+      // clearInterval(txWaitIntervals[this.state.currentTx])
       this.setState({bottomBar:0,bottomBarMessage:"Warning: your transaction might not get mined, try increasing your #gas  gas price.",bottomBarSize:20})
       clearTimeout(bottomBarTimeout)
       bottomBarTimeout = setTimeout(()=>{
@@ -878,7 +878,7 @@ class App extends Component {
             gasPrice:Math.round(this.state.GWEI * 1000000000)
           },(error,hash)=>{
             console.log("CALLBACK!",error,hash)
-            this.setState({currentTx:hash});
+            // this.setState({currentTx:hash});
             if(!error) this.load()
             this.resetButton("buyship")
             this.startWaiting(hash,"inventoryUpdate")
@@ -910,7 +910,7 @@ class App extends Component {
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
-      this.setState({currentTx:hash});
+      // this.setState({currentTx:hash});
       if(!error) this.load()
       this.resetButton("disembark")
       this.startWaiting(hash,"lockShipButtons")
@@ -938,7 +938,7 @@ class App extends Component {
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
-      this.setState({currentTx:hash});
+      // this.setState({currentTx:hash});
       if(!error) this.load()
       this.resetButton("approveandembark")
       this.setState({isEmbarking:true})
@@ -1321,7 +1321,7 @@ class App extends Component {
         gasPrice:Math.round(this.state.GWEI * 1000000000)
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
-        this.setState({currentTx:hash});
+        // this.setState({currentTx:hash});
         if(!error) this.load()
         if(direction) this.resetButton("saileast")
         else this.resetButton("sailwest")
@@ -1346,7 +1346,7 @@ class App extends Component {
         gasPrice:Math.round(this.state.GWEI * 1000000000)
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
-        this.setState({currentTx:hash});
+        // this.setState({currentTx:hash});
         if(!error) this.load()
         this.resetButton("dropanchor")
         this.startWaiting(hash,"lockShipButtons")
@@ -1373,7 +1373,7 @@ class App extends Component {
         gasPrice:Math.round(this.state.GWEI * 1000000000)
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
-        this.setState({currentTx:hash});
+        // this.setState({currentTx:hash});
         if(!error) this.load()
         this.resetButton("castline")
         this.startWaiting(hash,"lockShipButtons")
@@ -1438,7 +1438,7 @@ class App extends Component {
         gasPrice:Math.round(this.state.GWEI * 1000000000)
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
-        this.setState({currentTx:hash});
+        // this.setState({currentTx:hash});
         if(!error) this.load()
         this.resetButton("reelin")
         this.startWaiting(hash,"lockShipButtons")
@@ -1461,7 +1461,7 @@ class App extends Component {
   }
 
   updateLoader(){
-    console.log("UPDATE LOADER")
+    //console.log("UPDATE LOADER")
     let next = parseInt(this.state.loading)+1;
     if(next>24) {
       next=23;
@@ -1476,7 +1476,7 @@ class App extends Component {
     let DEBUGWAITINGFORTX = false
     //clearInterval(txWaitIntervals["loader"])
 
-    if(DEBUGWAITINGFORTX) console.log(" ~~~~ WAITING FOR TRANSACTION ",hash,this.state.waitingForTransaction,this.state.waitingForTransactionTime)
+    if(DEBUGWAITINGFORTX) console.log(" ~~~~ WAITING FOR TRANSACTION ",hash,waitAfterFirstStage,this.state.waitingForTransaction,this.state.waitingForTransactionTime)
     try {
       var receipt = await web3.eth.getTransactionReceipt(hash);
       //this.setState({bottomBar:0,bottomBarMessage:"Polled:"+JSON.stringify(receipt),bottomBarSize:24})
@@ -1534,6 +1534,7 @@ class App extends Component {
             this.setState({bottomBar:-80})
           },10000)
         }else{
+          console.log(" `````` end of first phase of tx, now green bar...... waitAfterFirstStage:"+waitAfterFirstStage)
           if(waitAfterFirstStage){
             console.log(" ~~~~ This is a ship transaction so make sure we wait for an update with green bar....")
             this.setState({loading:0,waitingForTransaction:false,waitingForUpdate:true,waitingForTransactionTime:Date.now()},()=>{
@@ -1602,15 +1603,16 @@ class App extends Component {
     if(hash){
       console.log("STARTWAITING",hash,nextPhase)
       let update = {waitingForTransaction:hash,waitingForTransactionTime:Date.now()}
-      if(nextPhase=="lockShipButtons"||nextPhase=="inventoryUpdate"){
+      let shipTx = (nextPhase=="lockShipButtons"||nextPhase=="inventoryUpdate")
+      if(shipTx){
         update.waitingForUpdate=true
       }else{
         update.waitingForUpdate=false
       }
 
       this.setState(update,()=>{
-        txWaitIntervals[hash] = setInterval(this.startWaitingForTransaction.bind(this,hash),RECEIPTPOLL)
-        this.startWaitingForTransaction(hash,update.waitingForUpdate)
+        txWaitIntervals[hash] = setInterval(this.startWaitingForTransaction.bind(this,hash,shipTx),RECEIPTPOLL)
+        this.startWaitingForTransaction(hash,shipTx)
         /*setTimeout(()=>{
           console.log("CHECKING BACK ON TX ",hash,txWaitIntervals[hash])
           if(txWaitIntervals[hash]){
