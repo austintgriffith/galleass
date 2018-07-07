@@ -14,7 +14,9 @@ I'm current developing on the second iteration, the first can always be played a
 
 ------------------------------------------------------------ 
 
-## Introduction [![](https://austingriffith.com/images/fishmongerMessage.png)](https://galleass.io) 
+## Introduction 
 
------------------------------------------------------------- 
+[![](https://austingriffith.com/images/fishmongerMessage.png)](https://galleass.io) 
 
+
+[Play Now!](https://galleass.io) 
