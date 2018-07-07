@@ -2369,6 +2369,16 @@ return (
   <div className="App">
   <ReactHint events delay={100} />
 
+  <div id="preloadthebuttons" style={{position:"absolute",left:-1000,top:-1000}}>
+    <img src={"dropanchor.png"} />
+    <img src={"buyship.png"} />
+    <img src={"approveAndEmbark.png"} />
+    <img src={"reelin.png"} />
+    <img src={"saileast.png"} />
+    <img src={"castLine.png"} />
+    <img src={"sailwest.png"} />
+  </div>
+
 
 
   {menu}
