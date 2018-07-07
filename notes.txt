@@ -33,6 +33,8 @@ Citizen status should probably be uint16
 
 ### TODO
 ```
+the transactions are on top of the menu so you can't click the last few buttons
+the fishmonger message isn't to the current account it is to a hardcoded account
 citizen with greens sends 3 copper and 1 greens and it doesn't seem to work!?
 letter is showing up over the map (txs too?)
 it would be cool on the testnet to have a request ether button that sends them like 0.01 or something on ropsten
