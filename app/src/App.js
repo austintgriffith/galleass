@@ -2390,9 +2390,6 @@ return (
 
   {menu}
 
-  <div style={{transform:"scale("+this.state.zoom+")",zIndex:701, width:300,position:'absolute',left:titlescaleoffsetleft,top:titlescaleoffsettop}} onClick={this.titleClick.bind(this)}>
-    <Writing string={"Galleass.io"} size={60} space={5} letterSpacing={29}/>
-  </div>
 
   {clickScreen}
   {inventory}
@@ -2747,20 +2744,26 @@ return (
 
 
       <div style={{zIndex:mapZ,transform:"scale("+this.state.zoom+")",marginLeft:-((1-this.state.zoom)*175),marginTop:-((1-this.state.zoom)*60)}}>
-      <a href="https://github.com/austintgriffith/galleass" target="_blank">
-      <img data-rh="Source" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:25+iconOffset,top:83,opacity:0.8}} src="github.png" />
-      </a>
-      <a href="http://austingriffith.com/portfolio/galleass/" target="_blank">
-      <img data-rh="Info" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:70+iconOffset,top:83,opacity:0.8}} src="moreinfo.png" />
-      </a>
-      <a href="contracts.html" target="_blank">
-      <img data-rh="Contracts" data-rh-at="bottom"  style={{maxHeight:36,position:"absolute",left:115+iconOffset,top:83,opacity:0.8}} src="smartcontract.png" />
-      </a>
-      <a href={decentralizedLink} target="_blank">
-      <img data-rh="IPFS" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:160+iconOffset,top:83,opacity:0.8}} src="ipfs.png" />
-      </a>
-      {gasDragger}
-      <img style={{zIndex:2}} src={"mapicon.png"} onClick={this.titleClick.bind(this)}/>
+        <div style={{position:'relative',backgroundImage:"url('mapicon.png')",width:400,height:115}} onClick={this.titleClick.bind(this)}>
+          <div style={{position:"absolute",top:19,left:32}}>
+            <Writing  string={"Galleass.io"} size={60} space={5} letterSpacing={29}/>
+          </div>
+        </div>
+        <a href="https://github.com/austintgriffith/galleass" target="_blank">
+        <img data-rh="Source" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:25+iconOffset,top:83,opacity:0.8}} src="github.png" />
+        </a>
+        <a href="http://austingriffith.com/portfolio/galleass/" target="_blank">
+        <img data-rh="Info" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:70+iconOffset,top:83,opacity:0.8}} src="moreinfo.png" />
+        </a>
+        <a href="contracts.html" target="_blank">
+        <img data-rh="Contracts" data-rh-at="bottom"  style={{maxHeight:36,position:"absolute",left:115+iconOffset,top:83,opacity:0.8}} src="smartcontract.png" />
+        </a>
+        <a href={decentralizedLink} target="_blank">
+        <img data-rh="IPFS" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:160+iconOffset,top:83,opacity:0.8}} src="ipfs.png" />
+        </a>
+        {gasDragger}
+
+
       </div>
 
 

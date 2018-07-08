@@ -660,6 +660,37 @@ module.exports = {
       });
     });
   },
+  buyLand:(accountindex,amount,tileName)=>{
+    describe('#buyLand()', function() {
+      it('should transfer '+amount+' Copper to LandLib to buy the tile '+tileName, async function() {
+        this.timeout(120000)
+
+        let contract = "Copper"
+        let toContract = "LandLib"
+        let data = "0x01"
+
+        let mainLand = await getMainLand();
+
+
+        let buyTileType = await clevis("contract","tileTypes","LandLib",web3.utils.fromAscii(tileName))
+
+        let found = await searchLandFromCenterOut(mainLand,9,buyTileType)
+        console.log(tab,"Found tiletype "+buyTileType+" at:",mainLand[0],mainLand[1],found)
+
+        let xHex = getPaddedHexFromNumber(mainLand[0],4)
+        let yHex = getPaddedHexFromNumber(mainLand[1],4)
+        let tileHex = getPaddedHexFromNumber(found,2)
+
+        data = data+xHex+yHex+tileHex
+        let toContractAddress = localContractAddress(toContract);
+        console.log("Transferring "+amount+" "+contract+" to "+toContract+" ("+toContractAddress+") and then calling receiver with data: "+data)
+        const result = await clevis("contract","transferAndCall",contract,accountindex,toContractAddress,amount,data)
+        printTxResult(result)
+        const events = await clevis("contract","eventTokenTransfer",toContract)
+        console.log(events[events.length-1].returnValues)
+      });
+    });
+  },
   transferTokens:(contract,accountindex,toContract,amount)=>{
     describe('#transferTokens() '+contract.magenta, function() {
       it('should transfer '+amount+' '+contract+' tokens to '+toContract, async function() {
