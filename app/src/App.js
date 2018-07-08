@@ -874,7 +874,7 @@ class App extends Component {
           contracts["Harbor"].methods.buyShip(this.state.landX,this.state.landY,this.state.harborIndex,web3.utils.fromAscii("Dogger")).send({
             value: currentPrice,
             from: accounts[0],
-            gas:130000,
+            gas:210000,
             gasPrice:Math.round(this.state.GWEI * 1000000000)
           },(error,hash)=>{
             console.log("CALLBACK!",error,hash)
@@ -906,7 +906,7 @@ class App extends Component {
 
     contracts["Bay"].methods.disembark(this.state.landX,this.state.landY,this.state.ships[this.state.account].id).send({
       from: accounts[0],
-      gas:250000,
+      gas:290000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
@@ -934,7 +934,7 @@ class App extends Component {
     //console.log("methods.embark(",this.state.inventoryDetail['Ships'][0])
     contracts["Bay"].methods.embark(this.state.landX,this.state.landY,shipId).send({
       from: accounts[0],
-      gas:250000,
+      gas:290000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
@@ -961,7 +961,7 @@ class App extends Component {
     console.log("Fishmonger is paying ",paying," for ",fishContract._address)
     contracts["Fishmonger"].methods.sellFish(x,y,i,fishContract._address,amount).send({
       from: accounts[0],
-      gas:180000+(amount*80000),
+      gas:250000+(amount*80000),
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
@@ -989,7 +989,7 @@ class App extends Component {
 
     contracts[tokenName].methods.transferAndCall(contracts[contractName]._address,amount,data).send({
       from: accounts[0],
-      gas:200000,
+      gas:250000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
@@ -1016,7 +1016,7 @@ class App extends Component {
     console.log("Sending "+amountOfCopper+" copper to LandLib with data:"+finalHex)
     contracts["Copper"].methods.transferAndCall(contracts["LandLib"]._address,amountOfCopper,finalHex).send({
       from: accounts[0],
-      gas:200000,
+      gas:250000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error, transactionHash)=>{
       console.log(error,transactionHash)
@@ -1053,7 +1053,7 @@ class App extends Component {
     console.log("Test market at  x:"+xHex+" y:"+yHex+" i:"+iHex+" for "+amountOfCopper+" copper with finalHex: "+finalHex)
     contracts["Copper"].methods.transferAndCall(contracts["Market"]._address,amountOfCopper,finalHex).send({
       from: accounts[0],
-      gas:500000,
+      gas:550000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
@@ -1088,7 +1088,7 @@ class App extends Component {
     console.log("%%%%%%%%%%%%%%%%% Buy "+tokenName+" at the market  x:"+xHex+" y:"+yHex+" i:"+iHex+" for "+amountOfCopper+" copper with finalHex: "+finalHex)
     contracts["Copper"].methods.transferAndCall(contracts["Market"]._address,amountOfCopper,finalHex).send({
       from: accounts[0],
-      gas:500000,
+      gas:550000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
@@ -1106,7 +1106,7 @@ class App extends Component {
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
     contracts[name].methods.transfer(toAddress,amount).send({
       from: accounts[0],
-      gas:120000,
+      gas:180000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
@@ -1143,7 +1143,7 @@ class App extends Component {
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
     contracts["CitizensLib"].methods.setPrice(id,wei).send({
       from: accounts[0],
-      gas:95000,
+      gas:130000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
@@ -1160,7 +1160,7 @@ class App extends Component {
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
     contracts["CitizensLib"].methods.moveCitizen(id,tile).send({
       from: accounts[0],
-      gas:90000,
+      gas:130000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
@@ -1177,7 +1177,7 @@ class App extends Component {
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
     contracts["Village"].methods.createCitizen(x,y,tile,web3.utils.fromAscii(food1),web3.utils.fromAscii(food2),web3.utils.fromAscii(food3)).send({
       from: accounts[0],
-      gas:400000,
+      gas:450000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
@@ -1201,7 +1201,7 @@ class App extends Component {
     console.log("BUILDTILE",mainX,mainY,tileIndex,newTileType)
     contracts["LandLib"].methods.buildTile(mainX,mainY,tileIndex,newTileType).send({
       from: accounts[0],
-      gas:400000,
+      gas:450000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
@@ -1240,7 +1240,7 @@ class App extends Component {
     console.log("finalHex:",finalHex)
     contracts["Copper"].methods.transferAndCall(contracts["LandLib"]._address,copper,finalHex).send({
       from: accounts[0],
-      gas:400000,
+      gas:450000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
@@ -1270,7 +1270,7 @@ class App extends Component {
     console.log("Purchasing land for account ("+accounts[0]+") x:"+xHex+" y:"+yHex+" i:"+iHex+" for "+copper+" copper")
     contracts["Copper"].methods.transferAndCall(contracts["LandLib"]._address,copper,"0x01"+xHex+yHex+iHex).send({
       from: accounts[0],
-      gas:320000,
+      gas:380000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
@@ -1296,7 +1296,7 @@ class App extends Component {
     console.log("Setting price of land x:"+x+" y:"+y+" i:"+i+" to "+copper+" copper")
     contracts["Land"].methods.setPrice(x,y,i,copper).send({
       from: accounts[0],
-      gas:120000,
+      gas:180000,
       gasPrice:Math.round(this.state.GWEI * 1000000000)
     },(error,hash)=>{
       console.log("CALLBACK!",error,hash)
@@ -1317,7 +1317,7 @@ class App extends Component {
       console.log(this.state.landX,this.state.landY,direction,_accounts[0])
       contracts["Bay"].methods.setSail(this.state.landX,this.state.landY,direction).send({
         from: _accounts[0],
-        gas:50000,
+        gas:110000,
         gasPrice:Math.round(this.state.GWEI * 1000000000)
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
@@ -1342,7 +1342,7 @@ class App extends Component {
       console.log(_accounts)
       contracts["Bay"].methods.dropAnchor(this.state.landX,this.state.landY).send({
         from: _accounts[0],
-        gas:50000,
+        gas:100000,
         gasPrice:Math.round(this.state.GWEI * 1000000000)
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
@@ -1369,7 +1369,7 @@ class App extends Component {
       this.setState({bait:bait,baitHash:baitHash})
       contracts["Bay"].methods.castLine(this.state.landX,this.state.landY,baitHash).send({
         from: _accounts[0],
-        gas:70000,
+        gas:110000,
         gasPrice:Math.round(this.state.GWEI * 1000000000)
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
@@ -1434,7 +1434,7 @@ class App extends Component {
 
       contracts["Bay"].methods.reelIn(this.state.landX,this.state.landY,bestId,baitToUse).send({
         from: _accounts[0],
-        gas:250000,
+        gas:290000,
         gasPrice:Math.round(this.state.GWEI * 1000000000)
       },(error,hash)=>{
         console.log("CALLBACK!",error,hash)
