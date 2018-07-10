@@ -1,5 +1,15 @@
 pragma solidity ^0.4.15;
 
+/*
+
+  https://galleass.io
+  by Austin Thomas Griffith
+
+  The CitizensLib contract extends the logic for Citizens
+  
+
+*/
+
 import 'Galleasset.sol';
 
 contract CitizensLib is Galleasset {
