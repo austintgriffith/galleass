@@ -33,87 +33,15 @@ Citizen status should probably be uint16
 
 ### TODO
 ```
-clevis contract Timber -- this command should print a help for all the commands for that contract and the argument order etc
-the Galleass.io title freaks out when you resize the screen on mobile.. figure that out and it will start looking great
-the transactions are on top of the menu so you can't click the last few buttons
-the fishmonger message isn't to the current account it is to a hardcoded account
-citizen with greens sends 3 copper and 1 greens and it doesn't seem to work!?
-letter is showing up over the map (txs too?)
-it would be cool on the testnet to have a request ether button that sends them like 0.01 or something on ropsten
-
-```
-
-### Before Staging
-```
-x - It can take a while when you click on a building for the modal to throw... may pop something above the building up that looks like a loader
-x - StandardToken inventory should be based on a per-tile basis... right now it show the inv for the contract.. it needs to also be withdrawal from the landowner
-    (When you send a token to a contract address it somehow needs to know which one (677 data?))
-[x]Harbor, Sea (Bay), and [x]FishMonger need to be moved over to landOwner system instead of contract owner
-
-More tokens in the Market by default
-[x]Maybe grass and mountain tiles could also produce resources like the timbercamp?
-The Sea should become The Bay and a new "Sea" is more about moving from island to island (Bay is 1 dogger per address, but Sea will track by Galley address)
-The inventory should have an alpha background and should be above the ship sail buttons
 The left side of the fishmonger and harbor don't line up right
-```
-
-### Once staging
-```
-Make sure it looks good on all phones
-Transactions should show up in bottom left to give progress bars to non-ship button clicks
-Make sure all things link to etherscan correctly
-Update your portfolio page for Galleass to basically be a wiki... explain everything... tokens, loader bars, event based actions like sailing and collecting, citizens, etc
-Any click to the top left click screen when not fully logged in should take you to the wiki and links to the contracts etc should be at the top of the wiki
-```
-
-### notes for a video
-```
-start at galleass.io and introduce the project
-  - fully open source
-  - fully decentralized
-    - meaining you can look at the old ipfs version that shows all the boats from the last version
-     (and someone can play with just the repo even making calls directly to the contracts https://galleass.io/contracts.html )
-    - multiplayer so massive it comes down to what can be displayed ... with the ethereum blockchain as the only backend
-jump to dev env and explain how land is procedurally generated and we can get something brand new each time
-pull up the first message you get from the fish monger and read it
-  - then visit and explain different pieces of land
-  - explain resource tiles vs building tiles
-buy a dogger and go fishing and sell your fish
-  - fish are ERC20s and the Dogger is an ERC721 - stats based on the Citizen that crafted it
-  - this is the foundation of the economy
-  - commit reveal on-chain for randomness plus distance to fish determines if you catch
-mint yourself some copper so you can cheat a little to speed things up (clevis contract mint Copper 0 0x9319bbb4e2652411be15bb74f339b7f6218b2508 5000)
-(Also mention how there are fishing bots and others that will act as NPCs etc just like the fishmoner, I hope to have user generated story lines)
-
-buy some land
-
-harvest some goods
-
-build a village and create:
-
-Citizens: created from food, recipes are key... you find you might be a glorified blockchain chef
-  - genetics determine how they look and will soon be passed down from generation to generation
-
-Interact with the market
-
-get into the smart contracts a little bit...
-  - predecessor system on main contract
-  - just an index of contract address and permissions each has (easily upgrading with logic and storage separated)
-    (for instance, the village and castle can create citizens on behalf of their owners if food is supplied)
-  - a lot of this is still in discovery mode... which brings up all the different ways to move tokens... authorize and then transfer (two tx, harbor does it to build ships), 667 transfer and call (parse data), give contract permission to transfer (soft/hard assets)
-      -- give examples of different ways to move... for instance, building a villages, the Landlib just *takes* 6 timber from you.. this might be frowned upon by contract auditors or players
-      -- this could easily be replace by a 677 method
-  - the whole event triggered paradigm is really efficient... like how the clouds or resources or sailing works
-   EVEN THE DAMN CLOUDS ARE IN A SMART CONTRACT --- Ethereum IS the backend
-
-lots of (not)fun web2.0 problems like mobile responsiveness/service worker issues along with awesome web3.0 blockchain-as-backend leads to other issues like slow ui
-gitcoin and cent.co and how you can incentivize developers to help out .. build a fishing bot..
-Would love for it to be ready for a mainnet deployment for a big conference like devcon4
-I can use all the help I can get, play it and shoot me feedback, jump in the slack, look for me on github and even gitcoin... it's all open source!
+look at how the screen adjusts on mobile.. the clickscreen and map are weird when an iphone zooms
+clevis contract Timber -- this command should print a help for all the commands for that contract and the argument order etc
+[-] citizen with greens sends 3 copper and 1 greens and it doesn't seem to work!?
+it would be cool on the testnet to have a request ether button that sends them like 0.01 or something on ropsten
 ```
 
 
-### Neat things to write about
+### Neat Things
 ```
 fully decentralized means each iteration lives forever on ipfs (no backend servers to upgrade, etc)
 main contract never change and if it does you use descendant system

@@ -26,6 +26,7 @@ import BuildTable from './modal/BuildTable.js'
 import CreateCitizens from './modal/CreateCitizens.js'
 import ResourceTable from './modal/ResourceTable.js'
 import SendToken from './modal/SendToken.js'
+import Wallet from './modal/Wallet.js'
 import SendToTile from './modal/SendToTile.js'
 import BuySellOwner from './modal/BuySellOwner.js'
 import ForestTile from './modal/ForestTile.js'
@@ -34,6 +35,7 @@ import GrassTile from './modal/GrassTile.js'
 import Harbor from './modal/Harbor.js'
 import Market from './modal/Market.js'
 import Fishmonger from './modal/Fishmonger.js'
+
 
 import Message from './modal/renderers/Message.js'
 
@@ -1100,7 +1102,25 @@ class App extends Component {
       console.log("RESULT:",receipt)
     })
   }
-
+  async sendEth(amount,toAddress){
+    console.log("sendEth",amount,toAddress)
+    const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+    web3.eth.sendTransaction({
+      value: web3.utils.toWei(""+amount, "ether"),
+      from: accounts[0],
+      to: toAddress,
+      gas:40000,
+      gasPrice:Math.round(this.state.GWEI * 1000000000)
+    },(error,hash)=>{
+      console.log("CALLBACK!",error,hash)
+      this.startWaiting(hash)
+    }).on('error',this.transactionError.bind(this))
+    .on('transactionHash',this.transactionHash.bind(this))
+    .on('receipt',this.transactionReceipt.bind(this))
+    .on('confirmation', this.transactionConfirmation.bind(this)).then((receipt)=>{
+      console.log("RESULT:",receipt)
+    })
+  }
   async sendToken(name,amount,toAddress){
     console.log("sendToken",name,amount,toAddress)
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
@@ -1852,48 +1872,56 @@ async tileClick(name,index,px) {
 }
 async invClick(name,contract) {
   console.log("INV CLICK",name,contract)
-  let modalObject = {
-    name:name,
-    contract:contract._address,
-    balance: await contracts[name].methods.balanceOf(this.state.account).call(),
-    token:true
-  }
-
-
-  //check if the token is a fish and add in fish monger details
-  let fish = [
-    "Pinner",
-    "Redbass",
-    "Catfish",
-    "Snark",
-    "Dangler",
-  ]
-  console.log("ISNAME ",name,fish)
-  if(fish.indexOf(name)>=0){
-    modalObject.isFish = true
-    modalObject.prices = {}
-    for(let f in fish){
-      console.log("Getting price:",this.state.landX,this.state.landY,this.state.fishmongerIndex)
-      modalObject.prices[fish[f]] = await contracts["Fishmonger"].methods.price(this.state.landX,this.state.landY,this.state.fishmongerIndex,contracts[fish[f]]._address).call();
-    }
-  }
-
-  if(typeof contracts[name].methods.tokensOfOwner == "function"){
-    //erc721
-    modalObject.tokensOfOwner = await contracts[name].methods.tokensOfOwner(this.state.account).call()
-    modalObject.tokens = {}
-    for(let tokenId in modalObject.tokensOfOwner){
-      modalObject.tokens[modalObject.tokensOfOwner[tokenId]] = await contracts[name].methods.getToken(modalObject.tokensOfOwner[tokenId]).call()
-      console.log("GOT TOKEN DATA",modalObject.tokens[modalObject.tokensOfOwner[tokenId]])
-      //load specific functions for specific tokens
-      if(name=="Citizens"){
-        modalObject.tokens[modalObject.tokensOfOwner[tokenId]].geneObject = await contracts['CitizensLib'].methods.getCitizenGenes(modalObject.tokensOfOwner[tokenId]).call()
-        //modalObject.tokens[modalObject.tokensOfOwner[tokenId]].statusObject = await contracts[name].methods.getCitizenStatus(modalObject.tokensOfOwner[tokenId]).call()
-        modalObject.tokens[modalObject.tokensOfOwner[tokenId]].characteristicsObject = await contracts['CitizensLib'].methods.getCitizenCharacteristics(modalObject.tokensOfOwner[tokenId]).call()
-      }
+  let modalObject
+  if(name=="Ether"){
+    modalObject = {
+      name:name,
+      balance: web3.utils.fromWei(await web3.eth.getBalance(this.state.account),"Ether"),
+      wallet:true
     }
   }else{
-    //erc20
+    modalObject = {
+      name:name,
+      contract:contract._address,
+      balance: await contracts[name].methods.balanceOf(this.state.account).call(),
+      token:true
+    }
+
+    //check if the token is a fish and add in fish monger details
+    let fish = [
+      "Pinner",
+      "Redbass",
+      "Catfish",
+      "Snark",
+      "Dangler",
+    ]
+    console.log("ISNAME ",name,fish)
+    if(fish.indexOf(name)>=0){
+      modalObject.isFish = true
+      modalObject.prices = {}
+      for(let f in fish){
+        console.log("Getting price:",this.state.landX,this.state.landY,this.state.fishmongerIndex)
+        modalObject.prices[fish[f]] = await contracts["Fishmonger"].methods.price(this.state.landX,this.state.landY,this.state.fishmongerIndex,contracts[fish[f]]._address).call();
+      }
+    }
+
+    if(typeof contracts[name].methods.tokensOfOwner == "function"){
+      //erc721
+      modalObject.tokensOfOwner = await contracts[name].methods.tokensOfOwner(this.state.account).call()
+      modalObject.tokens = {}
+      for(let tokenId in modalObject.tokensOfOwner){
+        modalObject.tokens[modalObject.tokensOfOwner[tokenId]] = await contracts[name].methods.getToken(modalObject.tokensOfOwner[tokenId]).call()
+        console.log("GOT TOKEN DATA",modalObject.tokens[modalObject.tokensOfOwner[tokenId]])
+        //load specific functions for specific tokens
+        if(name=="Citizens"){
+          modalObject.tokens[modalObject.tokensOfOwner[tokenId]].geneObject = await contracts['CitizensLib'].methods.getCitizenGenes(modalObject.tokensOfOwner[tokenId]).call()
+          //modalObject.tokens[modalObject.tokensOfOwner[tokenId]].statusObject = await contracts[name].methods.getCitizenStatus(modalObject.tokensOfOwner[tokenId]).call()
+          modalObject.tokens[modalObject.tokensOfOwner[tokenId]].characteristicsObject = await contracts['CitizensLib'].methods.getCitizenCharacteristics(modalObject.tokensOfOwner[tokenId]).call()
+        }
+      }
+    }else{
+      //erc20
+    }
   }
   this.openModal(modalObject)
 }
@@ -2234,6 +2262,7 @@ let menu = (
       blockieRight={this.state.blockieRight}
       blockieTop={this.state.blockieTop}
       blockieSize={this.state.blockieSize}
+      zoom={this.state.zoom}
       />
       </div>
     )
@@ -2246,7 +2275,7 @@ let menu = (
 //(-1)*this.state.zoom*180/2
 //(-position:"absolute",left:document.scrollingElement.scrollLeft+this.state.clientWidth-100-100*this.state.zoom,
 
-let adjustedInvZoom = Math.min(1,this.state.zoom * 1.5)
+let adjustedInvZoom = Math.min(1,this.state.zoom * 1.7)
 
 let rightOffset = ((1-adjustedInvZoom)*135)
 let inventory = (
@@ -2705,6 +2734,9 @@ return (
 
     //margins marginBottom:-20,marginRight:-10
     //width:300,transform:"scale("+this.state.zoom+")",cursor:"pointer",zIndex:2,
+    //
+    let adjustedMenuZoom = Math.min(1,this.state.zoom * 1.5)
+    //
     return (
 
       <div style={{
@@ -2743,7 +2775,7 @@ return (
       <div style={{cursor:"pointer",zIndex:1,position:'fixed',opacity:1-this.state.cornerOpacity,top:currentStyles.titleBottomFaster-20,left:-20}} >
 
 
-      <div style={{zIndex:mapZ,transform:"scale("+this.state.zoom+")",marginLeft:-((1-this.state.zoom)*175),marginTop:-((1-this.state.zoom)*60)}}>
+      <div style={{zIndex:mapZ,transform:"scale("+adjustedMenuZoom+")",marginLeft:-((1-adjustedMenuZoom)*175),marginTop:-((1-adjustedMenuZoom)*60)}}>
         <div style={{position:'relative',backgroundImage:"url('mapicon.png')",width:400,height:115}} onClick={this.titleClick.bind(this)}>
           <div style={{position:"absolute",top:19,left:32}}>
             <Writing  string={"Galleass.io"} size={60} space={5} letterSpacing={29}/>
@@ -2882,8 +2914,23 @@ return (
         </div>
       )
 
+      if(this.state.modalObject.wallet){
 
-      if(this.state.modalObject.token){
+        return (
+          <div style={{transform:"scale("+largerModalThanZoom+")",zIndex:999,position:'fixed',left:this.state.clientWidth/2-350,paddingTop:30,top:currentStyles.top-((1-largerModalThanZoom)*300),textAlign:"center",opacity:1,backgroundImage:"url('modal_smaller.png')",backgroundRepeat:'no-repeat',height:500,width:700}}>
+            <div style={{cursor:'pointer',position:'absolute',right:24,top:24}} onClick={this.clickScreenClick.bind(this)}>
+            <img src="exit.png" />
+            </div>
+            <Wallet
+              modalObject={this.state.modalObject}
+              account={this.state.account}
+              etherscan={this.state.etherscan}
+              sendEth={this.sendEth.bind(this)}
+            />
+          </div>
+        )
+
+      }else if(this.state.modalObject.token){
 
         let body
         if(this.state.modalObject.tokensOfOwner){

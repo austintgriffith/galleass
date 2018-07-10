@@ -26,8 +26,10 @@ class Inventory extends Component {
       console.log("open token send modal")
       this.props.invClick(item,contractOfItem)
     }else{
-      url = "https://wallet.ethereum.org/";
-      window.open(url)
+      //url = "https://wallet.ethereum.org/";
+      //window.open(url)
+      console.log("open eth wallet modal")
+      this.props.invClick(item)
     }
 
   }

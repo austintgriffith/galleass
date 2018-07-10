@@ -5,6 +5,7 @@
   "dependencies": {
     "axios": "^0.18.0",
     "js-sha3": "^0.7.0",
+    "qrcode.react": "^0.8.0",
     "react": "^16.2.0",
     "react-blockies": "^1.2.2",
     "react-dom": "^16.2.0",

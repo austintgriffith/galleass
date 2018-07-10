@@ -66,7 +66,7 @@ class Messages extends Component {
    let leftZoomOffset = ((1-largerThanZoom) * 59)*-1
     return (
 
-      <div style={{transform:"scale("+largerThanZoom+")",zIndex:780,position:'fixed',left:leftZoomOffset,paddingTop:30,marginBottom:fixedOffset,textAlign:"left",top:124,opacity:1,height:height,width:120}}>
+      <div style={{transform:"scale("+largerThanZoom+")",zIndex:749,position:'fixed',left:leftZoomOffset,paddingTop:30,marginBottom:fixedOffset,textAlign:"left",top:124,opacity:1,height:height,width:120}}>
         {messages}
       </div>
 
