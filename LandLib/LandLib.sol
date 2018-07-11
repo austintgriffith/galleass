@@ -48,6 +48,102 @@ contract LandLib is Galleasset, DataParser {
     tileTypes[_name] = _tile;
   }
 
+  uint256 public nonce=0;
+
+  function generateLand() onlyOwner isBuilding public returns (bool) {
+    Land landContract = Land(getContract("Land"));
+    //islands are procedurally generated based on a randomish hash
+    bytes32 id = keccak256(nonce++,block.blockhash(block.number-1));
+    uint16 x = uint16(id[0]) << 8 | uint16(id[1]);
+    uint16 y = uint16(id[2]) << 8 | uint16(id[3]);
+    bytes32 landParts1 = keccak256(id);
+    bytes32 landParts2 = keccak256(landParts1);
+
+    //don't allow land at 0's (those are viewed as empty)
+    if(x==0) x=1;
+    if(y==0) y=1;
+
+    //GAS USAGE AT THIS POINT --- 50k vvvvvvvvv EXPENSIVE vvvvvvvv
+    setTilesAndOwners(x,y,landContract,landParts1,landParts2);
+    //GAS USAGE AT THIS POINT ---   900k ^^^^^^ EXPENSIVE ^^^^^^^^^
+
+    //scan tiles and insert base spots
+    uint8 landCount = 0;
+    for(uint8 landex = 0; landex < 18; landex++){
+      if(landContract.tileTypeAt(x,y,landex)==0){
+        if(landCount>0){
+          //right edge
+          landContract.setTileTypeAt(x,y,landex-(landCount%2+landCount/2),1);//MAIN TITLE
+          landCount=0;
+        }
+      }else{
+        if(landCount==0){
+          //left edge
+        }
+        landCount++;
+      }
+    }
+    if(landCount>0){
+      //final right edge
+      landContract.setTileTypeAt(x,y,17-(landCount/2),1);//MAIN TITLE
+      landCount=0;
+    }
+
+    if(landContract.mainX()==0||landContract.mainY()==0){
+      landContract.setMainLocation(x,y);
+    }
+
+    landContract.setTotalWidth(x,y,getTotalWidth(x,y));
+  }
+
+  function setTilesAndOwners(uint16 x,uint16 y,Land landContract,bytes32 landParts1, bytes32 landParts2){
+    uint8[9] memory islands;
+    uint8 tileCountPerIsland = 0;
+    uint8 currentIslandCount = 0;
+    for(uint8 index = 0; index < 18; index++){
+      uint16 thisUint16 = uint16(landParts1[index]) << 8 | uint16(landParts2[index]);
+      uint16 tileType = translateToStartingTile(thisUint16);
+      landContract.setTileTypeAt(x,y,index,tileType);
+      landContract.setOwnerAt(x,y,index,msg.sender);
+      if(tileType==0){
+        if(tileCountPerIsland>0){
+          islands[currentIslandCount++] = tileCountPerIsland;
+          tileCountPerIsland=0;
+        }
+      }else{
+        tileCountPerIsland++;
+      }
+    }
+    if(tileCountPerIsland>0){
+      islands[currentIslandCount++] = tileCountPerIsland;
+    }
+    /*while(currentIslandCount<9){
+      islands[currentIslandCount++]=0;
+    }*/
+    landContract.signalGenerateLand(x,y,islands);
+  }
+  event Debug(uint8 currentIslandCount,uint8 tileCountPerIsland);
+
+
+  function getTotalWidth(uint16 _x,uint16 _y) public constant returns (uint16){
+    Land landContract = Land(getContract("Land"));
+    uint16 totalWidth = 0;
+    bool foundLand = false;
+    for(uint8 t = 0;t<18;t++){
+      uint16 tileType = landContract.tileTypeAt(_x,_y,t);
+      totalWidth+=translateTileToWidth(tileType);
+      if(tileType!=0&&!foundLand){
+        foundLand=true;
+        totalWidth+=114;
+      }else if(tileType==0&&foundLand){
+        foundLand=false;
+        totalWidth+=114;
+      }
+    }
+    if(foundLand) totalWidth+=114;
+    return totalWidth;
+  }
+
   //erc677 receiver
   function onTokenTransfer(address _sender, uint _amount, bytes _data) public isGalleasset("LandLib") returns (bool) {
     TokenTransfer(msg.sender,_sender,_amount,_data);
@@ -308,6 +404,10 @@ contract Land {
   function setContractAt(uint16 _x, uint16 _y, uint8 _tile,address _address) public returns (bool) { }
   function setOwnerAt(uint16 _x, uint16 _y, uint8 _tile,address _owner) public returns (bool) { }
   function setPriceAt(uint16 _x, uint16 _y, uint8 _tile,uint _price) public returns (bool) { }
+  function setMainLocation(uint16 _mainX,uint16 _mainY) public returns (bool) { }
+  function setTotalWidth(uint16 _x,uint16 _y,uint16 _width) public returns (bool){ }
+  function signalGenerateLand(uint16 _x,uint16 _y,uint8[9] islands) public returns (bool) { }
+
 }
 
 contract StandardToken {

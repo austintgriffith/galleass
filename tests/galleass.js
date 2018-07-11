@@ -777,8 +777,17 @@ module.exports = {
     describe('#generateLand()', function() {
       it('should generate an island', async function() {
         this.timeout(120000)
-        const result = await clevis("contract","generateLand","Land",accountindex)
+        const result = await clevis("contract","generateLand","LandLib",accountindex)
         printTxResult(result)
+      });
+    });
+  },
+  setMiddleMostLandToMain:(accountindex)=>{
+    describe('#setMiddleMostLandToMain()', function() {
+      it('should setMiddleMostLandToMain', async function() {
+        this.timeout(120000)
+        const events = await clevis("contract","eventTokenTransfer",toContract)
+        console.log(events[events.length-1].returnValues)
       });
     });
   },

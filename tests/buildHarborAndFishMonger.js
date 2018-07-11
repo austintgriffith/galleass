@@ -14,6 +14,15 @@ const galleass = require('./galleass.js')
 // galleass.reload()
 //---------------- ^^^^^ ----------------- happens in deploy ------- //
 galleass.generateLand(0)
+galleass.generateLand(0)
+galleass.generateLand(0)
+galleass.generateLand(0)
+// galleass.generateLand(0)
+// galleass.generateLand(0)
+// galleass.generateLand(0)
+// galleass.generateLand(0)
+// galleass.generateLand(0)
+// galleass.generateLand(0)
 
 
 //transfer ownership of the very first tile (could be anything from grass/forest to main hills/ stream etc) from account 0 to account 1

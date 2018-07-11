@@ -18,12 +18,7 @@ contract Land is Galleasset {
   uint16 public mainX;
   uint16 public mainY;
 
-  function setMainLocation(uint16 _mainX,uint16 _mainY) onlyOwner isBuilding public returns (bool) {
-    mainX=_mainX;
-    mainY=_mainY;
-  }
-
-  uint256 public nonce=0;
+  event LandGenerated(uint _timestamp,uint16 _x,uint16 _y,uint8 _island1,uint8 _island2,uint8 _island3,uint8 _island4,uint8 _island5,uint8 _island6,uint8 _island7,uint8 _island8,uint8 _island9);
 
   mapping (uint16 => mapping (uint16 => uint16[18])) public tileTypeAt;
   mapping (uint16 => mapping (uint16 => address[18])) public contractAt;
@@ -34,61 +29,6 @@ contract Land is Galleasset {
 
   function Land(address _galleass) public Galleasset(_galleass) { }
   function () public {revert();}
-
-  function generateLand() onlyOwner isBuilding public returns (bool) {
-
-    LandLib landLib = LandLib(getContract("LandLib"));
-
-    //islands are procedurally generated based on a randomish hash
-    bytes32 id = keccak256(nonce++,block.blockhash(block.number-1));
-    uint16 x = uint16(id[0]) << 8 | uint16(id[1]);
-    uint16 y = uint16(id[2]) << 8 | uint16(id[3]);
-    bytes32 landParts1 = keccak256(id);
-    bytes32 landParts2 = keccak256(landParts1);
-
-    //don't allow land at 0's (those are viewed as empty)
-    if(x==0) x=1;
-    if(y==0) y=1;
-
-    for(uint8 index = 0; index < 18; index++){
-      uint16 thisUint16 = uint16(landParts1[index]) << 8 | uint16(landParts2[index]);
-      tileTypeAt[x][y][index] = landLib.translateToStartingTile(thisUint16);
-      ownerAt[x][y][index] = msg.sender;
-    }
-
-    //scan tiles and insert base spots
-    uint8 landCount = 0;
-    for(uint8 landex = 0; landex < 18; landex++){
-      if(tileTypeAt[x][y][landex]==0){
-        if(landCount>0){
-          //right edge
-          tileTypeAt[x][y][landex-(landCount%2+landCount/2)]=1;//MAIN TILE
-          landCount=0;
-        }
-      }else{
-        if(landCount==0){
-          //left edge
-        }
-        landCount++;
-      }
-    }
-    if(landCount>0){
-      //final right edge
-      tileTypeAt[x][y][17-(landCount/2)]=1; //MAIN TILE
-      landCount=0;
-    }
-
-    if(mainX==0||mainY==0){
-      mainX=x;
-      mainY=y;
-    }
-
-    totalWidth[x][y] = getTotalWidth(x,y);
-
-    LandGenerated(x,y);
-  }
-  event LandGenerated(uint16 _x,uint16 _y);
-
 
   function editTile(uint16 _x, uint16 _y,uint8 _tile,uint16 _update,address _contract) onlyOwner isBuilding public returns (bool) {
     tileTypeAt[_x][_y][_tile] = _update;
@@ -116,33 +56,6 @@ contract Land is Galleasset {
     return true;
   }
   event BuyTile(uint16 _x,uint16 _y,uint8 _tile,address _owner,uint _price,address _contract);
-
-/*
-
-  MOVED TO LANDLIB
-  
-  function buildTile(uint16 _x, uint16 _y,uint8 _tile,uint16 _newTileType) public isGalleasset("Land") returns (bool) {
-    require(msg.sender==ownerAt[_x][_y][_tile]);
-    LandLib landLib = LandLib(getContract("LandLib"));
-    uint16 tileType = tileTypeAt[_x][_y][_tile];
-    if(tileType==landLib.tileTypes("MainHills")||tileType==landLib.tileTypes("MainGrass")){
-      //they want to build on a main, blank spot whether hills or grass
-      if(_newTileType==landLib.tileTypes("Village")){
-        //require( getTokens(msg.sender,"Timber",6) );
-        StandardToken timberContract = StandardToken(getContract("Timber"));
-        require( timberContract.galleassTransferFrom(msg.sender,address(this),6) ); //charge 6 timber
-        tileTypeAt[_x][_y][_tile] = _newTileType;
-        contractAt[_x][_y][_tile] = getContract("Village");
-        StandardTile(contractAt[_x][_y][_tile]).onPurchase(_x,_y,_tile,msg.sender,0);
-        return true;
-      }else{
-        return false;
-      }
-    } else {
-      return false;
-    }
-  }
-*/
 
   //erc677 receiver
   function onTokenTransfer(address _sender, uint _amount, bytes _data) public isGalleasset("Land") returns (bool) {
@@ -177,6 +90,23 @@ contract Land is Galleasset {
     priceAt[_x][_y][_tile] = _price;
     return true;
   }
+  function setTotalWidth(uint16 _x,uint16 _y,uint16 _width) public returns (bool){
+    require(msg.sender==getContract("LandLib"));
+    totalWidth[_x][_y] = _width;
+    return true;
+  }
+  function setMainLocation(uint16 _mainX,uint16 _mainY) public returns (bool) {
+    require(msg.sender==getContract("LandLib"));
+    mainX=_mainX;
+    mainY=_mainY;
+    return true;
+  }
+  function signalGenerateLand(uint16 _x,uint16 _y,uint8[9] islands) public returns (bool) {
+    require(msg.sender==getContract("LandLib"));
+    emit LandGenerated(now,_x,_y,islands[0],islands[1],islands[2],islands[3],islands[4],islands[5],islands[6],islands[7],islands[8]);
+  }
+
+
 
   //the land owner can also call setPrice directly
   function setPrice(uint16 _x,uint16 _y,uint8 _tile,uint256 _price) public isGalleasset("Land") returns (bool) {
@@ -225,24 +155,6 @@ contract Land is Galleasset {
 
     uint16 halfTotalWidth = totalWidth[_x][_y]/2;
     return 2000 - halfTotalWidth + widthOffset;
-  }
-
-  function getTotalWidth(uint16 _x,uint16 _y) public constant returns (uint16){
-    LandLib landLib = LandLib(getContract("LandLib"));
-    uint16 totalWidth = 0;
-    bool foundLand = false;
-    for(uint8 t = 0;t<18;t++){
-      totalWidth+=landLib.translateTileToWidth(tileTypeAt[_x][_y][t]);
-      if(tileTypeAt[_x][_y][t]!=0&&!foundLand){
-        foundLand=true;
-        totalWidth+=114;
-      }else if(tileTypeAt[_x][_y][t]==0&&foundLand){
-        foundLand=false;
-        totalWidth+=114;
-      }
-    }
-    if(foundLand) totalWidth+=114;
-    return totalWidth;
   }
 
   function findTile(uint16 _x,uint16 _y,uint16 _lookingForType) public constant returns (uint8) {

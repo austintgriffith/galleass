@@ -208,7 +208,8 @@ class App extends Component {
       isEmbarking:false,
       previousModalObject:{name:"Loading..."},
       transactions:[],
-      messages:[]
+      messages:[],
+      islands:[]
     }
 
     let timeoutLoader = 8000
@@ -502,6 +503,47 @@ class App extends Component {
     eventLoadIndexes["sync"+name+"Down"]=nextChunk;
     if(nextChunk>galleassBlockNumber) setTimeout(this.sync.bind(this,name,doSyncFn,CRAWLBACKDELAY,SYNCINVERVAL),CRAWLBACKDELAY)
   }
+
+  async doSyncIslands(from,to) {
+    let DEBUG_SYNCISLANDS = true
+    let storedIslands = []
+    if(from<1) from=1
+    if(DEBUG_SYNCISLANDS) console.log("Sync ISLAND Chunk: "+from+" to "+to)
+    let islandEvent = await contracts["Land"].getPastEvents('LandGenerated', {
+      fromBlock: from-1,
+      toBlock: to
+    })
+    //uint16 _x,uint16 _y,uint8 _island1,uint8 _island2,uint8 _island3,uint8 _island4,uint8 _island5,uint8 _island6,uint8 _island7,uint8 _island8,uint8 _island9
+    if(DEBUG_SYNCISLANDS) console.log("island...",islandEvent)
+    for(let i in islandEvent){
+
+      let _x = islandEvent[i].returnValues._x
+      let _y = islandEvent[i].returnValues._y
+      let id = _x+"_"+_y
+      let _timestamp = islandEvent[i].returnValues._timestamp
+      let _islands = [
+        islandEvent[i].returnValues._island1,
+        islandEvent[i].returnValues._island2,
+        islandEvent[i].returnValues._island3,
+        islandEvent[i].returnValues._island4,
+        islandEvent[i].returnValues._island5,
+        islandEvent[i].returnValues._island6,
+        islandEvent[i].returnValues._island7,
+        islandEvent[i].returnValues._island8,
+        islandEvent[i].returnValues._island9
+      ]
+      if(!storedIslands[id] || storedIslands[id]._timestamp < _timestamp){
+        if(DEBUG_SYNCISLANDS) console.log("&&&& IIISSSLLLLAAANNNDDDD!!!",id)
+        storedIslands[id]={x:_x,y:_y,islands:_islands,timestamp:_timestamp};
+      }
+    }
+    if(hasElements(storedIslands)){
+      storedIslands = mergeByTimestamp(storedIslands,this.state.islands)
+      if(DEBUG_SYNCISLANDS) console.log("SETSTATE storedIslands",storedIslands)
+      this.setState({islands:storedIslands})
+    }
+  }
+
   async doSyncFish(from,to) {
     let DEBUG_SYNCFISH = false
     let storedFish = []
@@ -660,7 +702,8 @@ class App extends Component {
         console.log("experienceBuyShip update",experienceBuyShip);
         this.setState({experienceBuyShip:experienceBuyShip})
       }
-      if(!experienceBuyShip&&this.state.messages.length<=0){
+      if(!experienceBuyShip&&this.state.messages.length<=0&&this.state.fishmongerIndex){
+        console.log("this.state.fishmongerIndex",this.state.fishmongerIndex)
         setTimeout(()=>{
           this.setState({messages:[
             {
@@ -764,11 +807,25 @@ class App extends Component {
     const DEBUG_SYNCLAND = false;
     if(DEBUG_SYNCLAND) console.log("SYNCING LAND")
     if(!this.state.landX || !this.state.landY){
+      let url = window.location.href.substr(window.location.href.lastIndexOf("/")+1);
       let mainX = await contracts["Land"].methods.mainX().call();
       let mainY = await contracts["Land"].methods.mainY().call();
+      let possibleX = false
+      let possibleY = false
+      if(url&&url.indexOf(".")>0){
+        let xy = url.split(".")
+        possibleX = parseInt(xy[0])
+        possibleY = parseInt(xy[1])
+      }
+      if(possibleX && possibleY){
+        mainX=possibleX
+        mainY=possibleY
+      }
+
       //we also want to track where the fishmoger is
       let fishmongerTileType = await contracts["LandLib"].methods.tileTypes(web3.utils.fromAscii("Fishmonger")).call()
       let fishmongerIndex = await contracts["Land"].methods.findTile(mainX,mainY,fishmongerTileType).call()
+      if(fishmongerIndex==255) fishmongerIndex=false;
       //and the harbor
       let harborTileType = await contracts["LandLib"].methods.tileTypes(web3.utils.fromAscii("Harbor")).call()
       let harborIndex = await contracts["Land"].methods.findTile(mainX,mainY,harborTileType).call()
@@ -1674,10 +1731,12 @@ class App extends Component {
     this.syncMyShip()
     this.syncInventory()
     this.syncLand()
+
     this.doSyncFish(this.state.blockNumber-2,'latest')
     this.doSyncShips(this.state.blockNumber-2,'latest')
     this.doSyncCitizens(this.state.blockNumber-2,'latest')
     this.doSyncClouds(this.state.blockNumber-2,'latest')
+    this.doSyncIslands(this.state.blockNumber-2,'latest')
   }
   bumpableButton(name,buttonsTop,fn){
     let buttonBounce = parseInt(this.state.buttonBumps[name])
@@ -2054,7 +2113,7 @@ render() {
   if(!myShip||!myShip.floating){
     if(!this.state||!this.state.contractsLoaded){
       //wait for contracts to load but for now let's preload some stuff off screen???
-    }else if(this.state.inventoryDetail && (!this.state.inventoryDetail['Dogger']||this.state.inventoryDetail['Dogger'].length<=0) && this.state.inventory['Dogger']<=0){
+    }else if(this.state.harborLocation && this.state.inventoryDetail && (!this.state.inventoryDetail['Dogger']||this.state.inventoryDetail['Dogger'].length<=0) && this.state.inventory['Dogger']<=0){
       let clickFn = this.buyShip.bind(this)
       if(buttonDisabled){clickFn=()=>{}}
       buttons.push(
@@ -2097,7 +2156,7 @@ render() {
       </div>
     )
   }
-}else{
+}else if(this.state.harborLocation){
   let clickFn = this.metamaskHint.bind(this)
   if(buttonDisabled){clickFn=()=>{}}
   buttons.push(
@@ -2414,16 +2473,10 @@ return (
     <img src={"sailwest.png"} />
   </div>
 
-
-
-
   {menu}
-
 
   {clickScreen}
   {inventory}
-
-
 
   <Transactions
     GWEI={this.state.GWEI}
@@ -2485,160 +2538,74 @@ return (
       islands.push(currentTotal)
     }
     //console.log("islands",islands)
-    let offset = 0
-    let islandRender = islands.map((island)=>{
-      offset+=30
-      //console.log(island,"@",offset)
-      return (
-        <div key={"island0part"+offset} style={{position:'absolute',left:700+offset,top:500}}>
-        <img style={{maxWidth:70}} src={"island"+island+".png"} />
-        </div>
-      )
-    })
+    // let offset = 0
+    // let islandRender = islands.map((island)=>{
+    //   offset+=30
+    //   //console.log(island,"@",offset)
+    //   return (
+    //     <div key={"island0part"+offset} style={{position:'absolute',left:700+offset,top:500}}>
+    //     <img style={{maxWidth:70}} src={"island"+island+".png"} />
+    //     </div>
+    //   )
+    // })
+
+    let allIslands = []
+
+    if(this.state.islands){
+
+      for(let id in this.state.islands){
+        let offset= 0
+        let thisIsland = []
+        for(let island in this.state.islands[id].islands){
+          let thisIslandSize = parseInt(this.state.islands[id].islands[island])
+          if(thisIslandSize){
+            const fullViewerSizeMinusPad = 1200
+            let left = parseInt(this.state.islands[id].x)/65535*fullViewerSizeMinusPad+offset
+            let top = parseInt(this.state.islands[id].y)/65535*fullViewerSizeMinusPad
+            thisIsland.push(
+              <div key={"island"+id+"art"+offset} style={{position:'absolute',left:left,top:top}}>
+                <img style={{maxWidth:70}} src={"island"+thisIslandSize+".png"} />
+              </div>
+            )
+            offset+=30
+          }
+        }
+        allIslands.push(
+          <div style={{cursor:"pointer"}} onClick={()=>{
+            window.location = "https://"+window.location.hostname+"/"+this.state.islands[id].x+"."+this.state.islands[id].y
+          }}>
+            {thisIsland}
+          </div>
+        )
+      }
+    }
 
     //add in some filler islands for now
-    /// the land is generated, it's just hard to display so far
-    let fakelocationx
-    let fakelocationy
-    offset = 0
-    fakelocationx = 800
-    fakelocationy = 600
-    let island2 = []
-    offset+=30
-    island2.push(
-      <div key={"island2art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
-      <img style={{maxWidth:70}} src={"island3.png"} />
-      </div>
-    )
-    offset+=30
-    island2.push(
-      <div key={"island2art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
-      <img style={{maxWidth:70}} src={"island7.png"} />
-      </div>
-    )
-    offset+=30
-    island2.push(
-      <div key={"island2art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
-      <img style={{maxWidth:70}} src={"island2.png"} />
-      </div>
-    )
-
-    offset = 0
-    fakelocationx = 180
-    fakelocationy = 450
-    let island3 = []
-    offset+=30
-    island3.push(
-      <div key={"island3art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
-      <img style={{maxWidth:70}} src={"island3.png"} />
-      </div>
-    )
-    offset+=30
-    island3.push(
-      <div key={"island3art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
-      <img style={{maxWidth:70}} src={"island11.png"} />
-      </div>
-    )
-    offset+=30
-    island3.push(
-      <div key={"island3art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
-      <img style={{maxWidth:70}} src={"island6.png"} />
-      </div>
-    )
-
-    offset = 0
-    fakelocationx = 754
-    fakelocationy = 234
-    let island4 = []
-    offset+=30
-    island4.push(
-      <div key={"island4art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
-      <img style={{maxWidth:70}} src={"island14.png"} />
-      </div>
-    )
-    offset+=30
-    island4.push(
-      <div key={"island4art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
-      <img style={{maxWidth:70}} src={"island2.png"} />
-      </div>
-    )
-    offset+=30
-    island4.push(
-      <div key={"island4art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
-      <img style={{maxWidth:70}} src={"island1.png"} />
-      </div>
-    )
-    offset+=30
-    island4.push(
-      <div key={"island4art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
-      <img style={{maxWidth:70}} src={"island8.png"} />
-      </div>
-    )
-
-    offset = 0
-    fakelocationx = 312
-    fakelocationy = 321
-    let island5 = []
-    offset+=30
-    island5.push(
-      <div key={"island5art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
-      <img style={{maxWidth:70}} src={"island16.png"} />
-      </div>
-    )
-    offset+=30
-    island5.push(
-      <div key={"island5art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
-      <img style={{maxWidth:70}} src={"island2.png"} />
-      </div>
-    )
-    offset+=30
-    island5.push(
-      <div key={"island5art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
-      <img style={{maxWidth:70}} src={"island13.png"} />
-      </div>
-    )
-    offset+=30
-    island5.push(
-      <div key={"island5art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
-      <img style={{maxWidth:70}} src={"island8.png"} />
-      </div>
-    )
-    offset+=30
-    island5.push(
-      <div key={"island5art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
-      <img style={{maxWidth:70}} src={"island8.png"} />
-      </div>
-    )
-
-    offset = 0
-    fakelocationx = 140
-    fakelocationy = 280
-    let island6 = []
-    offset+=30
-    island6.push(
-      <div key={"island6art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
-      <img style={{maxWidth:70}} src={"island1.png"} />
-      </div>
-    )
-    offset+=30
-    island6.push(
-      <div key={"island6art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
-      <img style={{maxWidth:70}} src={"island4.png"} />
-      </div>
-    )
-    offset+=30
-    island6.push(
-      <div key={"island6art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
-      <img style={{maxWidth:70}} src={"island2.png"} />
-      </div>
-    )
-    offset+=30
-    island6.push(
-      <div key={"island6art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
-      <img style={{maxWidth:70}} src={"island3.png"} />
-      </div>
-    )
-
+    // /// the land is generated, it's just hard to display so far
+    // let fakelocationx
+    // let fakelocationy
+    // offset = 0
+    // fakelocationx = 800
+    // fakelocationy = 600
+    // let island2 = []
+    // offset+=30
+    // island2.push(
+    //   <div key={"island2art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+    //   <img style={{maxWidth:70}} src={"island3.png"} />
+    //   </div>
+    // )
+    // offset+=30
+    // island2.push(
+    //   <div key={"island2art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+    //   <img style={{maxWidth:70}} src={"island7.png"} />
+    //   </div>
+    // )
+    // offset+=30
+    // island2.push(
+    //   <div key={"island2art"+offset} style={{position:'absolute',left:fakelocationx+offset,top:fakelocationy}}>
+    //   <img style={{maxWidth:70}} src={"island2.png"} />
+    //   </div>
+    // )
 
 
     let startingPercent = STARTINGGWEI / MAXGWEI
@@ -2704,14 +2671,9 @@ return (
           top:-100,
           backgroundImage:"url('maptexturelightfaded.jpg')",
         }}>
-        //real island
-        {islandRender}
-        //fake, filler island for now to get the look right
-        {island2}
-        {island3}
-        {island4}
-        {island5}
-        {island6}
+
+        {allIslands}
+
         </div>
 
         </Draggable>
@@ -2719,7 +2681,7 @@ return (
       )
     }
 
-    let decentralizedLink = "http://ipfs.io/ipfs/"+IPFSADDRESS;
+    let decentralizedLink = "https://ipfs.io/ipfs/"+IPFSADDRESS;
     if(window.location.href.indexOf("ipfs")>=0){
       decentralizedLink = "https://galleass.io";
     }
