@@ -21,6 +21,7 @@ let loadContracts = [
   "Castle",
   "Citizens",
   "Dogger",
+  "Schooner",
   "Timber",
   "TimberCamp",
   "Stone",

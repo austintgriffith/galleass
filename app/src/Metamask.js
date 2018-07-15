@@ -19,14 +19,22 @@ class Metamask extends Component {
     this.checkMetamask()
   }
   checkMetamask() {
+    console.log("CHECKMM")
     if (typeof window.web3 == 'undefined') {
-      if(this.state.metamask!=0) this.setState({metamask:0})
+
+      if(this.state.metamask!=0){
+        //this is a switch from having web3 to losing it (logout)
+        window.location.reload(true);
+        this.setState({metamask:0})
+      }
       this.props.setHintMode(1);
     } else {
       this.props.setHintMode(0);
+
       window.web3.version.getNetwork((err,network)=>{
 
         network = translateNetwork(network);
+
         if(network=="Mainnet" || network=="Morden" || network=="Rinkeby" || network=="Kovan"){
           if(this.state.metamask!=2) this.setState({metamask:2,network:network})
         }else{
@@ -34,6 +42,9 @@ class Metamask extends Component {
           let accounts
           try{
             window.web3.eth.getAccounts((err,_accounts)=>{
+              if(_accounts&&this.props.account&&this.props.account!=_accounts[0]){
+                window.location.reload(true);
+              }
               if(err){
                 console.log("metamask error",err)
                 if(this.state.metamask!=-1) this.setState({metamask:-1,network:network})
@@ -55,15 +66,13 @@ class Metamask extends Component {
                   if(this.state.metamask!=2) this.setState({metamask:2,network:network})
                 } else{
 
-                  if(this.props.account&&this.props.account!=accounts[0]){
-                    window.location.reload(true);
-                  }else{
+
                     if(this.state.metamask!=3) {
                       this.setState({metamask:3,accounts:accounts,network:network},()=>{
                         this.props.init(accounts[0])
                       })
                     }
-                  }
+
                 }
               }
             })

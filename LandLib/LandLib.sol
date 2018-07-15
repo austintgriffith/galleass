@@ -16,6 +16,8 @@ import 'DataParser.sol';
 
 contract LandLib is Galleasset, DataParser {
 
+  uint public constant OPENLANDTILECOST = 5;
+
   mapping (bytes32 => uint16) public tileTypes;
 
   constructor(address _galleass) public Galleasset(_galleass) {
@@ -104,7 +106,7 @@ contract LandLib is Galleasset, DataParser {
       uint16 thisUint16 = uint16(landParts1[index]) << 8 | uint16(landParts2[index]);
       uint16 tileType = translateToStartingTile(thisUint16);
       landContract.setTileTypeAt(x,y,index,tileType);
-      landContract.setOwnerAt(x,y,index,msg.sender);
+      //landContract.setOwnerAt(x,y,index,msg.sender);
       if(tileType==0){
         if(tileCountPerIsland>0){
           islands[currentIslandCount++] = tileCountPerIsland;
@@ -168,13 +170,20 @@ contract LandLib is Galleasset, DataParser {
     uint16 _x = getX(_data);
     uint16 _y = getY(_data);
     uint8 _tile = getTile(_data);
-    //must be for sale
-    require(landContract.priceAt(_x,_y,_tile)>0);
-    //must send at least enough as the price
-    require(_amount>=landContract.priceAt(_x,_y,_tile));
-    //transfer the copper to the Land Owner
     StandardToken copperContract = StandardToken(copperContractAddress);
-    require(copperContract.transfer(landContract.ownerAt(_x,_y,_tile),_amount));
+    if(landContract.ownerAt(_x,_y,_tile)==address(0)){
+      //must send at least BLANK LAND TILE COST
+      require(_amount>=OPENLANDTILECOST);
+      //transfer the copper to the Land Contract
+      require(copperContract.transfer(landContract,OPENLANDTILECOST));
+    }else{
+      //must be for sale
+      require(landContract.priceAt(_x,_y,_tile)>0);
+      //must send at least enough as the price
+      require(_amount>=landContract.priceAt(_x,_y,_tile));
+      //transfer the copper to the Land Owner
+      require(copperContract.transfer(landContract.ownerAt(_x,_y,_tile),_amount));
+    }
     //set the new owner to the sender
     landContract.setOwnerAt(_x,_y,_tile,_sender);
     //when a piece of land is purchased, an "onPurchase" function is called
@@ -295,7 +304,7 @@ contract LandLib is Galleasset, DataParser {
     CitizensLib citizensLibContract = CitizensLib(getContract("CitizensLib"));
     uint16 strength;
     uint16 stamina;
-    (strength,stamina,,,,,) = citizensLibContract.getCitizenCharacteristics(_citizen);
+    (strength,stamina,,,,,,) = citizensLibContract.getCitizenCharacteristics(_citizen);
     require(strength>1);
     require(stamina>1);
     //set citizen status to TimberCamp tile type (lumberjack!)

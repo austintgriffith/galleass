@@ -636,12 +636,14 @@ module.exports = {
   },
   transferAndCall:(contract,accountindex,toContract,amount,data)=>{
     describe('#transferAndCall() '+contract.magenta, function() {
-      it('should transfer '+amount+' '+contract.yellow+' tokens to '+toContract+' and then call receiver function with data:'+data.blue, async function() {
+      it('should transferAndCall '+amount+' '+contract.yellow+' tokens to '+toContract+' and then call receiver function with data:'+data.blue, async function() {
         this.timeout(120000)
 
         let mainLand = await getMainLand();
+        console.log(mainLand)
 
         let toContractTileType = await clevis("contract","tileTypes","LandLib",web3.utils.fromAscii(toContract))
+        console.log(toContractTileType)
 
         let found = await searchLandFromCenterOut(mainLand,9,toContractTileType)
         console.log(tab,"Found tiletype "+toContractTileType+" at:",mainLand[0],mainLand[1],found)
@@ -686,8 +688,8 @@ module.exports = {
         console.log("Transferring "+amount+" "+contract+" to "+toContract+" ("+toContractAddress+") and then calling receiver with data: "+data)
         const result = await clevis("contract","transferAndCall",contract,accountindex,toContractAddress,amount,data)
         printTxResult(result)
-        const events = await clevis("contract","eventTokenTransfer",toContract)
-        console.log(events[events.length-1].returnValues)
+        //const events = await clevis("contract","eventTokenTransfer",toContract)
+        //console.log(events[events.length-1].returnValues)
       });
     });
   },
@@ -841,7 +843,7 @@ module.exports = {
       });
     });
   },
-  transferTile:(accountindex,x,y,tileIndex,newAccountIndex)=>{
+  /*transferTile:(accountindex,x,y,tileIndex,newAccountIndex)=>{
     describe('#transferTile()', function() {
       it('should transfer ownership of a tile from one account to another', async function() {
         this.timeout(120000)
@@ -862,7 +864,7 @@ module.exports = {
         assert(currentOwnerEnd==accounts[newAccountIndex],"transfer tile FAILED, accounts["+newAccountIndex+"] ("+accounts[newAccountIndex]+") doesn't own tile "+tileIndex+" at "+x+","+y)
       });
     });
-  },
+  },*/
   setPriceOfTile:(accountindex,x,y,tileIndex,price)=>{
     describe('#setPriceOfTile()', function() {
       it('should set the price of a tile', async function() {
@@ -906,24 +908,84 @@ module.exports = {
       });
     });
   },
+  findBestMainLand:(accountindex)=>{
+    describe('#findBestMainLand() ', function() {
+      it('should findBestMainLand', async function() {
+        this.timeout(120000)
+        //look through all generated land and find the center most with enough building tiles ...
+        let result = await clevis("contract","eventLandGenerated","Land")
+        let islands = [];
+        for(let f in result){
+          let thisIsland = {x:result[f].returnValues._x,y:result[f].returnValues._y,buildTiles:0}
+          for(let i=0;i<18;i++){
+            const tileType = await clevis("contract","tileTypeAt","Land",thisIsland.x,thisIsland.y,i)
+            if(tileType>=1&&tileType<=3){
+              thisIsland.buildTiles++
+            }
+          }
+          //require at least 5 build tiles for main land
+          if(thisIsland.buildTiles>=5){
+            islands.push(thisIsland)
+          }
+        }
+        let center = 65535/2
+        let bestDistance = 999999999
+        let bestIsland = false
+        for(let i in islands){
+          var a = islands[i].x - center;
+          var b = islands[i].y - center;
+          var distanceToCenter = Math.sqrt( a*a + b*b );
+          if(distanceToCenter<bestDistance){
+            bestDistance=distanceToCenter;
+            bestIsland=islands[i]
+          }
+        }
+
+        console.log("BEST ISLAND",bestIsland," @ "+bestDistance+"px from the center")
+        const txresult = await clevis("contract","ownerSetMainLocation","Land",accountindex,bestIsland.x,bestIsland.y)
+        printTxResult(txresult)
+        const mainX = await clevis("contract","mainX","Land")
+        const mainY = await clevis("contract","mainY","Land")
+        console.log("mainX,mainY is now ",mainX,mainY)
+      });
+    });
+  },
   buyTile:(accountindex,x,y,tileIndex)=>{
-    describe('#buyTile()', function() {
+    describe('#buyTile() (using transferandcall)', function() {
       it('should buy a tile for copper', async function() {
         this.timeout(120000)
         const accounts = await clevis("accounts")
 
-        const currentPrice = await clevis("contract","priceAt","Land",x,y,tileIndex)
+        let currentPrice = await clevis("contract","priceAt","Land",x,y,tileIndex)
         const currentOwnerStart = await clevis("contract","ownerAt","Land",x,y,tileIndex)
         assert(currentOwnerStart!=accounts[accountindex],"Account index "+accountindex+" is already the owner of "+tileIndex+" at "+x+","+y)
 
         const tileType = await clevis("contract","tileTypeAt","Land",x,y,tileIndex)
-        console.log(tab,"Buying tile at index "+tileIndex+" (type "+tileType+") from account "+currentOwnerStart+" for "+(""+currentPrice).cyan+" Copper")
 
+        if(currentOwnerStart=="0x0000000000000000000000000000000000000000"){
+          currentPrice = await clevis("contract","OPENLANDTILECOST","LandLib")
+        }
+        let toContract = "LandLib"
+        let contract = "Copper"
+
+        let mainLand = await getMainLand();
+
+        let xHex = getPaddedHexFromNumber(mainLand[0],4)
+        let yHex = getPaddedHexFromNumber(mainLand[1],4)
+        let tileHex = getPaddedHexFromNumber(tileIndex,2)
+
+        let data = "0x01"
+
+        data = data+xHex+yHex+tileHex
+        let toContractAddress = localContractAddress(toContract);
+        console.log("Transferring "+currentPrice+" "+contract+" to "+toContract+" ("+toContractAddress+") and then calling receiver with data: "+data)
+        const result = await clevis("contract","transferAndCall",contract,accountindex,toContractAddress,currentPrice,data)
+        //console.log(tab,"Buying tile at index "+tileIndex+" (type "+tileType+") from account "+currentOwnerStart+" for "+(""+currentPrice).cyan+" Copper")
         //clevis contract buyTile Land 0 0
-        const result = await clevis("contract","buyTile","Land",accountindex,x,y,tileIndex)
+        //const result = await clevis("contract","buyTile","Land",accountindex,x,y,tileIndex)
         printTxResult(result)
-
         const currentOwnerEnd = await clevis("contract","ownerAt","Land",x,y,tileIndex)
+        console.log("The new owner is:",currentOwnerEnd)
         assert(currentOwnerEnd==accounts[accountindex],"Failed to buy tile "+tileIndex+" at "+x+","+y+" at price "+currentPrice+" from "+currentOwnerStart+"")
 
       });
@@ -1068,6 +1130,7 @@ module.exports = {
         loadAbi("Citizens")
         loadAbi("TimberCamp")
         loadAbi("Market")
+        loadAbi("Schooner")
       });
     });
   },

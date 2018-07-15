@@ -30,6 +30,10 @@ galleass.setContract("Land",0)
 
 galleass.deploy("Dogger",0)
 galleass.setContract("Dogger",0)
+
+galleass.deploy("Schooner",0)
+galleass.setContract("Schooner",0)
+
 //
 galleass.deploy("Timber",0)
 galleass.setContract("Timber",0)
@@ -69,6 +73,7 @@ galleass.setContract("Fillet",0)
 galleass.deploy("Harbor",0)
 galleass.setContract("Harbor",0)
 galleass.setPermission("Harbor",0,"buildDogger","true")
+galleass.setPermission("Harbor",0,"buildSchooner","true")
 galleass.setPermission("Harbor",0,"updateExperience","true")
 
 galleass.deploy("Fishmonger",0)
@@ -107,3 +112,4 @@ galleass.setPermission("Market",0,"transferTimber","true")
 
 galleass.deploy("Sea",0)
 galleass.setContract("Sea",0)
+//galleass.setPermission("Sea",0,"transferSchooner","true")

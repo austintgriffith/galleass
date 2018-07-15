@@ -5,6 +5,7 @@ by Austin Thomas Griffith
 
 */
 
+
 import React, { Component } from 'react';
 import Draggable from 'react-draggable';
 
@@ -106,7 +107,8 @@ let loadContracts = [
   "Citizens",
   "CitizensLib",
   "TimberCamp",
-  "Market"
+  "Market",
+  "Schooner"
 ]
 
 let inventoryTokens = [
@@ -209,7 +211,8 @@ class App extends Component {
       previousModalObject:{name:"Loading..."},
       transactions:[],
       messages:[],
-      islands:[]
+      islands:[],
+      readyToDisplay:false,
     }
 
     let timeoutLoader = 8000
@@ -217,18 +220,27 @@ class App extends Component {
     let timeoutCount = 0
     let loadWatcher = setInterval(()=>{
       if(document.readyState=="complete" || ((timeoutCount++)*timeoutLoaderInterval) > timeoutLoader){
-        if(this.state.clickScreenReadyToGetOut){
-          this.setState({clickScreenOpacity:0})
+        //this.setState({})
+        //if(this.state.clickScreenReadyToGetOut){
+        //  this.setState({clickScreenOpacity:0})
+        //  setTimeout(()=>{
+        //
+        //  },2000)
+        //}else{
+        if(this.state.readyToDisplay){
+          this.setState({clickScreenOpacity:0,loaderOpacity:0})
           setTimeout(()=>{
-            this.setState({clickScreenTop:-90000})
-          },2000)
-        }else{
-          this.setState({clickScreenOpacity:0})
+            if(this.state.account){
+              this.setState({clickScreenTop:-90000})
+            }
+          },1000)
+          clearInterval(loadWatcher)
         }
-        setTimeout(()=>{
-          this.setState({loaderOpacity:0})
-        },3000)
-        clearInterval(loadWatcher)
+      //  }
+        //setTimeout(()=>{
+        //  this.setState({loaderOpacity:0})
+        //},4500)
+
       }
     },timeoutLoaderInterval)
 
@@ -244,7 +256,7 @@ class App extends Component {
       if(DEBUGCONTRACTLOAD) console.log("galleassAddress",galleassAddress)
       contracts["Galleass"] = new web3.eth.Contract(galleassAbi,galleassAddress)
       for(let c in loadContracts){
-        loadContract(loadContracts[c])
+        loadContract(loadContracts[c],this)
       }
       waitInterval = setInterval(waitForAllContracts.bind(this),229)
 
@@ -421,6 +433,14 @@ class App extends Component {
   }
   init(account) {
     console.log("Init "+account+"...")
+
+    //valid account.. pull the click screen
+    //the only time this is needed is if they got all the way in on the right network but then
+    //didn't unlock MM until after everything was up
+    if(this.state.readyToDisplay){
+      this.setState({clickScreenTop:-90000})
+    }
+
     if(UPGRADING){
       console.log("Displaying upgrade screen...")
       this.openModal({
@@ -505,7 +525,7 @@ class App extends Component {
   }
 
   async doSyncIslands(from,to) {
-    let DEBUG_SYNCISLANDS = true
+    let DEBUG_SYNCISLANDS = false
     let storedIslands = []
     if(from<1) from=1
     if(DEBUG_SYNCISLANDS) console.log("Sync ISLAND Chunk: "+from+" to "+to)
@@ -546,10 +566,14 @@ class App extends Component {
 
   async doSyncFish(from,to) {
     let DEBUG_SYNCFISH = false
+    if(!this.state.landX || !this.state.landY){
+      if(DEBUG_SYNCFISH) console.log("Skip Sync Fish, land not ready")
+      return;
+    }
     let storedFish = []
     if(from<1) from=1
-    if(DEBUG_SYNCFISH) console.log("Sync Fish Chunk: "+from+" to "+to)
     let filter = {x:this.state.landX,y:this.state.landY}
+    if(DEBUG_SYNCFISH) console.log("Sync Fish Chunk: "+from+" to "+to+" filtered by ",filter)
     let catchEvent = await contracts["Bay"].getPastEvents('Catch', {
       filter: filter,
       fromBlock: from-1,
@@ -565,7 +589,7 @@ class App extends Component {
         storedFish[id]={timestamp:timestamp,species:species,dead:true};
       }
     }
-    if(DEBUG_SYNCFISH) console.log("Sync Fish Chunk: "+from+" to "+to)
+    if(DEBUG_SYNCFISH) console.log("Sync Fish Catch Chunk: "+from+" to "+to+" filtered by ",filter)
     let fish = await contracts["Bay"].getPastEvents('Fish', {
       filter: filter,
       fromBlock: from-1,
@@ -831,7 +855,10 @@ class App extends Component {
       let harborIndex = await contracts["Land"].methods.findTile(mainX,mainY,harborTileType).call()
       this.setState({landX:mainX,landY:mainY,fishmongerIndex:fishmongerIndex,harborIndex:harborIndex},()=>{
         console.log("Reloading with Land x,y and fishmongerIndex",mainX,mainY,fishmongerIndex,harborIndex)
+        //recall this function to do the other stuff
         this.syncLand()
+        //we need to wait to sync all fish until we have landX and landY set
+        this.sync("Fish",this.doSyncFish.bind(this),127,FISHEVENTSYNCLIVEINTERVAL);
       })
     }else{
       let land = this.state.land;
@@ -868,7 +895,14 @@ class App extends Component {
       //console.log("Loading Harbor Location",this.state.landX,this.state.landY,contracts["Harbor"]._address)
       let harborLocation = await contracts["Land"].methods.getTileLocation(this.state.landX,this.state.landY,contracts["Harbor"]._address).call();
       if(harborLocation!=this.state.harborLocation){
-        this.setState({harborLocation:parseInt(harborLocation),scrollLeft:parseInt(harborLocation)-(document.documentElement.clientWidth/2)})
+        harborLocation = parseInt(harborLocation)
+        console.log("SAVING HARBOR LOCATION AS ",harborLocation)
+        if(!harborLocation){
+          this.setState({readyToDisplay:true,harborLocation:harborLocation,scrollLeft:parseInt(2000)-(document.documentElement.clientWidth/2)})
+        }else{
+          this.setState({readyToDisplay:true,harborLocation:harborLocation,scrollLeft:harborLocation-(document.documentElement.clientWidth/2)})
+        }
+
       }
     }
   }
@@ -1710,28 +1744,27 @@ class App extends Component {
   startEventSync() {
     console.log("Finished loading contracts and block number, start syncing events...",this.state.blockNumber)
     clearInterval(waitInterval);
-    if(this.state.clickScreenOpacity==0){
-      this.setState({avgBlockTime:15000,contractsLoaded:true,clickScreenTop:-90000})//clickScreenTop:-90000,clickScreenOpacity:0
-    }else{
-      this.setState({avgBlockTime:15000,contractsLoaded:true,clickScreenReadyToGetOut:true})
-    }
+    //if(this.state.clickScreenOpacity==0){
+      //this.setState({avgBlockTime:15000,contractsLoaded:true,clickScreenTop:-90000})//clickScreenTop:-90000,clickScreenOpacity:0
+    //}else{
+      this.setState({avgBlockTime:15000,contractsLoaded:true})
+    //}
 
 
-    setInterval(this.syncMyShip.bind(this),1381)
-    setInterval(this.syncInventory.bind(this),2273)
-    setInterval(this.syncLand.bind(this),5103)
-    this.sync("Fish",this.doSyncFish.bind(this),127,FISHEVENTSYNCLIVEINTERVAL);
+    setInterval(this.syncMyShip.bind(this),581)
+    setInterval(this.syncInventory.bind(this),773)
+    setInterval(this.syncLand.bind(this),333)
+
     this.sync("Ships",this.doSyncShips.bind(this),198,SHIPSEVENTSYNCLIVEINTERVAL);
     this.sync("Citizens",this.doSyncCitizens.bind(this),198,SHIPSEVENTSYNCLIVEINTERVAL);
     this.sync("Clouds",this.doSyncClouds.bind(this),151,CLOUDEVENTSYNCLIVEINTERVAL);
     this.syncEverythingOnce()
   }
   syncEverythingOnce() {
+    this.syncLand()
     this.syncBlockNumber()
     this.syncMyShip()
     this.syncInventory()
-    this.syncLand()
-
     this.doSyncFish(this.state.blockNumber-2,'latest')
     this.doSyncShips(this.state.blockNumber-2,'latest')
     this.doSyncCitizens(this.state.blockNumber-2,'latest')
@@ -1823,12 +1856,17 @@ async tileClick(name,index,px) {
   console.log("TILE CLICK",name,index,px)
   this.openModal({loading:true})
   let tile = await contracts['Land'].methods.getTile(this.state.landX,this.state.landY,index).call();
+  let claimPrice = 0
+  if(tile._owner="0x0000000000000000000000000000000000000000"){
+    claimPrice = await contracts['LandLib'].methods.OPENLANDTILECOST().call();
+  }
   let modalObject = {
     name:name,
     contract:tile._contract,
     owner:tile._owner,
     ownsTile:(this.state.account && tile._owner && this.state.account.toLowerCase()==tile._owner.toLowerCase()),
     price:tile._price,
+    claimPrice:claimPrice,
     index:index,
     px:px,
     citizens:[],
@@ -1988,6 +2026,12 @@ setHintMode(num){
   //1 means take them to metamask install
   //0 means just keep shaking the metamask hint
   this.setState({hintMode:num})
+  if(num==1){
+    //since they don't have metamask or something, go ahead and show the base stuff
+    setTimeout(()=>{
+      this.setState({readyToDisplay:true})
+    },2500)
+  }
 }
 clickScreenClick(event){
   var userAgent = window.navigator.userAgent;
@@ -2550,29 +2594,58 @@ return (
     // })
 
     let allIslands = []
-
+    let thisXYOff = [0,0]
     if(this.state.islands){
 
       for(let id in this.state.islands){
         let offset= 0
         let thisIsland = []
+        let iscurrentisland = false
         for(let island in this.state.islands[id].islands){
           let thisIslandSize = parseInt(this.state.islands[id].islands[island])
+
           if(thisIslandSize){
             const fullViewerSizeMinusPad = 1200
-            let left = parseInt(this.state.islands[id].x)/65535*fullViewerSizeMinusPad+offset
-            let top = parseInt(this.state.islands[id].y)/65535*fullViewerSizeMinusPad
+            let left = (parseInt(this.state.islands[id].x)/65535*fullViewerSizeMinusPad+offset)+200
+            let top = (parseInt(this.state.islands[id].y)/65535*fullViewerSizeMinusPad)+200
+
+
             thisIsland.push(
               <div key={"island"+id+"art"+offset} style={{position:'absolute',left:left,top:top}}>
                 <img style={{maxWidth:70}} src={"island"+thisIslandSize+".png"} />
               </div>
             )
+            if(island==0){
+              if(this.state.islands[id].x==this.state.landX && this.state.islands[id].y==this.state.landY ){
+                thisXYOff = [left-document.documentElement.clientWidth/2-200,top-document.documentElement.clientHeight/2-50]
+                iscurrentisland=[left+75,top+40]
+              }
+              thisIsland.push(
+                <div key={"island"+id+"art"+offset+"labelarrow"} style={{position:'absolute',left:left+70,top:top+60}}>
+                  <img src="arrowformap.png" style={{maxHeight:20,opacity:0.8}} />
+                </div>
+              )
+              thisIsland.push(
+                <div key={"island"+id+"art"+offset+"label"} style={{position:'absolute',left:left+78,top:top+55}}>
+                  <Writing string={""+this.state.islands[id].x+","+this.state.islands[id].y} size={16}/>
+                </div>
+              )
+            }
             offset+=30
           }
         }
+        if(iscurrentisland){
+          let coverSize=200
+          thisIsland.push(
+            <div key={"island"+id+"cover"} style={{position:'absolute',left:iscurrentisland[0]-coverSize/2,top:iscurrentisland[1]-coverSize/2}}>
+              <img style={{opacity:0.25,maxWidth:coverSize}} src={"currentisland.png"} />
+            </div>
+          )
+        }
+
         allIslands.push(
           <div style={{cursor:"pointer"}} onClick={()=>{
-            window.location = "https://"+window.location.hostname+"/"+this.state.islands[id].x+"."+this.state.islands[id].y
+            window.location = window.location.protocol+"//"+window.location.hostname+(window.location.port ? ':'+window.location.port: '')+"/"+this.state.islands[id].x+"."+this.state.islands[id].y
           }}>
             {thisIsland}
           </div>
@@ -2661,7 +2734,7 @@ return (
           height:6500,
           /*transform:"scale("+this.state.mapScale+")",*/
         }}>
-        <Draggable bounds={{right:300,left:-6200,bottom:100,top:-6400}}>
+        <Draggable bounds={{right:300,left:-6200,bottom:100,top:-6400}} defaultPosition={{x: -thisXYOff[0], y: -thisXYOff[1]}} >
 
         <div style={{
           width:6500,
@@ -2699,6 +2772,19 @@ return (
     //
     let adjustedMenuZoom = Math.min(1,this.state.zoom * 1.5)
     //
+    //
+    //
+    //
+
+    let coords = ""
+    if(this.state.landY&&this.state.landX){
+      coords = (
+        <div style={{position:"absolute",top:62,left:-9,width:300}}>
+          <Writing  string={"@ "+this.state.landX+","+this.state.landY} size={20}/>
+        </div>
+      )
+    }
+
     return (
 
       <div style={{
@@ -2739,9 +2825,10 @@ return (
 
       <div style={{zIndex:mapZ,transform:"scale("+adjustedMenuZoom+")",marginLeft:-((1-adjustedMenuZoom)*175),marginTop:-((1-adjustedMenuZoom)*60)}}>
         <div style={{position:'relative',backgroundImage:"url('mapicon.png')",width:400,height:115}} onClick={this.titleClick.bind(this)}>
-          <div style={{position:"absolute",top:19,left:32}}>
-            <Writing  string={"Galleass.io"} size={60} space={5} letterSpacing={29}/>
+          <div style={{position:"absolute",top:15,left:24}}>
+            <Writing  string={"Galleass.io"} size={50} space={5} letterSpacing={20}/>
           </div>
+          {coords}
         </div>
         <a href="https://github.com/austintgriffith/galleass" target="_blank">
         <img data-rh="Source" data-rh-at="bottom" style={{maxHeight:36,position:"absolute",left:25+iconOffset,top:83,opacity:0.8}} src="github.png" />
@@ -3237,6 +3324,17 @@ if(OWNS_TILE){
     />
     </div>
   )
+}else if(this.state.modalObject.owner=="0x0000000000000000000000000000000000000000"){
+  tilePriceAndPurchase = (
+    <div style={{float:'right',padding:10}}>
+    <Writing style={{opacity:0.9}} string={"Claim Land: "+this.state.modalObject.claimPrice+" "} size={20}/>
+    <img  style={{maxHeight:20}} src="copper.png" />
+    <img data-rh={"Claim land for  "+this.state.modalObject.claimPrice+" Copper"} data-rh-at="right"
+    src="metamasksign.png"
+    style={{maxHeight:20,marginLeft:10,cursor:"pointer"}} onClick={this.buyLand.bind(this,this.state.landX,this.state.landY,this.state.modalObject.index,this.state.modalObject.claimPrice)}
+    />
+    </div>
+  )
 }
 
 let contractAddress = ""
@@ -3288,7 +3386,7 @@ return (
 
 
 const DEBUGCONTRACTLOAD = false;
-let loadContract = async (contract)=>{
+let loadContract = async (contract,theThis)=>{
   try{
     if(DEBUGCONTRACTLOAD) console.log("HITTING GALLEASS for address of "+contract)
     if(DEBUGCONTRACTLOAD) console.log(contracts["Galleass"])
@@ -3303,6 +3401,8 @@ let loadContract = async (contract)=>{
     contracts[contract] = new web3.eth.Contract(thisContractAbi,thisContractAddress)
   } catch(e) {
     console.log("ERROR LOADING "+contract,e)
+    //go ahead and show things...
+    theThis.setState({readyToDisplay:true})
   }
 
 }

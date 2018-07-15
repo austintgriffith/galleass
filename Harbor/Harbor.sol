@@ -16,7 +16,7 @@ import 'StandardTile.sol';
 contract Harbor is StandardTile {
 
   uint16 public constant TIMBERTOBUILDDOGGER = 2;
-  uint16 public constant TIMBERTOBUILDGALLEY = 5;
+  uint16 public constant TIMBERTOBUILDSCHOONER = 6;
 
   //      land x            land y          land tile           model      array of ids
   mapping(uint16 => mapping(uint16 => mapping(uint8 => mapping (bytes32 => uint256[99])))) public shipStorage; //make ship storage very large for testnet (eventually this should be much smaller)
@@ -64,9 +64,9 @@ contract Harbor is StandardTile {
       require( _amount >= TIMBERTOBUILDDOGGER );
       require( _buildShip(_x,_y,_tile,_model) > 0);
       return true;
-    }else if(_model=="Galley"){
+    }else if(_model=="Schooner"){
       //must send in enough timber to build
-      require( _amount >= TIMBERTOBUILDGALLEY );
+      require( _amount >= TIMBERTOBUILDSCHOONER );
       require( _buildShip(_x,_y,_tile,_model) > 0);
       return true;
     }else{
@@ -81,8 +81,8 @@ contract Harbor is StandardTile {
     if(_model=="Dogger"){
       require( getTokens(msg.sender,"Timber",TIMBERTOBUILDDOGGER) );
       return _buildShip(_x,_y,_tile,_model);
-    }else if(_model=="Galley"){
-      require( getTokens(msg.sender,"Timber",TIMBERTOBUILDGALLEY) );
+    }else if(_model=="Schooner"){
+      require( getTokens(msg.sender,"Timber",TIMBERTOBUILDSCHOONER) );
       return _buildShip(_x,_y,_tile,_model);
     }else{
       return 0;
@@ -94,8 +94,8 @@ contract Harbor is StandardTile {
     require( shipsContractAddress!=address(0) );
     if(_model=="Dogger"){
       require( approveTokens("Timber",shipsContractAddress,TIMBERTOBUILDDOGGER) );
-    }else if(_model=="Galley"){
-      require( approveTokens("Timber",shipsContractAddress,TIMBERTOBUILDGALLEY) );
+    }else if(_model=="Schooner"){
+      require( approveTokens("Timber",shipsContractAddress,TIMBERTOBUILDSCHOONER) );
     }else{
       return 0;
     }
