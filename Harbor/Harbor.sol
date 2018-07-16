@@ -36,6 +36,8 @@ contract Harbor is StandardTile {
       return _sendToken(_sender,_amount,_data);
     } else if(action==1){
       return _build(_sender,_amount,_data);
+    } else if(action==2){
+      return _buyShip(_sender,_amount,_data);
     } else {
       revert("unknown action");
     }
@@ -43,6 +45,39 @@ contract Harbor is StandardTile {
   }
   event TokenTransfer(address token,address sender,uint amount,bytes data);
 
+  function _buyShip(address _sender, uint _amount, bytes _data) internal returns (bool) {
+
+    uint16 _x = getX(_data);
+    uint16 _y = getY(_data);
+    uint8 _tile = getTile(_data);
+
+    bytes32 _model = getRemainingBytesTrailingZs(6,_data);
+
+    //you must be sending in copper
+    require(msg.sender == getContract("Copper"));
+
+    //they must send in enough copper to buy the ship
+    require( _amount >= currentPrice[_x][_y][_tile][_model] );
+
+    if(_model=="Schooner"){
+      address shipsContractAddress = getContract(_model);
+      require( shipsContractAddress!=address(0) );
+      NFT shipsContract = NFT(shipsContractAddress);
+      uint256 availableShip = getShipFromStorage(_x,_y,_tile,shipsContract,_model);
+      require( availableShip!=0 );
+      shipsContract.transfer(_sender,availableShip);
+
+      Land landContract = Land(getContract("Land"));
+      uint16 harborLocation = uint16(uint256(landContract.getTileLocation(_x,_y,address(this)))*65535/4000);
+
+      Sea seaContract = Sea(getContract("Sea"));
+      seaContract.embark(shipsContractAddress,availableShip,_x,_y,harborLocation);
+
+      return true;
+    }else{
+      return false;
+    }
+  }
 
 
   function _build(address _sender, uint _amount, bytes _data) internal returns (bool) {
@@ -187,6 +222,15 @@ contract Harbor is StandardTile {
   }
 
 }
+
+contract Sea {
+  function embark(address _contract, uint256 _shipId, uint16 _x, uint16 _y, uint16 _location) returns (bool) { }
+}
+
+contract Land {
+  function getTileLocation(uint16 _x,uint16 _y,address _address) public constant returns (uint16) { }
+}
+
 
 contract StandardToken {
   function transfer(address _to, uint256 _value) public returns (bool) { }

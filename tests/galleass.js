@@ -253,6 +253,25 @@ module.exports = {
       });
     });
   },
+  setShipCopperPrice:(accountindex,model,copper)=>{
+    describe('#setShipPrice()', function() {
+      it('should buy ship from the Harbor', async function() {
+        this.timeout(120000)
+        const accounts = await clevis("accounts")
+        let mainLand = await getMainLand();
+        let harborTile = await clevis("contract","tileTypes","LandLib",web3.utils.fromAscii("Harbor"))
+        let found = await searchLandFromCenterOut(mainLand,9,harborTile)
+        console.log(tab,"Found harbor tile at:",mainLand[0],mainLand[1],found)
+        //setPrice(uint16 _x,uint16 _y,uint8 _tile,bytes32 model,uint256 amount)
+        const result = await clevis("contract","setPrice","Harbor",accountindex,mainLand[0],mainLand[1],found,web3.utils.fromAscii(model),copper)
+        printTxResult(result)
+        const currentPrice = await clevis("contract","currentPrice","Harbor",mainLand[0],mainLand[1],found,web3.utils.fromAscii(model));
+        const priceInCopper = currentPrice
+        console.log(tab,"The currentPrice for a "+model.blue+" at the",mainLand[0],mainLand[1],found,"Harbor is",priceInCopper.toString().green," Copper")
+        assert(copper==priceInCopper,"Price did not set correctly.")
+      });
+    });
+  },
   buyShip:(accountindex,model)=>{
     describe('#buyShip()', function() {
       it('should buy ship from the Harbor', async function() {
@@ -1131,6 +1150,7 @@ module.exports = {
         loadAbi("TimberCamp")
         loadAbi("Market")
         loadAbi("Schooner")
+        loadAbi("Sea")
       });
     });
   },

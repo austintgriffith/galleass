@@ -15,6 +15,9 @@ galleass.testMint("Timber",0,0,100)
 galleass.approveContract("Timber",0,"Harbor",2)
 galleass.buildShip(0,"Dogger")
 
+galleass.approveContract("Timber",0,"Harbor",12)
+galleass.buildShip(0,"Schooner")
+galleass.buildShip(0,"Schooner")
 //make sure you can revoke timber and it will fail to build ships at the harbor
 // galleass.approveContract("Timber",1,"Harbor",0)
 // galleass.attemptToBuildShip(1,"Dogger")

@@ -16,9 +16,10 @@ contract Schooner is Galleasset, NFT {
 
     uint16 public constant TIMBERTOBUILD = 6;
 
-
     string public constant name = "Galleass Schooner";
     string public constant symbol = "G_SCHOONER";
+
+    bytes32 public constant image = "schooner";
 
     constructor(address _galleass) Galleasset(_galleass) public {
       //0 index should be a blank item owned by no one

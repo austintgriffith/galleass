@@ -75,6 +75,7 @@ galleass.setContract("Harbor",0)
 galleass.setPermission("Harbor",0,"buildDogger","true")
 galleass.setPermission("Harbor",0,"buildSchooner","true")
 galleass.setPermission("Harbor",0,"updateExperience","true")
+galleass.setPermission("Harbor",0,"embarkShips","true")
 
 galleass.deploy("Fishmonger",0)
 galleass.setContract("Fishmonger",0)

@@ -14,7 +14,7 @@ import 'NFT.sol';
 
 contract Dogger is Galleasset, NFT {
 
-    uint16 public constant TIMBERTOBUILDDOGGER = 2;
+    uint16 public constant TIMBERTOBUILD = 2;
 
 
     string public constant name = "Galleass Dogger";
@@ -43,7 +43,7 @@ contract Dogger is Galleasset, NFT {
 
     function build() public isGalleasset("Dogger") returns (uint){
       require( hasPermission(msg.sender,"buildDogger") );
-      require( getTokens(msg.sender,"Timber",TIMBERTOBUILDDOGGER) );
+      require( getTokens(msg.sender,"Timber",TIMBERTOBUILD) );
 
       //when citizens are introduced to the game,
       //their level of craftsmanship will play a role

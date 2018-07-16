@@ -14,10 +14,10 @@ const galleass = require('./galleass.js')
 // galleass.reload()
 //---------------- ^^^^^ ----------------- happens in deploy ------- //
 galleass.generateLand(0)
-galleass.generateLand(0)
-galleass.generateLand(0)
-galleass.generateLand(0)
-galleass.generateLand(0)
+// galleass.generateLand(0)
+// galleass.generateLand(0)
+// galleass.generateLand(0)
+// galleass.generateLand(0)
 // galleass.generateLand(0)
 // galleass.generateLand(0)
 // galleass.generateLand(0)
@@ -29,7 +29,7 @@ galleass.generateLand(0)
 // galleass.generateLand(0)
 // galleass.generateLand(0)
 
-galleass.findBestMainLand(0)
+// galleass.findBestMainLand(0) // DO THIS ON REAL DEPLOY OR BIG DEPLOY BUT SKIP FOR FAST
 
 //transfer ownership of the very first tile (could be anything from grass/forest to main hills/ stream etc) from account 0 to account 1
 //galleass.transferFirstLandTile(0,1)
@@ -47,9 +47,9 @@ galleass.buyFirstLandTile(0)
 
 //create buildings in the middle...
 galleass.editMiddleTile(0,"Harbor",100)
-// galleass.setPriceOfFirstTileOfType(0,100,1999)
+galleass.setPriceOfFirstTileOfType(0,100,99)
 galleass.editMiddleTile(0,"Fishmonger",101)
-// galleass.setPriceOfFirstTileOfType(0,101,1999)
+galleass.setPriceOfFirstTileOfType(0,101,99)
 
 galleass.setFishPrice(0,"Pinner",2)
 galleass.setFishPrice(0,"Redbass",4)
@@ -59,9 +59,12 @@ galleass.setFishPrice(0,"Dangler",9)
 galleass.createCitizenAtTileType(0,"0x9129a6fbb3298ba8452a7c7948133c0138c0a6114af88226d6fd0ecdc7640d83","0x000f000f000f000f000f00000000000f00000000000000000000000000000000","Fishmonger")
 
 
+galleass.setShipPrice(0,"Dogger","0.001")
+galleass.setShipCopperPrice(0,"Schooner","9")
+
 
 galleass.editMiddleTile(0,"Market",102)
-// galleass.setPriceOfFirstTileOfType(0,102,1999)
+galleass.setPriceOfFirstTileOfType(0,102,99)
 
 // no need for this now until you go 667// galleass.approveContract("Timber",0,"Land",6)
 //find a spot searching left to right for  (main hills or main grass =) and build a 2000 (village)

@@ -34,6 +34,7 @@ Citizen status should probably be uint16
 
 ### TODO
 ```
+if you put in coords in the url that don't exist it should take you to the main url instead of showing a blank island
 Timber -> timber in images
 Add alt="#LETTER#" to handwriting
 map needs a bad ass compass and some wave lines and maybe a bit of a blue backdrop fade behind islands
@@ -42,7 +43,7 @@ look at how the screen adjusts on mobile.. the clickscreen and map are weird whe
 clevis contract Timber -- this command should print a help for all the commands for that contract and the argument order etc
 [-] citizen with greens sends 3 copper and 1 greens and it doesn't seem to work!?
 it would be cool on the testnet to have a request ether button that sends them like 0.01 or something on ropsten
-now that the loader waits longer, there are checkpoints along the way that could update a loader bar just to give a little more feedback 
+now that the loader waits longer, there are checkpoints along the way that could update a loader bar just to give a little more feedback
 ```
 
 

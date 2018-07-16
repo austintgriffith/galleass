@@ -8,7 +8,6 @@ const galleass = require("./galleass.js")
 // galleass.attemptToSellFirstShip(2,"Dogger")
 
 //check the the experience works
-galleass.setShipPrice(0,"Dogger","0.001")
 galleass.shouldNotHaveExperience(2,1)
 galleass.buyShip(2,"Dogger")
 galleass.shouldHaveExperience(2,1)

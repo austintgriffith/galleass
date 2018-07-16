@@ -12,6 +12,7 @@ let etherscan = "http://ropsten.etherscan.io"
 let loadContracts = [
   "Galleass",
   "Land",
+  "Sea",
   "Bay",
   "Sky",
   "Harbor",
@@ -39,6 +40,7 @@ let loadContracts = [
   "Staged",
   "LandLib",
   "CitizensLib",
+
 ]
 
 contractsHtml = "<table cellspacing='0' cellpadding='10' border='0'>"
