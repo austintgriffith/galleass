@@ -11,12 +11,12 @@ class Sea extends Component {
     window.open(url)
   }
   render(){
-    let {sea,web3,blockNumber,shipSpeed,width,height,horizon} = this.props
+    let {sea,web3,blockNumber,shipSpeed,width,height,horizon,landX,landY} = this.props
     let renderedSea = []
 
     for(let b in sea){
     //  console.log("SHIP "+b,ships[b],b)
-      if(sea[b].floating){
+      if(sea[b].floating && sea[b].x==landX && sea[b].y==landY ){
         let translatedX
         let image = "schooner";
         let direction = sea[b].destX>sea[b].x
@@ -59,6 +59,8 @@ class Sea extends Component {
         let idLeftOffset = 0
         //console.log("idHash",idHash)
 
+        let schoonerPushDown = 100
+
         let extraZ = 0
 
         if(this.props && this.props.account && sea[b]&&sea[b].owner&&sea[b].owner.toLowerCase()==this.props.account.toLowerCase()){
@@ -70,7 +72,7 @@ class Sea extends Component {
           let lastTwoBytes = idHash.substring(idHash.length-2);
           idTopOffset = lastTwoBytes.substring(0,1);
           idLeftOffset = lastTwoBytes.substring(1);
-          idTopOffset = 1+parseInt(idTopOffset, 16)*3
+          idTopOffset = schoonerPushDown+1+parseInt(idTopOffset, 16)*3
           idLeftOffset = (7-parseInt(idLeftOffset, 16))
         }
 
@@ -83,7 +85,7 @@ class Sea extends Component {
           renderedSea.push(
             <div key={"sea"+b} onClick={this.openUrl.bind(this,this.props.etherscan+"address/"+b)}
               style={{
-                zIndex:20+idTopOffset+extraZ,
+                zIndex:schoonerPushDown+20+idTopOffset+extraZ,
                 position:'absolute',
                 left:translatedX+idLeftOffset,
                 top:horizon-28+idTopOffset,

@@ -2677,6 +2677,8 @@ return (
 
 
   <Sea
+  landX={this.state.landX}
+  landY={this.state.landY}
   account={this.state.account}
   sea={this.state.sea}
   width={width}
