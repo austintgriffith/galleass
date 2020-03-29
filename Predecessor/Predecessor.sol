@@ -10,5 +10,5 @@ contract Predecessor is Ownable, Staged{
       _;
     }
 }
-import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
+import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
 import 'Staged.sol';

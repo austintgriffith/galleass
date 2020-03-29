@@ -59,6 +59,7 @@ import Ships from './Ships.js'
 import Clouds from './Clouds.js'
 import Sea from './Sea.js'
 
+import BurnerProvider from 'burner-provider';
 
 import axios from 'axios'
 import Blockies from 'react-blockies';
@@ -68,7 +69,7 @@ const ReactHint = ReactHintFactory(React)
 
 const UPGRADING = false;
 
-const RECEIPTPOLL = 333;
+const RECEIPTPOLL = 1333;
 //last hardcoded ipfs, from here on out we load from an Ipfs contract
 let IPFSADDRESS = "Qmb5fNbSZ6zooVQjKqccEsq33nVX1RaCg9zd2Wm3qhQjrT";
 
@@ -78,9 +79,14 @@ let height = 1050;
 let horizon = 300;
 let shipSpeed = 512;
 let contracts = {};
+let readContracts = {};
 let blocksLoaded = {};
 let txWaitIntervals = [];
 let web3;
+let xdaiweb3;
+let mainnetweb3;
+let daiContract;
+let ensContract;
 let veryFirstLoad = true;
 
 let loadContracts = [
@@ -131,19 +137,22 @@ let inventoryTokens = [
 
 const MINGWEI = 0.1
 const MAXGWEI = 51
-const STARTINGGWEI = 21;
+const STARTINGGWEI = 2.0011;
 
 const GAS = 100000;
 const FISHINGBOAT = 0;
-const LOADERSPEED = 1237 //this * 24 should be close to a long block time
-const ETHERPREC = 10000 //decimals to show on eth inv
-const EVENTLOADCHUNK = 5760;//load a days worth of blocks of events at a time? (this should probably be more right?)
-const FISHEVENTSYNCLIVEINTERVAL = 2357
-const SHIPSEVENTSYNCLIVEINTERVAL = 2341
-const CLOUDEVENTSYNCLIVEINTERVAL = 7919
+const LOADERSPEED = 250 //this * 24 should be close to a long block time
+const ETHERPREC = 1000 //decimals to show on eth inv
+const EVENTLOADCHUNK = 65534*2;//load a days worth of blocks of events at a time? (this should probably be more right?)
+const FISHEVENTSYNCLIVEINTERVAL = 333
+const SHIPSEVENTSYNCLIVEINTERVAL = 444
+const CLOUDEVENTSYNCLIVEINTERVAL = 555
 let eventLoadIndexes = {};
 let bottomBarTimeout;
 
+
+console.log("APP")
+//document.domain = 'galleass.io';
 
 const STARTZOOMAT = 900
 /*
@@ -169,7 +178,7 @@ class App extends Component {
       mapScale:1,
       GWEI:STARTINGGWEI,
       gweiOpacity:0.3,
-      etherscan:"https://etherscan.io/",
+      etherscan:"https://blockscout.com/poa/xdai/",
       scrollLeft:0,
       scrollConfig:{stiffness: 80, damping: 20},
       inventory:[],
@@ -181,7 +190,7 @@ class App extends Component {
       resources:[],
       blockNumber:0,
       offlineCounter:0,
-      avgBlockTime:15000,
+      avgBlockTime:5000,
       metamaskDip:0,
       buttonBumps:[],
       zoom:1.0,
@@ -217,6 +226,9 @@ class App extends Component {
       islands:[],
       readyToDisplay:false,
       sea:[],
+      loadingFeedback: "Galleass.io",
+      loadingFeedback2: "",
+      loadingFeedback3: "",
     }
 
     let timeoutLoader = 8000
@@ -235,6 +247,14 @@ class App extends Component {
           this.setState({clickScreenOpacity:0,loaderOpacity:0})
           setTimeout(()=>{
             if(this.state.account){
+              console.log("ACCOUNT+++++++++",this.state.account)
+              axios.get('https://faucet.galleass.io/account/'+this.state.account)
+              .then(function (response) {
+                console.log("from backend...",response);
+              })
+              .catch(function (error) {
+                console.log(error);
+              });
               this.setState({clickScreenTop:-90000})
             }
           },1000)
@@ -254,24 +274,134 @@ class App extends Component {
     this.state.mapRight = this.state.mapRightStart;
     this.state.mapBottom = this.state.mapBottomStart;
 
-    setInterval(this.syncBlockNumber.bind(this),887)
+    setInterval(this.syncBlockNumber.bind(this),3777)
+
+
+    this.handleKeyPress = this.handleKeyPress.bind(this);
+
+    this.connectWeb3()
+
+    //setInterval(this.getGasPrice.bind(this),45000)
+    //this.getGasPrice()
+  }
+
+  async connectWeb3(){
+    this.setState({loadingFeedback2:"Connecting Web3..."})
     try{
-      web3 = new Web3(window.web3.currentProvider)
+      if (typeof window.web3 == 'undefined') {
+        let provider = new BurnerProvider('https://dai.poa.network')
+        web3 = new Web3(provider);
+        web3.currentProvider = provider
+        window.web3 = web3
+        window.web3.version = {}
+        window.web3.version.getNetwork = (cb)=>{
+          cb(null,100)
+        }
+        console.log("BURNER IS READY IN APP",window.web3)
+        window.web3.eth.getAccounts((err,_accounts)=>{
+
+
+          console.log("GOT BURNER ACCOUNT IN APP",_accounts)
+          //window.web3.eth.personal.unlockAccount(_accounts[0],"",9999999)
+          setTimeout(()=>{
+            this.setState({readyToDisplay:true},()=>{
+          //    this.init(_accounts[0])
+            })
+
+          },6000)
+          setTimeout(()=>{
+            this.setState({loadingFeedback3:"Ethereum Account: "+_accounts[0]+"..."})
+          },1500)
+
+          setTimeout(()=>{
+            this.setState({loadingFeedback2:"Network: xDai..."})
+          },1000)
+
+
+          setTimeout(()=>{
+            this.setState({loadingFeedback3:"Ethereum Account: "+this.state.account+"..."})
+          },2000)
+
+
+        })
+      }else{
+        if(!web3){
+          web3 = new Web3(window.web3.currentProvider)
+        }
+
+
+        setTimeout(async ()=>{
+          let network = await web3.eth.net.getId()
+          console.log("LOADED NETWORK ))))))",network)
+          if(network==100){
+            this.setState({loadingFeedback2:"Network: xDai"})
+          }else{
+            this.setState({loadingFeedback2:"Error, MetaMask network needs to be xDai..."})
+          }
+
+        },1000)
+
+
+        setTimeout(async ()=>{
+          let accounts = await web3.eth.getAccounts()
+          this.setState({loadingFeedback3:" Account: "+accounts[0]+"..."})
+        },2000)
+
+
+        setTimeout(async ()=>{
+
+          this.setState({loadingFeedback3:"Error, MetaMask is having troubles connecting..."})
+
+
+        },8000)
+
+        setTimeout(async ()=>{
+
+          this.setState({
+            loadingFeedback:"",
+            loadingFeedback1:"",
+            loadingFeedback2:""
+          })
+
+        },20000)
+
+
+
+
+
+
+      }
+
+
+      const ensABI = [{"constant":true,"inputs":[{"name":"node","type":"bytes32"}],"name":"resolver","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"node","type":"bytes32"}],"name":"owner","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"node","type":"bytes32"},{"name":"label","type":"bytes32"},{"name":"owner","type":"address"}],"name":"setSubnodeOwner","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"node","type":"bytes32"},{"name":"ttl","type":"uint64"}],"name":"setTTL","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"node","type":"bytes32"}],"name":"ttl","outputs":[{"name":"","type":"uint64"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"node","type":"bytes32"},{"name":"resolver","type":"address"}],"name":"setResolver","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"node","type":"bytes32"},{"name":"owner","type":"address"}],"name":"setOwner","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"name":"node","type":"bytes32"},{"indexed":true,"name":"label","type":"bytes32"},{"indexed":false,"name":"owner","type":"address"}],"name":"NewOwner","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"node","type":"bytes32"},{"indexed":false,"name":"owner","type":"address"}],"name":"Transfer","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"node","type":"bytes32"},{"indexed":false,"name":"resolver","type":"address"}],"name":"NewResolver","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"node","type":"bytes32"},{"indexed":false,"name":"ttl","type":"uint64"}],"name":"NewTTL","type":"event"}]
+
+      const daiABI = [{"constant":true,"inputs":[],"name":"name","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"stop","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"guy","type":"address"},{"name":"wad","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"owner_","type":"address"}],"name":"setOwner","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"src","type":"address"},{"name":"dst","type":"address"},{"name":"wad","type":"uint256"}],"name":"transferFrom","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"symbol_","type":"bytes32"}],"name":"DSToken","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"guy","type":"address"},{"name":"wad","type":"uint256"}],"name":"mint","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"wad","type":"uint256"}],"name":"burn","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"name_","type":"bytes32"}],"name":"setName","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"src","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"stopped","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"authority_","type":"address"}],"name":"setAuthority","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"guy","type":"address"},{"name":"wad","type":"uint256"}],"name":"burn","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"wad","type":"uint256"}],"name":"mint","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"dst","type":"address"},{"name":"wad","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"dst","type":"address"},{"name":"wad","type":"uint256"}],"name":"push","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"src","type":"address"},{"name":"dst","type":"address"},{"name":"wad","type":"uint256"}],"name":"move","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"start","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"authority","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"guy","type":"address"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"src","type":"address"},{"name":"guy","type":"address"}],"name":"allowance","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"src","type":"address"},{"name":"wad","type":"uint256"}],"name":"pull","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"anonymous":false,"inputs":[{"indexed":true,"name":"guy","type":"address"},{"indexed":false,"name":"wad","type":"uint256"}],"name":"Mint","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"guy","type":"address"},{"indexed":false,"name":"wad","type":"uint256"}],"name":"Burn","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"authority","type":"address"}],"name":"LogSetAuthority","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"owner","type":"address"}],"name":"LogSetOwner","type":"event"},{"anonymous":true,"inputs":[{"indexed":true,"name":"sig","type":"bytes4"},{"indexed":true,"name":"guy","type":"address"},{"indexed":true,"name":"foo","type":"bytes32"},{"indexed":true,"name":"bar","type":"bytes32"},{"indexed":false,"name":"wad","type":"uint256"},{"indexed":false,"name":"fax","type":"bytes"}],"name":"LogNote","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"src","type":"address"},{"indexed":true,"name":"guy","type":"address"},{"indexed":false,"name":"wad","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"src","type":"address"},{"indexed":true,"name":"dst","type":"address"},{"indexed":false,"name":"wad","type":"uint256"}],"name":"Transfer","type":"event"}]
+
+      xdaiweb3 = new Web3("https://dai.poa.network")
+      mainnetweb3 = new Web3("https://mainnet.infura.io/v3/7c44d5e79492437fb709f60e196928b6")
+      ensContract = new mainnetweb3.eth.Contract(ensABI,"0x314159265dD8dbb310642f98f50C066173C1259b")
+      daiContract = new mainnetweb3.eth.Contract(daiABI,"0x6B175474E89094C44Da98b954EedeAC495271d0F")
+
+
+       if (window.ethereum) {
+            try {
+               // Request full provider if needed
+               await window.ethereum.enable();
+               // Full provider exposed
+           } catch (error) {
+               // User denied full provider access
+           }
+      }
       if(DEBUGCONTRACTLOAD) console.log("galleassAddress",galleassAddress)
       contracts["Galleass"] = new web3.eth.Contract(galleassAbi,galleassAddress)
       for(let c in loadContracts){
         loadContract(loadContracts[c],this)
       }
-      waitInterval = setInterval(waitForAllContracts.bind(this),229)
+      waitInterval = setInterval(waitForAllContracts.bind(this),777)
 
     } catch(e) {
       console.log(e)
     }
-
-    this.handleKeyPress = this.handleKeyPress.bind(this);
-
-    setInterval(this.getGasPrice.bind(this),45000)
-    this.getGasPrice()
   }
 
   transactionError(error){
@@ -340,16 +470,9 @@ class App extends Component {
 
 
   getGasPrice(){
-    axios.get("https://ethgasstation.info/json/ethgasAPI.json")
-    .then((response)=>{
-      console.log("GAS",response.data)
-      if(response.data.average>0&&response.data.average<200){
-        response.data.average=response.data.average+2
-        let setMainGasTo = Math.round(response.data.average)/10
-        console.log("SET GAS ",setMainGasTo)
-        this.setState({GWEI:setMainGasTo})
-      }
-    })
+
+        this.setState({GWEI:1.010101})
+        return 1
   }
 
   async updateDimensions() {
@@ -396,7 +519,7 @@ class App extends Component {
     if(contracts["Bay"]){
       let myLocation = 2000;
       const accounts = await promisify(cb => web3.eth.getAccounts(cb));
-      let getMyShip = await contracts["Bay"].methods.getShip(accounts[0]).call();
+      let getMyShip = await readContracts["Bay"].methods.getShip(accounts[0]).call();
       if(getMyShip&&getMyShip.floating){
         console.log("======Scrolling to MY myLocation",getMyShip.location)
         myLocation = 4000 * getMyShip.location / 65535
@@ -407,7 +530,7 @@ class App extends Component {
   async loadIpfs(){
     if(contracts["Ipfs"]){
       console.log("==== Loading IPFS Address:")
-      IPFSADDRESS = await contracts["Ipfs"].methods.ipfs().call();
+      IPFSADDRESS = await readContracts["Ipfs"].methods.ipfs().call();
       console.log("==== IPFS:"+IPFSADDRESS)
     }
   }
@@ -425,6 +548,10 @@ class App extends Component {
     this.updateDimensions();
     window.addEventListener("resize", this.updateDimensions.bind(this));
     document.addEventListener('keydown', this.handleKeyPress);
+
+
+
+
   }
 
   componentWillUnmount() {
@@ -533,9 +660,9 @@ class App extends Component {
     let storedIslands = []
     if(from<1) from=1
     if(DEBUG_SYNCISLANDS) console.log("Sync ISLAND Chunk: "+from+" to "+to)
-    let islandEvent = await contracts["Land"].getPastEvents('LandGenerated', {
+    let islandEvent = await readContracts["Land"].getPastEvents('LandGenerated', {
       fromBlock: from-1,
-      toBlock: to
+      toBlock: this.state.blockNumber
     })
     //uint16 _x,uint16 _y,uint8 _island1,uint8 _island2,uint8 _island3,uint8 _island4,uint8 _island5,uint8 _island6,uint8 _island7,uint8 _island8,uint8 _island9
     if(DEBUG_SYNCISLANDS) console.log("island...",islandEvent)
@@ -578,10 +705,10 @@ class App extends Component {
     if(from<1) from=1
     let filter = {x:this.state.landX,y:this.state.landY}
     if(DEBUG_SYNCFISH) console.log("Sync Fish Chunk: "+from+" to "+to+" filtered by ",filter)
-    let catchEvent = await contracts["Bay"].getPastEvents('Catch', {
+    let catchEvent = await readContracts["Bay"].getPastEvents('Catch', {
       filter: filter,
       fromBlock: from-1,
-      toBlock: to
+      toBlock: this.state.blockNumber
     })
     if(DEBUG_SYNCFISH) console.log("catch...",catchEvent)
     for(let f in catchEvent){
@@ -594,10 +721,10 @@ class App extends Component {
       }
     }
     if(DEBUG_SYNCFISH) console.log("Sync Fish Catch Chunk: "+from+" to "+to+" filtered by ",filter)
-    let fish = await contracts["Bay"].getPastEvents('Fish', {
+    let fish = await readContracts["Bay"].getPastEvents('Fish', {
       filter: filter,
       fromBlock: from-1,
-      toBlock: to
+      toBlock: this.state.blockNumber
     })
     if(DEBUG_SYNCFISH) console.log("fish...",fish)
     for(let f in fish){
@@ -607,7 +734,7 @@ class App extends Component {
       let image = fish[f].returnValues.image
       if(!storedFish[id] || storedFish[id].timestamp < timestamp){
         if(DEBUG_SYNCFISH) console.log(id)
-        let result = await contracts["Bay"].methods.fishLocation(id).call()
+        let result = await readContracts["Bay"].methods.fishLocation(id).call()
         storedFish[id]={timestamp:timestamp,species:species,x:result[0],y:result[1],dead:false,image:web3.utils.hexToUtf8(image)};
       }
     }
@@ -626,10 +753,10 @@ class App extends Component {
     let filter = {x:this.state.landX,y:this.state.landY}
     if(DEBUG_SYNCCITIZENS) console.log("Sync Citizens With Filter ",filter)
     if(from<1) from=1
-    let CitizenUpdate = await contracts["Citizens"].getPastEvents('CitizenUpdate', {
+    let CitizenUpdate = await readContracts["Citizens"].getPastEvents('CitizenUpdate', {
       filter: filter,
       fromBlock: from,
-      toBlock: to
+      toBlock: this.state.blockNumber
     })
     if(DEBUG_SYNCCITIZENS) console.log("citizen...",CitizenUpdate)
     let storedCitizens = [];
@@ -667,9 +794,9 @@ class App extends Component {
     let DEBUG_SYNCSEA = false;
     if(from<1) from=1
     if(DEBUG_SYNCSEA) console.log("Sync Sea from ",from," to ",to)
-    let seaEvents = await contracts["Sea"].getPastEvents('ShipUpdate', {
+    let seaEvents = await readContracts["Sea"].getPastEvents('ShipUpdate', {
       fromBlock: from,
-      toBlock: to
+      toBlock: this.state.blockNumber
     })
     if(DEBUG_SYNCSEA) console.log("sea events:",seaEvents)
     let storedSea = [];
@@ -710,10 +837,10 @@ class App extends Component {
       return;
     }
     let filter = {x:this.state.landX,y:this.state.landY}
-    let ships = await contracts["Bay"].getPastEvents('ShipUpdate', {
+    let ships = await readContracts["Bay"].getPastEvents('ShipUpdate', {
       filter: filter,
       fromBlock: from,
-      toBlock: to
+      toBlock: this.state.blockNumber
     })
     if(DEBUG_SYNCSHIPS) console.log("ship...",ships)
     let storedShips = [];
@@ -752,7 +879,7 @@ class App extends Component {
       return;
     }
     let filter = {x:this.state.landX,y:this.state.landY}
-    let clouds = await contracts["Sky"].getPastEvents('Cloud', {filter: filter,fromBlock: from,toBlock: to})
+    let clouds = await readContracts["Sky"].getPastEvents('Cloud', {filter: filter,fromBlock: from,toBlock: this.state.blockNumber})
     for(let c in clouds){
       if(!storedClouds[clouds[c].transactionHash]){
         storedClouds[clouds[c].transactionHash] = clouds[c].returnValues
@@ -766,6 +893,9 @@ class App extends Component {
   }
   async syncInventory() {
     const DEBUG_INVENTORY = false;
+
+    console.log("CHECK THSES INF ",this.state,this.state.account,this.state.inventory)
+
     if(this.state && this.state.account && this.state.inventory){
 
       let inventory = this.state.inventory
@@ -774,7 +904,7 @@ class App extends Component {
       let updateDetail = false
       if(DEBUG_INVENTORY) console.log("account",this.state.account)
 
-      let experienceBuyShip = await contracts["Experience"].methods.experience(this.state.account,1).call()
+      let experienceBuyShip = await readContracts["Experience"].methods.experience(this.state.account,1).call()
       if(this.state.experienceBuyShip!=experienceBuyShip){
         console.log("experienceBuyShip update",experienceBuyShip);
         this.setState({experienceBuyShip:experienceBuyShip})
@@ -792,14 +922,14 @@ class App extends Component {
         },4000)
       }
 
-      let experienceCatchFish = await contracts["Experience"].methods.experience(this.state.account,2).call()
+      let experienceCatchFish = await readContracts["Experience"].methods.experience(this.state.account,2).call()
       if(this.state.experienceCatchFish!=experienceCatchFish){
         console.log("experienceCatchFish update",experienceCatchFish);
         this.setState({experienceCatchFish:experienceCatchFish})
       }
 
       if(inventory['Dogger']>0){
-        let myShipArray = await contracts["Dogger"].methods.tokensOfOwner(this.state.account).call()
+        let myShipArray = await readContracts["Dogger"].methods.tokensOfOwner(this.state.account).call()
         if(myShipArray && !isEquivalentAndNotEmpty(myShipArray,inventoryDetail['Dogger'])){
           inventoryDetail['Dogger']=myShipArray
           updateDetail=true
@@ -808,7 +938,7 @@ class App extends Component {
 
       for(let i in inventoryTokens){
         if(DEBUG_INVENTORY) console.log(contracts[inventoryTokens[i]])
-        let balanceOf = await contracts[inventoryTokens[i]].methods.balanceOf(this.state.account).call()
+        let balanceOf = await readContracts[inventoryTokens[i]].methods.balanceOf(this.state.account).call()
         if(DEBUG_INVENTORY) console.log("balanceOf",inventoryTokens[i],balanceOf)
         if(inventory[inventoryTokens[i]]!=balanceOf){
           inventory[inventoryTokens[i]] = balanceOf;
@@ -816,7 +946,22 @@ class App extends Component {
         }
       }
 
-      let balanceOfEther = Math.round(web3.utils.fromWei(await web3.eth.getBalance(this.state.account),"Ether")*ETHERPREC)/ETHERPREC;
+      let balanceOfRealEther = Math.round(mainnetweb3.utils.fromWei(await mainnetweb3.eth.getBalance(this.state.account),"Ether")*ETHERPREC)/ETHERPREC;
+      if(DEBUG_INVENTORY) console.log("balanceOfRealEther",balanceOfRealEther)
+      if(inventory['RealEther']!=balanceOfRealEther){
+        inventory['RealEther']=balanceOfRealEther
+        update=true
+      }
+
+      let daiBalance = await daiContract.methods.balanceOf(this.state.account).call()
+      daiBalance = parseFloat(mainnetweb3.utils.fromWei(""+daiBalance,'ether')).toFixed(2)
+      if(DEBUG_INVENTORY) console.log("daiBalance",daiBalance)
+      if(inventory['DAI']!=daiBalance){
+        inventory['DAI']=daiBalance
+        update=true
+      }
+
+      let balanceOfEther = Math.round(web3.utils.fromWei(await xdaiweb3.eth.getBalance(this.state.account),"Ether")*ETHERPREC)/ETHERPREC;
       if(DEBUG_INVENTORY) console.log("balanceOfEther",balanceOfEther)
       if(inventory['Ether']!=balanceOfEther){
         inventory['Ether']=balanceOfEther
@@ -843,7 +988,7 @@ class App extends Component {
     let myship = this.state.ship;
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
     if(DEBUG_SYNCMYSHIP) console.log("Getting ship for account "+accounts[0])
-    let getMyShip = await contracts["Bay"].methods.getShip(this.state.landX,this.state.landY,accounts[0]).call();
+    let getMyShip = await readContracts["Bay"].methods.getShip(this.state.landX,this.state.landY,accounts[0]).call();
     if(DEBUG_SYNCMYSHIP) console.log("COMPARE",this.state.ship,getMyShip)
     //if(JSON.stringify(this.state.ship)!=JSON.stringify(getMyShip)) {
     if(this.state.ship) getMyShip.inRangeToDisembark = this.state.ship.inRangeToDisembark
@@ -871,7 +1016,7 @@ class App extends Component {
       }
       //console.log("SHIP UPDATE ",getMyShip)
       try{
-        getMyShip.inRangeToDisembark = await contracts["Bay"].methods.inRangeToDisembark(this.state.landX,this.state.landY,accounts[0]).call();
+        getMyShip.inRangeToDisembark = await readContracts["Bay"].methods.inRangeToDisembark(this.state.landX,this.state.landY,accounts[0]).call();
         //console.log("getMyShip.inRangeToDisembark",getMyShip.inRangeToDisembark)
       }catch(e){console.log("ERROR checking inRangeToDisembark",e)}
       this.setState({/*zoom:HARDCODEDSCALE,*/loading:0,ship:getMyShip,waitingForUpdate:false,myLocation:myLocation},()=>{
@@ -885,8 +1030,10 @@ class App extends Component {
     if(DEBUG_SYNCLAND) console.log("SYNCING LAND")
     if(!this.state.landX || !this.state.landY){
       let url = window.location.href.substr(window.location.href.lastIndexOf("/")+1);
-      let mainX = await contracts["Land"].methods.mainX().call();
-      let mainY = await contracts["Land"].methods.mainY().call();
+      let mainX = await readContracts["Land"].methods.mainX().call();
+      console.log("mainX",mainX)
+      let mainY = await readContracts["Land"].methods.mainY().call();
+      console.log("mainY",mainY)
       let possibleX = false
       let possibleY = false
       if(url&&url.indexOf(".")>0){
@@ -900,12 +1047,12 @@ class App extends Component {
       }
 
       //we also want to track where the fishmoger is
-      let fishmongerTileType = await contracts["LandLib"].methods.tileTypes(web3.utils.fromAscii("Fishmonger")).call()
-      let fishmongerIndex = await contracts["Land"].methods.findTile(mainX,mainY,fishmongerTileType).call()
+      let fishmongerTileType = await readContracts["LandLib"].methods.tileTypes(web3.utils.fromAscii("Fishmonger")).call()
+      let fishmongerIndex = await readContracts["Land"].methods.findTile(mainX,mainY,fishmongerTileType).call()
       if(fishmongerIndex==255) fishmongerIndex=false;
       //and the harbor
-      let harborTileType = await contracts["LandLib"].methods.tileTypes(web3.utils.fromAscii("Harbor")).call()
-      let harborIndex = await contracts["Land"].methods.findTile(mainX,mainY,harborTileType).call()
+      let harborTileType = await readContracts["LandLib"].methods.tileTypes(web3.utils.fromAscii("Harbor")).call()
+      let harborIndex = await readContracts["Land"].methods.findTile(mainX,mainY,harborTileType).call()
       this.setState({landX:mainX,landY:mainY,fishmongerIndex:fishmongerIndex,harborIndex:harborIndex},()=>{
         console.log("Reloading with Land x,y and fishmongerIndex",mainX,mainY,fishmongerIndex,harborIndex)
         //recall this function to do the other stuff
@@ -913,6 +1060,10 @@ class App extends Component {
         this.startEventSyncAfterLandIsLoaded()
       })
     }else{
+      if(DEBUG_SYNCLAND) console.log("MAIN XY IS SET!!!")
+      if(!this.state.readyToDisplay){
+        this.setState({readyToDisplay:true})
+      }
       let land = this.state.land;
       let landOwners = this.state.landOwners;
       let resources = this.state.resources;
@@ -920,16 +1071,17 @@ class App extends Component {
       if(!landOwners) landOwners=[]
       if(!resources) resources=[]
       for(let l=0;l<18;l++){
-        let currentTileHere = await contracts["Land"].methods.tileTypeAt(this.state.landX,this.state.landY,l).call()
-        let ownerOfTileHere = await contracts["Land"].methods.ownerAt(this.state.landX,this.state.landY,l).call()
-        let contractOfTileHere = await contracts["Land"].methods.contractAt(this.state.landX,this.state.landY,l).call()
+        //console.log("LOADING TILE",l)
+        let currentTileHere = await readContracts["Land"].methods.tileTypeAt(this.state.landX,this.state.landY,l).call()
+        let ownerOfTileHere = await readContracts["Land"].methods.ownerAt(this.state.landX,this.state.landY,l).call()
+        let contractOfTileHere = await readContracts["Land"].methods.contractAt(this.state.landX,this.state.landY,l).call()
         let resourcesHere = {}
         //console.log("CONTRACT HERE",contractOfTileHere,currentTileHere,ownerOfTileHere,this.state.account)
         if(contractOfTileHere!="0x0000000000000000000000000000000000000000" && ownerOfTileHere && this.state.account && ownerOfTileHere.toLowerCase()==this.state.account.toLowerCase()){
           if(currentTileHere==150){
             //timber camp
             if(DEBUG_SYNCLAND) console.log("Checking on timber camp collect ...")
-            let timberToCollect = await contracts["TimberCamp"].methods.canCollect(this.state.landX,this.state.landY,l).call()
+            let timberToCollect = await readContracts["TimberCamp"].methods.canCollect(this.state.landX,this.state.landY,l).call()
             //console.log("timberToCollect:",timberToCollect)
             if(timberToCollect>0){
               resourcesHere["Timber"]=timberToCollect
@@ -961,8 +1113,9 @@ class App extends Component {
   async syncBlockNumber(){
     this.setState({staticFillerShipsX:this.state.staticFillerShipsX+2})
 
-    //console.log("checking block number....")
-    if( !web3 || !web3.eth || typeof web3.eth.getBlockNumber !="function" || !this.state.contractsLoaded){
+    console.log("checking block number....")
+    if( !web3 || !web3.eth || typeof xdaiweb3.eth.getBlockNumber !="function" ){
+      console.log("NOT THE RIGHT WEB3")
       let offlineCounter = this.state.offlineCounter;
       offlineCounter+=1;
       if(offlineCounter<3){
@@ -982,7 +1135,9 @@ class App extends Component {
 
     }else{
       try{
-        let blockNumber = await web3.eth.getBlockNumber();
+        console.log("getting blick number.......")
+        let blockNumber = await xdaiweb3.eth.getBlockNumber();
+        console.log("blockNumber",blockNumber)
         if(this.state.blockNumber!=blockNumber){
 
           let thisBlockTime = Date.now()-this.state.lastBlockWasAt
@@ -1014,7 +1169,7 @@ class App extends Component {
         if(!accounts[0]){
           this.metamaskHint()
         }else{
-          let currentPrice = await contracts["Harbor"].methods.currentPrice(this.state.landX,this.state.landY,this.state.harborIndex,web3.utils.fromAscii("Schooner")).call()
+          let currentPrice = await readContracts["Harbor"].methods.currentPrice(this.state.landX,this.state.landY,this.state.harborIndex,web3.utils.fromAscii("Schooner")).call()
           console.log("current price for a buySchooner is",currentPrice)
           let xHex = parseInt(this.state.landX).toString(16)
           while(xHex.length<4) xHex="0"+xHex;
@@ -1081,7 +1236,7 @@ class App extends Component {
         if(!accounts[0]){
           this.metamaskHint()
         }else{
-          let currentPrice = await contracts["Harbor"].methods.currentPrice(this.state.landX,this.state.landY,this.state.harborIndex,web3.utils.fromAscii("Dogger")).call()
+          let currentPrice = await readContracts["Harbor"].methods.currentPrice(this.state.landX,this.state.landY,this.state.harborIndex,web3.utils.fromAscii("Dogger")).call()
           console.log("current price for",FISHINGBOAT,"is",currentPrice)
           contracts["Harbor"].methods.buyShip(this.state.landX,this.state.landY,this.state.harborIndex,web3.utils.fromAscii("Dogger")).send({
             value: currentPrice,
@@ -1169,7 +1324,7 @@ class App extends Component {
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
     let fishContract = contracts[fish];
     console.log("fishContractAddress:",fishContract._address)
-    let paying = await contracts["Fishmonger"].methods.price(x,y,i,fishContract._address).call()
+    let paying = await readContracts["Fishmonger"].methods.price(x,y,i,fishContract._address).call()
     console.log("Fishmonger is paying ",paying," for ",fishContract._address)
     contracts["Fishmonger"].methods.sellFish(x,y,i,fishContract._address,amount).send({
       from: accounts[0],
@@ -1352,7 +1507,7 @@ class App extends Component {
     console.log("collect",name,tile,this.state.landX,this.state.landY)
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
     //  collect(uint16 _x,uint16 _y,uint8 _tile)
-    let timberToCollect = await contracts["TimberCamp"].methods.canCollect(this.state.landX,this.state.landY,tile).call()
+    let timberToCollect = await readContracts["TimberCamp"].methods.canCollect(this.state.landX,this.state.landY,tile).call()
     contracts[name].methods.collect(this.state.landX,this.state.landY,tile).send({
       from: accounts[0],
       gas:20000+75000*timberToCollect,
@@ -1425,8 +1580,8 @@ class App extends Component {
     //let filletPrice = await contracts["Fishmonger"].methods.filletPrice().call()
     //console.log("Fishmonger charges ",filletPrice," for fillets")
     //
-    let mainX = await contracts["Land"].methods.mainX().call();
-    let mainY = await contracts["Land"].methods.mainY().call();
+    let mainX = await readContracts["Land"].methods.mainX().call();
+    let mainY = await readContracts["Land"].methods.mainY().call();
     //buildTile(uint16 _x, uint16 _y,uint8 _tile,uint16 _newTileType)
     console.log("BUILDTILE",mainX,mainY,tileIndex,newTileType)
     contracts["LandLib"].methods.buildTile(mainX,mainY,tileIndex,newTileType).send({
@@ -1708,7 +1863,7 @@ class App extends Component {
 
     if(DEBUGWAITINGFORTX) console.log(" ~~~~ WAITING FOR TRANSACTION ",hash,waitAfterFirstStage,this.state.waitingForTransaction,this.state.waitingForTransactionTime)
     try {
-      var receipt = await web3.eth.getTransactionReceipt(hash);
+      var receipt = await xdaiweb3.eth.getTransactionReceipt(hash);
       //this.setState({bottomBar:0,bottomBarMessage:"Polled:"+JSON.stringify(receipt),bottomBarSize:24})
 
       if(DEBUGWAITINGFORTX) console.log("~~ TIME SPENT:"+Date.now()-this.state.waitingForTransactionTime)
@@ -1867,16 +2022,17 @@ class App extends Component {
     //if(this.state.clickScreenOpacity==0){
       //this.setState({avgBlockTime:15000,contractsLoaded:true,clickScreenTop:-90000})//clickScreenTop:-90000,clickScreenOpacity:0
     //}else{
-      this.setState({avgBlockTime:15000,contractsLoaded:true})
+      this.setState({avgBlockTime:5000,contractsLoaded:true})
     //}
     //}
 
-    this.sync("Sea",this.doSyncSea.bind(this),198,SHIPSEVENTSYNCLIVEINTERVAL);
+    this.sync("Sea",this.doSyncSea.bind(this),3198,SHIPSEVENTSYNCLIVEINTERVAL);
 
 
-    setInterval(this.syncMyShip.bind(this),581)
-    setInterval(this.syncInventory.bind(this),773)
-    setInterval(this.syncLand.bind(this),333)
+    setInterval(this.syncMyShip.bind(this),9581)
+    setInterval(this.syncInventory.bind(this),4773)
+    console.log("SET LAND INTERVAL")
+    setInterval(this.syncLand.bind(this),25333)
 
     this.syncEverythingOnce()
   }
@@ -1885,19 +2041,19 @@ class App extends Component {
     this.syncBlockNumber()
     this.syncMyShip()
     this.syncInventory()
-    this.doSyncFish(this.state.blockNumber-2,'latest')
-    this.doSyncShips(this.state.blockNumber-2,'latest')
-    this.doSyncCitizens(this.state.blockNumber-2,'latest')
-    this.doSyncClouds(this.state.blockNumber-2,'latest')
-    this.doSyncIslands(this.state.blockNumber-2,'latest')
-    this.doSyncSea(this.state.blockNumber-2,'latest')
+    this.doSyncFish(this.state.blockNumber-31,'latest')
+    this.doSyncShips(this.state.blockNumber-31,'latest')
+    this.doSyncCitizens(this.state.blockNumber-31,'latest')
+    this.doSyncClouds(this.state.blockNumber-31,'latest')
+    this.doSyncIslands(this.state.blockNumber-31,'latest')
+    this.doSyncSea(this.state.blockNumber-31,'latest')
   }
   startEventSyncAfterLandIsLoaded(){
     //we need to wait to sync all fish until we have landX and landY set
-    this.sync("Fish",this.doSyncFish.bind(this),127,FISHEVENTSYNCLIVEINTERVAL);
-    this.sync("Ships",this.doSyncShips.bind(this),198,SHIPSEVENTSYNCLIVEINTERVAL);
-    this.sync("Citizens",this.doSyncCitizens.bind(this),198,SHIPSEVENTSYNCLIVEINTERVAL);
-    this.sync("Clouds",this.doSyncClouds.bind(this),151,CLOUDEVENTSYNCLIVEINTERVAL);
+    this.sync("Fish",this.doSyncFish.bind(this),1023,FISHEVENTSYNCLIVEINTERVAL);
+    this.sync("Ships",this.doSyncShips.bind(this),1023,SHIPSEVENTSYNCLIVEINTERVAL);
+    this.sync("Citizens",this.doSyncCitizens.bind(this),1023,SHIPSEVENTSYNCLIVEINTERVAL);
+    this.sync("Clouds",this.doSyncClouds.bind(this),1023,CLOUDEVENTSYNCLIVEINTERVAL);
     this.syncEverythingOnce()
   }
   bumpableButton(name,buttonsTop,fn){
@@ -1984,10 +2140,10 @@ titleClick(){
 async tileClick(name,index,px) {
   console.log("TILE CLICK",name,index,px)
   this.openModal({loading:true})
-  let tile = await contracts['Land'].methods.getTile(this.state.landX,this.state.landY,index).call();
+  let tile = await readContracts['Land'].methods.getTile(this.state.landX,this.state.landY,index).call();
   let claimPrice = 0
   if(tile._owner=="0x0000000000000000000000000000000000000000"){
-    claimPrice = await contracts['LandLib'].methods.OPENLANDTILECOST().call();
+    claimPrice = await readContracts['LandLib'].methods.OPENLANDTILECOST().call();
   }
   let modalObject = {
     name:name,
@@ -2018,7 +2174,7 @@ async tileClick(name,index,px) {
         owner:this.state.citizens[c].owner,
         status:this.state.citizens[c].status,
         data:this.state.citizens[c].data,
-        geneObject: await contracts["CitizensLib"].methods.getCitizenGenes(this.state.citizens[c].id).call()
+        geneObject: await readContracts["CitizensLib"].methods.getCitizenGenes(this.state.citizens[c].id).call()
       };
       modalObject.citizens.push(citizenObject)
     }
@@ -2031,11 +2187,11 @@ async tileClick(name,index,px) {
 
 
   if(name=="Harbor"){
-    modalObject.doggers = await contracts["Harbor"].methods.countShips(this.state.landX,this.state.landY,this.state.harborIndex,web3.utils.asciiToHex("Dogger")).call();
-    modalObject.doggerPrice = await contracts["Harbor"].methods.currentPrice(this.state.landX,this.state.landY,this.state.harborIndex,web3.utils.asciiToHex("Dogger")).call();
+    modalObject.doggers = await readContracts["Harbor"].methods.countShips(this.state.landX,this.state.landY,this.state.harborIndex,web3.utils.asciiToHex("Dogger")).call();
+    modalObject.doggerPrice = await readContracts["Harbor"].methods.currentPrice(this.state.landX,this.state.landY,this.state.harborIndex,web3.utils.asciiToHex("Dogger")).call();
 
-    modalObject.schooners = await contracts["Harbor"].methods.countShips(this.state.landX,this.state.landY,this.state.harborIndex,web3.utils.asciiToHex("Schooner")).call();
-    modalObject.schoonerPrice = await contracts["Harbor"].methods.currentPrice(this.state.landX,this.state.landY,this.state.harborIndex,web3.utils.asciiToHex("Schooner")).call();
+    modalObject.schooners = await readContracts["Harbor"].methods.countShips(this.state.landX,this.state.landY,this.state.harborIndex,web3.utils.asciiToHex("Schooner")).call();
+    modalObject.schoonerPrice = await readContracts["Harbor"].methods.currentPrice(this.state.landX,this.state.landY,this.state.harborIndex,web3.utils.asciiToHex("Schooner")).call();
   }
 
   if(name=="Fishmonger"){
@@ -2048,9 +2204,9 @@ async tileClick(name,index,px) {
     ]
     modalObject.prices = []
     for(let f in modalObject.fish){
-      modalObject.prices[modalObject.fish[f]] = await contracts["Fishmonger"].methods.price(this.state.landX,this.state.landY,index,contracts[modalObject.fish[f]]._address).call();
+      modalObject.prices[modalObject.fish[f]] = await readContracts["Fishmonger"].methods.price(this.state.landX,this.state.landY,index,contracts[modalObject.fish[f]]._address).call();
     }
-    modalObject.filletPrice = await contracts["Fishmonger"].methods.filletPrice(this.state.landX,this.state.landY,index).call();
+    modalObject.filletPrice = await readContracts["Fishmonger"].methods.filletPrice(this.state.landX,this.state.landY,index).call();
 
     let fishmongerTokens = ["Copper","Fillet"]
     modalObject.tokenBalance = {}
@@ -2069,18 +2225,18 @@ async tileClick(name,index,px) {
     modalObject.buyPrices = {}
     modalObject.tokenBalance = {}
     for(let i in marketTokens){
-      modalObject.sellPrices[marketTokens[i]] = parseInt(await contracts["Market"].methods.sellPrices(this.state.landX,this.state.landY,index,contracts[marketTokens[i]]._address).call());
-      modalObject.buyPrices[marketTokens[i]] = parseInt(await contracts["Market"].methods.buyPrices(this.state.landX,this.state.landY,index,contracts[marketTokens[i]]._address).call());
-      modalObject.tokenBalance[marketTokens[i]] = parseInt(await contracts["Market"].methods.tokenBalance(this.state.landX,this.state.landY,index,contracts[marketTokens[i]]._address).call());
+      modalObject.sellPrices[marketTokens[i]] = parseInt(await readContracts["Market"].methods.sellPrices(this.state.landX,this.state.landY,index,contracts[marketTokens[i]]._address).call());
+      modalObject.buyPrices[marketTokens[i]] = parseInt(await readContracts["Market"].methods.buyPrices(this.state.landX,this.state.landY,index,contracts[marketTokens[i]]._address).call());
+      modalObject.tokenBalance[marketTokens[i]] = parseInt(await readContracts["Market"].methods.tokenBalance(this.state.landX,this.state.landY,index,contracts[marketTokens[i]]._address).call());
     }
     //each tile will have a different balance, show the local balance
     calculateBalanceGlobally=false;
   }
 
   if(name=="Timber Camp"){
-    modalObject.resourceMin = (await contracts["TimberCamp"].methods.min().call()).replace(/[^a-z0-9]/gmi, "")
-    modalObject.resourceMax = (await contracts["TimberCamp"].methods.max().call()).replace(/[^a-z0-9]/gmi, "")
-    modalObject.resourceType = (web3.utils.hexToAscii(await contracts["TimberCamp"].methods.resource().call())).replace(/[^a-z0-9A-Z ]/gmi, "")
+    modalObject.resourceMin = (await readContracts["TimberCamp"].methods.min().call()).replace(/[^a-z0-9]/gmi, "")
+    modalObject.resourceMax = (await readContracts["TimberCamp"].methods.max().call()).replace(/[^a-z0-9]/gmi, "")
+    modalObject.resourceType = (web3.utils.hexToAscii(await readContracts["TimberCamp"].methods.resource().call())).replace(/[^a-z0-9A-Z ]/gmi, "")
   }
 
 
@@ -2088,11 +2244,11 @@ async tileClick(name,index,px) {
   if(calculateBalanceGlobally){
     let cleanName = name.replace(" ","")
     if(contracts[cleanName]){
-      if(contracts[cleanName].methods.getBalance) modalObject.balance = await contracts[cleanName].methods.getBalance().call();
-      modalObject.copperBalance = await contracts["Copper"].methods.balanceOf(contracts[cleanName]._address).call();
-      modalObject.filletBalance = await contracts["Fillet"].methods.balanceOf(contracts[cleanName]._address).call();
-      modalObject.timberBalance = await contracts["Timber"].methods.balanceOf(contracts[cleanName]._address).call();
-      modalObject.doggerBalance = await contracts["Dogger"].methods.balanceOf(contracts[cleanName]._address).call();
+      if(contracts[cleanName].methods.getBalance) modalObject.balance = await readContracts[cleanName].methods.getBalance().call();
+      modalObject.copperBalance = await readContracts["Copper"].methods.balanceOf(readContracts[cleanName]._address).call();
+      modalObject.filletBalance = await readContracts["Fillet"].methods.balanceOf(readContracts[cleanName]._address).call();
+      modalObject.timberBalance = await readContracts["Timber"].methods.balanceOf(readContracts[cleanName]._address).call();
+      modalObject.doggerBalance = await readContracts["Dogger"].methods.balanceOf(readContracts[cleanName]._address).call();
       console.log("copperBalance",contracts["Copper"]._address,cleanName,contracts[cleanName]._address,modalObject.copperBalance)
     }
   }
@@ -2105,14 +2261,14 @@ async invClick(name,contract) {
   if(name=="Ether"){
     modalObject = {
       name:name,
-      balance: web3.utils.fromWei(await web3.eth.getBalance(this.state.account),"Ether"),
+      balance: web3.utils.fromWei(await xdaiweb3.eth.getBalance(this.state.account),"Ether"),
       wallet:true
     }
   }else{
     modalObject = {
       name:name,
       contract:contract._address,
-      balance: await contracts[name].methods.balanceOf(this.state.account).call(),
+      balance: await readContracts[name].methods.balanceOf(this.state.account).call(),
       token:true
     }
 
@@ -2136,16 +2292,16 @@ async invClick(name,contract) {
 
     if(typeof contracts[name].methods.tokensOfOwner == "function"){
       //erc721
-      modalObject.tokensOfOwner = await contracts[name].methods.tokensOfOwner(this.state.account).call()
+      modalObject.tokensOfOwner = await readContracts[name].methods.tokensOfOwner(this.state.account).call()
       modalObject.tokens = {}
       for(let tokenId in modalObject.tokensOfOwner){
-        modalObject.tokens[modalObject.tokensOfOwner[tokenId]] = await contracts[name].methods.getToken(modalObject.tokensOfOwner[tokenId]).call()
+        modalObject.tokens[modalObject.tokensOfOwner[tokenId]] = await readContracts[name].methods.getToken(modalObject.tokensOfOwner[tokenId]).call()
         console.log("GOT TOKEN DATA",modalObject.tokens[modalObject.tokensOfOwner[tokenId]])
         //load specific functions for specific tokens
         if(name=="Citizens"){
-          modalObject.tokens[modalObject.tokensOfOwner[tokenId]].geneObject = await contracts['CitizensLib'].methods.getCitizenGenes(modalObject.tokensOfOwner[tokenId]).call()
+          modalObject.tokens[modalObject.tokensOfOwner[tokenId]].geneObject = await readContracts['CitizensLib'].methods.getCitizenGenes(modalObject.tokensOfOwner[tokenId]).call()
           //modalObject.tokens[modalObject.tokensOfOwner[tokenId]].statusObject = await contracts[name].methods.getCitizenStatus(modalObject.tokensOfOwner[tokenId]).call()
-          modalObject.tokens[modalObject.tokensOfOwner[tokenId]].characteristicsObject = await contracts['CitizensLib'].methods.getCitizenCharacteristics(modalObject.tokensOfOwner[tokenId]).call()
+          modalObject.tokens[modalObject.tokensOfOwner[tokenId]].characteristicsObject = await readContracts['CitizensLib'].methods.getCitizenCharacteristics(modalObject.tokensOfOwner[tokenId]).call()
         }
       }
     }else{
@@ -2155,6 +2311,7 @@ async invClick(name,contract) {
   this.openModal(modalObject)
 }
 setHintMode(num){
+  console.log("HINT MODE",num)
   //1 means take them to metamask install
   //0 means just keep shaking the metamask hint
   this.setState({hintMode:num})
@@ -2162,7 +2319,7 @@ setHintMode(num){
     //since they don't have metamask or something, go ahead and show the base stuff
     setTimeout(()=>{
       this.setState({readyToDisplay:true})
-    },2500)
+    },3500)
   }
 }
 clickScreenClick(event){
@@ -2530,7 +2687,7 @@ let inventory = (
 let bay = (
   <div style={{position:"absolute",left:0,top:0,width:width,height:height,overflow:'hidden'}} >
   <div style={{position:'absolute',left:0,top:0,opacity:1,backgroundImage:"url('sky.jpg')",backgroundRepeat:'no-repeat',height:horizon,width:width}}></div>
-  <Clouds web3={web3} clouds={this.state.clouds} horizon={horizon} width={width} blockNumber={this.state.blockNumber}/>
+  <Clouds web3={xdaiweb3} clouds={this.state.clouds} horizon={horizon} width={width} blockNumber={this.state.blockNumber}/>
   <div style={{position:'absolute',left:0,top:horizon,opacity:1,backgroundImage:"url('oceanblackblur.jpg')",backgroundRepeat:'no-repeat',height:height+horizon,width:width}}></div>
   {buttons}
   <Ships
@@ -2540,12 +2697,12 @@ let bay = (
   height={height}
   horizon={horizon+100}
   Blockies={Blockies}
-  web3={web3}
+  web3={xdaiweb3}
   shipSpeed={shipSpeed}
   blockNumber={this.state.blockNumber}
   etherscan={this.state.etherscan}
   />
-  <Fish web3={web3} fish={this.state.fish} width={width} height={height} horizon={horizon+150} />
+  <Fish web3={xdaiweb3} fish={this.state.fish} width={width} height={height} horizon={horizon+150} />
   </div>
 )
 //  <div style={{zIndex:11,position:'absolute',left:0,top:horizon,opacity:.7,backgroundImage:"url('oceanfront.png')",backgroundRepeat:'no-repeat',height:height+horizon,width:width}}></div>
@@ -2605,7 +2762,7 @@ let galleass= (
   </div>
   </div>
 )
-
+let starttop = this.state.clickScreenHeight*2/3
 let clickScreen = (
   <Motion
   defaultStyle={{
@@ -2618,13 +2775,22 @@ let clickScreen = (
   {currentStyles => {
     return (
       <div style={{cursor:'pointer',width:this.state.clickScreenWidth,height:this.state.clickScreenHeight,opacity:currentStyles.opacity,backgroundColor:"#0a1727",position:"fixed",left:0,top:this.state.clickScreenTop,zIndex:899}} onClick={this.clickScreenClick.bind(this)}>
-      <img style={{
-        position:"absolute",
-        zIndex:-99,
-        left:"42%",
-        top:"42%",
-        opacity:this.state.loaderOpacity,
-      }} src="loading3.gif" />
+
+        <div id="outer" style={{width:"100%"}}>
+          <div id="inner" style={{textAlign:"left",display:"table",marginLeft:"20%"}}>
+          <div>
+              <img style={{
+                position:"absolute",top:this.state.clickScreenHeight*1/3,
+                zIndex:-99,
+                width:Math.max(this.state.clickScreenWidth/16,100),
+                opacity:this.state.loaderOpacity,
+              }} src="loading3.gif" />
+            </div>
+            <div style={{filter:"invert(1)",position:"absolute",top:starttop}}><Writing string={this.state.loadingFeedback} size={32}/></div>
+            <div style={{filter:"invert(1)",position:"absolute",top:starttop+32}}><Writing string={this.state.loadingFeedback2} size={32}/></div>
+            <div style={{filter:"invert(1)",position:"absolute",top:starttop+64}}><Writing string={this.state.loadingFeedback3} size={32}/></div>
+          </div>
+        </div>
       </div>
     )
   }}
@@ -3546,10 +3712,12 @@ let loadContract = async (contract,theThis)=>{
     let thisContractAbi = require('./'+contract+'.abi.js');
     if(DEBUGCONTRACTLOAD) console.log("LOADING",contract,thisContractAddress,thisContractAbi)
     contracts[contract] = new web3.eth.Contract(thisContractAbi,thisContractAddress)
+    readContracts[contract] = new xdaiweb3.eth.Contract(thisContractAbi,thisContractAddress)
   } catch(e) {
     console.log("ERROR LOADING "+contract,e)
     //go ahead and show things...
     theThis.setState({readyToDisplay:true})
+
   }
 
 }

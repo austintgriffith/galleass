@@ -1317,6 +1317,72 @@ module.exports = {
 
   },
 
+  postDeploy:()=>{
+    describe(bigHeader('BUILD HARBOR AND FISH MONGER'), function() {
+      it('should buildHarborAndFishMonger', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","buildHarborAndFishMonger")
+        assert(result==0,"buildHarborAndFishMonger ERRORS")
+      });
+    });
+
+    describe(bigHeader('TIMBER MINTING & BUILD SHIPS'), function() {
+      it('should mintTimberBuildShips', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","mintTimberBuildShips")
+        assert(result==0,"mintTimberBuildShips ERRORS")
+      });
+    });
+/*
+    describe(bigHeader('BUY/SELL SHIPS'), function() {
+      it('should buyAndSellShips', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","buyAndSellShips")
+        assert(result==0,"buyAndSellShips ERRORS")
+      });
+    });
+*/
+    describe(bigHeader('MINT FISH AND STOCK'), function() {
+      it('should mintCatfishAndStockSea', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","mintCatfishAndStockSea")
+        assert(result==0,"mintCatfishAndStockSea ERRORS")
+      });
+    });
+/*
+    describe(bigHeader('EMBARK AND GO FISHING'), function() {
+      it('should embarkAndGoFishing', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","embarkAndGoFishing")
+        assert(result==0,"embarkAndGoFishing ERRORS")
+      });
+    });
+*/
+    describe(bigHeader('MINT Copper AND TEST FISH MONGER'), function() {
+      it('should mintCopperTestFishmonger', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","mintCopperTestFishmonger")
+        assert(result==0,"mintCopperTestFishmonger ERRORS")
+      });
+    });
+
+    describe(bigHeader('FINISHING TOUCHES'), function() {
+      it('should finishingTouches', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","finishingTouches")
+        assert(result==0,"finishingTouches ERRORS")
+      });
+    });
+
+    describe(bigHeader('PUBLISH'), function() {
+      it('should publish conract address to app', async function() {
+        this.timeout(6000000)
+        const result = await clevis("test","publish")
+        assert(result==0,"publish ERRORS")
+      });
+    });
+  },
+
   redeploy:()=>{
     describe(bigHeader('DEPLOY'), function() {
       it('should deploy', async function() {

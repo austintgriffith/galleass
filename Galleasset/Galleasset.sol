@@ -1,6 +1,6 @@
 pragma solidity ^0.4.15;
 
-import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
+import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
 
 contract Galleasset is Ownable {
 
@@ -37,7 +37,7 @@ contract Galleasset is Ownable {
   function approveTokens(bytes32 _name,address _to,uint256 _amount) internal returns (bool) {
     return StandardTokenInterface(getContract(_name)).approve(_to,_amount);
   }
-
+/*
   function withdraw(uint256 _amount) public onlyOwner isBuilding returns (bool) {
     require(address(this).balance >= _amount);
     assert(owner.send(_amount));
@@ -47,7 +47,7 @@ contract Galleasset is Ownable {
     StandardTokenInterface token = StandardTokenInterface(_token);
     token.transfer(msg.sender,_amount);
     return true;
-  }
+  }*/
 
   //this prevents old contracts from remaining active
   //if you want to disable functions after the contract is retired,

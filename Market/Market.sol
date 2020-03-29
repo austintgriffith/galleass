@@ -99,7 +99,7 @@ contract Market is StandardTile {
     _incrementTokenBalance(_x,_y,_tile,msg.sender,_amount);
 
     emit Sell(_x,_y,_tile,msg.sender,_amount,_sender);
-    
+
     uint amountOfCopperToSend = _amount*buyPrices[_x][_y][_tile][msg.sender];
     //make sure this tile has enough copper to buy the token
     _decrementTokenBalance(_x,_y,_tile,getContract("Copper"),amountOfCopperToSend);

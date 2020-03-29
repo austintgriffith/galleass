@@ -1,11 +1,11 @@
 pragma solidity ^0.4.11;
 
-import 'zeppelin-solidity/contracts/token/ERC20/StandardToken.sol';
+import 'openzeppelin-solidity/contracts/token/ERC20/ERC20.sol';
 
 // adapted from https://github.com/ethereum/EIPs/issues/677
 //    big thanks to Steve Ellis
 
-contract ERC677Token is StandardToken {
+contract ERC677Token is ERC20 {
 
   event TransferAndCall(address indexed from, address indexed to, uint value, bytes data);
 

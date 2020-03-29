@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import Writing from './Writing.js'
 import {Motion, spring, presets} from 'react-motion';
+import BurnerProvider from 'burner-provider';
+var Web3 = require('web3');
 
 class Metamask extends Component {
   constructor(props) {
@@ -14,35 +16,54 @@ class Metamask extends Component {
     this.forceUpdate()
     setInterval(()=>{
       this.forceUpdate()
-    },647)
-    setInterval(this.checkMetamask.bind(this),1001)
+    },2447)
+    setInterval(this.checkMetamask.bind(this),3001)
     this.checkMetamask()
   }
   checkMetamask() {
-    console.log("CHECKMM")
+    console.log("CHECKMM",typeof window.web3)
     if (typeof window.web3 == 'undefined') {
 
+      var web3 = new Web3(new BurnerProvider('https://dai.poa.network'));
+      window.web3 = web3
+      console.log("BURNER IS READY",window.web3)
+      window.web3.eth.getAccounts((err,_accounts)=>{
+        console.log("GOT BURNER ACCOUNT",_accounts)
+        this.props.init(_accounts[0].toLowerCase())
+      })
+      window.web3.version = {}
+      window.web3.version.getNetwork = (cb)=>{
+        cb(null,100)
+      }
+      /*
       if(this.state.metamask!=0){
         //this is a switch from having web3 to losing it (logout)
         window.location.reload(true);
         this.setState({metamask:0})
       }
-      this.props.setHintMode(1);
+      this.props.setHintMode(1);*/
     } else {
       this.props.setHintMode(0);
 
+
+
       window.web3.version.getNetwork((err,network)=>{
+
+        console.log("got network",network)
 
         network = translateNetwork(network);
 
-        if(network=="Mainnet" || network=="Morden" || network=="Rinkeby" || network=="Kovan"){
+        if(network!="xDai"){
           if(this.state.metamask!=2) this.setState({metamask:2,network:network})
         }else{
           //console.log("network",network)
           let accounts
           try{
             window.web3.eth.getAccounts((err,_accounts)=>{
-              if(_accounts&&this.props.account&&this.props.account!=_accounts[0]){
+              if(_accounts[0] && _accounts[0].toLowerCase) {
+                _accounts[0] = _accounts[0].toLowerCase()
+              }
+              if(_accounts&&this.props.account&&this.props.account.toLowerCase()!=_accounts[0].toLowerCase()){
                 window.location.reload(true);
               }
               if(err){
@@ -54,6 +75,8 @@ class Metamask extends Component {
                   let etherscan = "https://etherscan.io/"
                   if(network=="Unknown"||network=="private"){
                     etherscan = "http://localhost:8000/#/"
+                  }else if(network=="xDai"){
+                    etherscan = "https://blockscout.com/poa/xdai/"
                   }else if(network!="Mainnet"){
                     etherscan = "https://"+network.toLowerCase()+".etherscan.io/"
                   }
@@ -69,7 +92,7 @@ class Metamask extends Component {
 
                     if(this.state.metamask!=3) {
                       this.setState({metamask:3,accounts:accounts,network:network},()=>{
-                        this.props.init(accounts[0])
+                        this.props.init(accounts[0].toLowerCase())
                       })
                     }
 
@@ -130,7 +153,7 @@ class Metamask extends Component {
         </div>
       )
     }else if(this.state.metamask==2){
-      if(this.state.network=="Mainnet" || this.state.network=="Morden" || this.state.network=="Rinkeby" || this.state.network=="Kovan"){
+      if(this.state.network=="Mainnet" || this.state.network=="Morden" || this.state.network=="Kovan"|| this.state.network=="Ropsten"){
         //console.log("goodblock",this.state.accounts[0])
         metamask = (
           <div style={{padding:4}}>
@@ -145,7 +168,7 @@ class Metamask extends Component {
                 color:"#222",
                 textAlign:"right"
               }}>
-                <div><Writing string={"Please switch your network to Ropsten"} size={24} space={5}/></div>
+                <div><Writing string={"Please switch your network to xDai: http://dai.poa.network"} size={24} space={5}/></div>
               </span>
               <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
                 src="metamaskhah.png"
@@ -157,7 +180,7 @@ class Metamask extends Component {
         metamask = (
           <div>
             <span style={this.props.textStyle}>
-                <Writing string={"Unlock MetaMask to play"} size={24} space={5}/>
+                <Writing string={"Unlock MetaMask on network xDai: http://dai.poa.network"} size={24} space={5}/>
             </span>
             <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
               src="metamaskhah.png"
@@ -289,6 +312,8 @@ function translateNetwork(network){
     return "Rinkeby";
   }else if(network==42){
     return "Kovan";
+  }else if(network==100){
+    return "xDai";
   }else{
     return "Unknown";
   }

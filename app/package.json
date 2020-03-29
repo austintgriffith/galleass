@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "axios": "^0.18.0",
+    "burner-provider": "^1.0.12",
     "js-sha3": "^0.7.0",
     "qrcode.react": "^0.8.0",
     "react": "^16.2.0",
@@ -12,7 +13,7 @@
     "react-draggable": "^3.0.5",
     "react-hint": "^3.0.0",
     "react-motion": "^0.5.2",
-    "react-scripts": "1.0.17",
+    "react-scripts": "^3.4.1",
     "s3": "^4.4.0",
     "sha3": "^1.2.0",
     "web3": "^1.0.0-beta.34"
@@ -22,5 +23,17 @@
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }

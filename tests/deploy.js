@@ -1,6 +1,5 @@
 const galleass = require("./galleass.js")
 
-
 galleass.deploy("Galleass",0)
 
 galleass.deploy("Experience",0)
@@ -18,10 +17,10 @@ galleass.deploy("LandLib",0)
 galleass.setContract("LandLib",0)
 galleass.setPermission("LandLib",0,"useCitizens","true")
 galleass.setPermission("LandLib",0,"mintTimber","true")
-galleass.setPermission("LandLib",0,"mintStone","true")
-galleass.setPermission("LandLib",0,"mintGreens","true")
-galleass.setPermission("LandLib",0,"transferStone","true")
-galleass.setPermission("LandLib",0,"transferGreens","true")
+ galleass.setPermission("LandLib",0,"mintStone","true")
+ galleass.setPermission("LandLib",0,"mintGreens","true")
+ galleass.setPermission("LandLib",0,"transferStone","true")
+ galleass.setPermission("LandLib",0,"transferGreens","true")
 galleass.setPermission("LandLib",0,"transferTimber","true")
 
 galleass.deploy("Land",0)
@@ -80,13 +79,15 @@ galleass.setPermission("Harbor",0,"embarkShips","true")
 galleass.deploy("Fishmonger",0)
 galleass.setContract("Fishmonger",0)
 galleass.setPermission("Fishmonger",0,"transferFish","true")
+galleass.setPermission("Fishmonger",0,"transferTimber","true")
+galleass.setPermission("Fishmonger",0,"mintTimber","true")
 galleass.setPermission("Fishmonger",0,"mintFillet","true")
 galleass.setPermission("Fishmonger",0,"updateExperience","true")
 
 //make sure the fishmonger has a little copper for testing
-// galleass.testMint("Copper",0,1,10)
-// galleass.approveContract("Copper",1,"Fishmonger",10)
-// galleass.transferTokens("Copper",1,"Fishmonger",10)
+galleass.testMint("Copper",0,1,10)
+galleass.approveContract("Copper",1,"Fishmonger",10)
+galleass.transferTokens("Copper",1,"Fishmonger",10)
 
 galleass.deploy("Ipfs",0)
 galleass.setContract("Ipfs",0)
@@ -113,4 +114,4 @@ galleass.setPermission("Market",0,"transferTimber","true")
 
 galleass.deploy("Sea",0)
 galleass.setContract("Sea",0)
-//galleass.setPermission("Sea",0,"transferSchooner","true")
+galleass.setPermission("Sea",0,"transferSchooner","true")

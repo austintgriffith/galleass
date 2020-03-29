@@ -1,5 +1,7 @@
 pragma solidity ^0.4.15;
 
+import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
+
 contract Staged is Ownable {
 
   enum StagedMode {
@@ -47,14 +49,13 @@ contract Staged is Ownable {
     stagedMode=StagedMode.BUILD;
   }
 
+  /*
   function destruct() isNotProduction onlyOwner public returns (bool) {
     selfdestruct(owner);
-  }
+  }*/
 
   function production() isStaging onlyOwner public returns (bool) {
     stagedMode=StagedMode.PRODUCTION;
   }
 
 }
-
-import 'zeppelin-solidity/contracts/ownership/Ownable.sol';

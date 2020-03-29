@@ -47,9 +47,9 @@ galleass.buyFirstLandTile(0)
 
 //create buildings in the middle...
 galleass.editMiddleTile(0,"Harbor",100)
-galleass.setPriceOfFirstTileOfType(0,100,99)
+galleass.setPriceOfFirstTileOfType(0,100,999)
 galleass.editMiddleTile(0,"Fishmonger",101)
-galleass.setPriceOfFirstTileOfType(0,101,99)
+galleass.setPriceOfFirstTileOfType(0,101,999)
 
 galleass.setFishPrice(0,"Pinner",2)
 galleass.setFishPrice(0,"Redbass",4)

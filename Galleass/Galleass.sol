@@ -22,11 +22,11 @@ pragma solidity ^0.4.18;
 
 
 
-import 'zeppelin-solidity/contracts/ownership/Contactable.sol';
+import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
 import 'Staged.sol';
 import 'Predecessor.sol';
 
-contract Galleass is Staged, Contactable, Predecessor{
+contract Galleass is Staged, Predecessor{
 
   string public constant name = "Galleass";
   string public constant author = "Austin Thomas Griffith austin@concurrence.io";
@@ -38,7 +38,7 @@ contract Galleass is Staged, Contactable, Predecessor{
   mapping(bytes32 => address) contracts;
   mapping(address => mapping(bytes32 => bool)) permission;
 
-  function Galleass(string _contact) public { setContactInformation(_contact); }
+function Galleass(string _contact) public { /*setContactInformation(_contact);*/ }
 
   function upgradeContract(address _contract) onlyOwner isBuilding public returns (bool) {
     Galleasset(_contract).upgradeGalleass(descendant);
@@ -73,7 +73,7 @@ contract Galleass is Staged, Contactable, Predecessor{
       return permission[_contract][_permission];
     }
   }
-
+/*
   function withdraw(uint256 _amount) public onlyOwner returns (bool) {
     require(address(this).balance >= _amount);
     assert(owner.send(_amount));
@@ -84,7 +84,7 @@ contract Galleass is Staged, Contactable, Predecessor{
     token.transfer(msg.sender,_amount);
     return true;
   }
-
+*/
 }
 
 contract Galleasset {

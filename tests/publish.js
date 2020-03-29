@@ -7,7 +7,7 @@ let content = fs.readFileSync("app/public/contracts.template").toString();
 
 let contractsHtml = ""
 
-let etherscan = "http://ropsten.etherscan.io"
+let etherscan = "https://blockscout.com/poa/xdai"
 
 let loadContracts = [
   "Galleass",

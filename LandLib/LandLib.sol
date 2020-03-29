@@ -91,9 +91,9 @@ contract LandLib is Galleasset, DataParser {
       landCount=0;
     }
 
-    if(landContract.mainX()==0||landContract.mainY()==0){
+    //if(landContract.mainX()==0||landContract.mainY()==0){
       landContract.setMainLocation(x,y);
-    }
+    //}
 
     landContract.setTotalWidth(x,y,getTotalWidth(x,y));
   }
