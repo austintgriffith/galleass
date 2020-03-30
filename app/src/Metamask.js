@@ -168,7 +168,7 @@ class Metamask extends Component {
                 color:"#222",
                 textAlign:"right"
               }}>
-                <div><Writing string={"Please switch your network to xDai: http://dai.poa.network"} size={24} space={5}/></div>
+                <div><Writing string={"Please switch your network to xDai: https:dai.poa.network"} size={24} space={5}/></div>
               </span>
               <img style={{maxHeight:45,padding:5,verticalAlign:"middle"}}
                 src="metamaskhah.png"
@@ -232,6 +232,36 @@ class Metamask extends Component {
           accountToShow=accountToShow.substr(0,22)
         }
 
+
+        let accountDisplay = (
+          <a target="_blank" href={this.props.etherscan+"address/"+this.state.accounts[0]}>
+            <div style={{width:500}}>
+              <Writing string={accountToShow} size={20} space={5}/>
+            </div>
+          </a>
+        )
+
+
+        let blockieClickFunction = this.props.clickBlockie
+
+        try{
+          const burnerKey = localStorage.getItem('metaPrivateKey')
+          if(burnerKey){
+            accountDisplay = (
+              <a target="_blank" href={"https://xdai.io/pk#"+burnerKey}>
+                <div style={{width:500}}>
+                  <Writing string={accountToShow.substr(0,8)+"..."+accountToShow.substr(36)} size={32} space={5}/>
+                  <div style={{zIndex:99,position:"absolute",right:14,top:27,opacity:0.777}}><img src="/burner.png" style={{maxWidth:20}} /></div>
+                </div>
+              </a>
+            )
+
+            blockieClickFunction = ()=>{
+              window.open("https://xdai.io/pk#"+burnerKey);
+            }
+          }
+        }catch(e){console.log(e)}
+
         metamask = (
           <div style={{padding:4}}>
 
@@ -247,11 +277,7 @@ class Metamask extends Component {
                 textAlign:"right",
 
               }}>
-              <a target="_blank" href={this.props.etherscan+"address/"+this.state.accounts[0]}>
-                <div style={{width:500}}>
-                  <Writing string={accountToShow} size={20} space={5}/>
-                </div>
-              </a>
+              {accountDisplay}
                 <div>
                   <Writing string={this.state.network} size={26} space={5}/>
                   <a target="_blank" href={this.props.etherscan+"block/"+this.props.blockNumber}>
@@ -275,7 +301,7 @@ class Metamask extends Component {
               >
                 {currentStyles => {
                   return (
-                    <div style={{position:"absolute",right:currentStyles.right,top:currentStyles.top}} onClick={this.props.clickBlockie}>
+                    <div style={{position:"absolute",right:currentStyles.right,top:currentStyles.top}} onClick={blockieClickFunction}>
                       <this.props.Blockies
                       seed={this.state.accounts[0]}
                       scale={currentStyles.size}

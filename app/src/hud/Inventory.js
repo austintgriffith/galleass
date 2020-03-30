@@ -47,7 +47,7 @@ class Inventory extends Component {
 
     for(let pass in [0,1])
     for(let i in inventory){
-      if((pass==0 && i=="Ether" || pass==1 && i!="Ether")&&inventory[i]>0){
+      if((pass==0 && i=="Ether" || pass==1 && i!="Ether")&&inventory[i]>0||(pass==1&&i=="DAI")||(pass==0&&i=="Ether")||(pass==1&&i=="RealEther")){
         let extra = "";
         let maxWidth = 40
         let maxHeight = 40
