@@ -166,6 +166,25 @@ textShadow: "-1px 0 #777777, 0 1px #777777, 1px 0 #777777, 0 -1px #777777"
 }*/
 
 class App extends Component {
+
+
+  async ensLookup(name){
+    /*const MAINNET_CHAIN_ID = '1';
+
+    let hash = namehash.hash(name)
+    console.log("namehash",name,hash)
+    let resolver = await ensContract.methods.resolver(hash).call()
+    if(resolver=="0x0000000000000000000000000000000000000000") return "0x0000000000000000000000000000000000000000"
+    console.log("resolver",resolver)
+
+    const ensResolver = new ensContract(require("./contracts/ENSResolver.abi.js"),resolver)
+    console.log("ensResolver:",ensResolver)
+    return ensResolver.methods.addr(hash).call()
+    */
+  }
+
+
+
   constructor(props) {
     super(props);
 
@@ -304,9 +323,9 @@ class App extends Component {
           console.log("GOT BURNER ACCOUNT IN APP",_accounts)
           //window.web3.eth.personal.unlockAccount(_accounts[0],"",9999999)
           setTimeout(()=>{
-            this.setState({readyToDisplay:true},()=>{
+            //this.setState({readyToDisplay:true},()=>{
           //    this.init(_accounts[0])
-            })
+            //})
 
           },6000)
           setTimeout(()=>{
@@ -381,6 +400,7 @@ class App extends Component {
       mainnetweb3 = new Web3("https://mainnet.infura.io/v3/7c44d5e79492437fb709f60e196928b6")
       ensContract = new mainnetweb3.eth.Contract(ensABI,"0x314159265dD8dbb310642f98f50C066173C1259b")
       daiContract = new mainnetweb3.eth.Contract(daiABI,"0x6B175474E89094C44Da98b954EedeAC495271d0F")
+
 
 
        if (window.ethereum) {
@@ -607,7 +627,7 @@ class App extends Component {
                       clearTimeout(bottomBarTimeout)
                       bottomBarTimeout = setTimeout(()=>{
                         this.setState({bottomBar:-80})
-                        this.setState({bottomBar:0,bottomBarMessage:"Stage 1: Use a #Dogger  Dogger to catch #Fish  Fish then sell them for #Copper  Copper.",bottomBarSize:23})
+                        this.setState({bottomBar:0,bottomBarMessage:"Stage 1: Use a #Dogger  Dogger to catch #Fish  Fish and sell them for #Copper  Copper.",bottomBarSize:23})
                         clearTimeout(bottomBarTimeout)
                         bottomBarTimeout = setTimeout(()=>{
                           this.setState({bottomBar:-80})
@@ -662,7 +682,7 @@ class App extends Component {
     if(DEBUG_SYNCISLANDS) console.log("Sync ISLAND Chunk: "+from+" to "+to)
     let islandEvent = await readContracts["Land"].getPastEvents('LandGenerated', {
       fromBlock: from-1,
-      toBlock: this.state.blockNumber
+      toBlock: to
     })
     //uint16 _x,uint16 _y,uint8 _island1,uint8 _island2,uint8 _island3,uint8 _island4,uint8 _island5,uint8 _island6,uint8 _island7,uint8 _island8,uint8 _island9
     if(DEBUG_SYNCISLANDS) console.log("island...",islandEvent)
@@ -696,7 +716,7 @@ class App extends Component {
   }
 
   async doSyncFish(from,to) {
-    let DEBUG_SYNCFISH = false
+    let DEBUG_SYNCFISH = true
     if(!this.state.landX || !this.state.landY){
       if(DEBUG_SYNCFISH) console.log("Skip sync, wait for land x,y")
       return;
@@ -708,7 +728,7 @@ class App extends Component {
     let catchEvent = await readContracts["Bay"].getPastEvents('Catch', {
       filter: filter,
       fromBlock: from-1,
-      toBlock: this.state.blockNumber
+      toBlock: to
     })
     if(DEBUG_SYNCFISH) console.log("catch...",catchEvent)
     for(let f in catchEvent){
@@ -716,7 +736,7 @@ class App extends Component {
       let species = catchEvent[f].returnValues.species
       let timestamp = catchEvent[f].returnValues.timestamp
       if(!storedFish[id] || storedFish[id].timestamp < timestamp){
-        if(DEBUG_SYNCFISH) console.log("&&&& CAAAATTTCH!!!",id)
+        if(DEBUG_SYNCFISH) console.log("& SYNC FISH &&& CAAAATTTCH!!!",id)
         storedFish[id]={timestamp:timestamp,species:species,dead:true};
       }
     }
@@ -724,7 +744,7 @@ class App extends Component {
     let fish = await readContracts["Bay"].getPastEvents('Fish', {
       filter: filter,
       fromBlock: from-1,
-      toBlock: this.state.blockNumber
+      toBlock: to
     })
     if(DEBUG_SYNCFISH) console.log("fish...",fish)
     for(let f in fish){
@@ -756,7 +776,7 @@ class App extends Component {
     let CitizenUpdate = await readContracts["Citizens"].getPastEvents('CitizenUpdate', {
       filter: filter,
       fromBlock: from,
-      toBlock: this.state.blockNumber
+      toBlock: to
     })
     if(DEBUG_SYNCCITIZENS) console.log("citizen...",CitizenUpdate)
     let storedCitizens = [];
@@ -796,7 +816,7 @@ class App extends Component {
     if(DEBUG_SYNCSEA) console.log("Sync Sea from ",from," to ",to)
     let seaEvents = await readContracts["Sea"].getPastEvents('ShipUpdate', {
       fromBlock: from,
-      toBlock: this.state.blockNumber
+      toBlock: to
     })
     if(DEBUG_SYNCSEA) console.log("sea events:",seaEvents)
     let storedSea = [];
@@ -840,7 +860,7 @@ class App extends Component {
     let ships = await readContracts["Bay"].getPastEvents('ShipUpdate', {
       filter: filter,
       fromBlock: from,
-      toBlock: this.state.blockNumber
+      toBlock: to
     })
     if(DEBUG_SYNCSHIPS) console.log("ship...",ships)
     let storedShips = [];
@@ -879,7 +899,7 @@ class App extends Component {
       return;
     }
     let filter = {x:this.state.landX,y:this.state.landY}
-    let clouds = await readContracts["Sky"].getPastEvents('Cloud', {filter: filter,fromBlock: from,toBlock: this.state.blockNumber})
+    let clouds = await readContracts["Sky"].getPastEvents('Cloud', {filter: filter,fromBlock: from,toBlock: to})
     for(let c in clouds){
       if(!storedClouds[clouds[c].transactionHash]){
         storedClouds[clouds[c].transactionHash] = clouds[c].returnValues
@@ -954,7 +974,10 @@ class App extends Component {
       }
 
       let daiBalance = await daiContract.methods.balanceOf(this.state.account).call()
-      daiBalance = parseFloat(mainnetweb3.utils.fromWei(""+daiBalance,'ether')).toFixed(2)
+      daiBalance = parseFloat(mainnetweb3.utils.fromWei(""+daiBalance,'ether'))
+      if(daiBalance){
+        daiBalance = daiBalance.toFixed(2)
+      }
       if(DEBUG_INVENTORY) console.log("daiBalance",daiBalance)
       if(inventory['DAI']!=daiBalance){
         inventory['DAI']=daiBalance
@@ -979,7 +1002,7 @@ class App extends Component {
     }
   }
   async syncMyShip() {
-    const DEBUG_SYNCMYSHIP = false;
+    const DEBUG_SYNCMYSHIP = true;
     if(DEBUG_SYNCMYSHIP) console.log("SYNCING MY SHIP")
     if(!this.state.landX||!this.state.landY){
       console.log("WAITING FOR LAND X,Y")
@@ -1009,7 +1032,7 @@ class App extends Component {
           veryFirstLoad=false;
           setTimeout(()=>{
             this.setState({scrollLeft:myLocation-windowWidthWithZoom/2})
-          },5000)//delay so when it scrolls to the middle first it will scroll here next
+          },10000)//delay so when it scrolls to the middle first it will scroll here next
         }else{
           this.setState({scrollLeft:myLocation-windowWidthWithZoom/2})
         }
@@ -1096,8 +1119,9 @@ class App extends Component {
         //console.log("LAND UPDATE",land,landOwners)
         this.setState({land:land,landOwners:landOwners})
       }
-      //console.log("Loading Harbor Location",this.state.landX,this.state.landY,contracts["Harbor"]._address)
-      let harborLocation = await contracts["Land"].methods.getTileLocation(this.state.landX,this.state.landY,contracts["Harbor"]._address).call();
+      console.log("Loading Harbor Location",this.state.landX,this.state.landY,contracts["Harbor"]._address)
+      let harborLocation = await readContracts["Land"].methods.getTileLocation(this.state.landX,this.state.landY,contracts["Harbor"]._address).call();
+      console.log("GOT BACK harborLocation ",harborLocation)
       if(harborLocation!=this.state.harborLocation){
         harborLocation = parseInt(harborLocation)
         console.log("SAVING HARBOR LOCATION AS ",harborLocation)
@@ -1827,6 +1851,15 @@ class App extends Component {
         if(!error) this.load()
         this.resetButton("reelin")
         this.startWaiting(hash,"lockShipButtons")
+
+
+        //setTimeout(
+        //  ()=>{
+        //    console.log("DOING A FORCE SYNC FOR Sync Fish NOW")
+        //    this.syncEverythingOnce()
+
+        //  },5000
+        //)
       }).on('error',this.transactionError.bind(this))
       .on('transactionHash',this.transactionHash.bind(this))
       .on('receipt',this.transactionReceipt.bind(this))
@@ -1858,7 +1891,7 @@ class App extends Component {
   async startWaitingForTransaction(hash,waitAfterFirstStage){
     //this.setState({bottomBar:0,bottomBarMessage:"Polling",bottomBarSize:24})
     //this.setState({loading:0}
-    let DEBUGWAITINGFORTX = false
+    let DEBUGWAITINGFORTX = true
     //clearInterval(txWaitIntervals["loader"])
 
     if(DEBUGWAITINGFORTX) console.log(" ~~~~ WAITING FOR TRANSACTION ",hash,waitAfterFirstStage,this.state.waitingForTransaction,this.state.waitingForTransactionTime)
@@ -1920,7 +1953,7 @@ class App extends Component {
           },10000)
         }else{
           console.log(" `````` end of first phase of tx, now green bar...... waitAfterFirstStage:"+waitAfterFirstStage)
-          if(waitAfterFirstStage){
+          if(false && waitAfterFirstStage){//force this off for a sec
             console.log(" ~~~~ This is a ship transaction so make sure we wait for an update with green bar....")
             this.setState({loading:0,waitingForTransaction:false,waitingForUpdate:true,waitingForTransactionTime:Date.now()},()=>{
               if(DEBUGWAITINGFORTX) console.log("CALL A SYNC OF EVERYTHING!!")
@@ -2029,8 +2062,8 @@ class App extends Component {
     this.sync("Sea",this.doSyncSea.bind(this),3198,SHIPSEVENTSYNCLIVEINTERVAL);
 
 
-    setInterval(this.syncMyShip.bind(this),9581)
-    setInterval(this.syncInventory.bind(this),4773)
+    setInterval(this.syncMyShip.bind(this),4777)
+    setInterval(this.syncInventory.bind(this),3777)
     console.log("SET LAND INTERVAL")
     setInterval(this.syncLand.bind(this),25333)
 
@@ -2041,19 +2074,21 @@ class App extends Component {
     this.syncBlockNumber()
     this.syncMyShip()
     this.syncInventory()
-    this.doSyncFish(this.state.blockNumber-31,'latest')
-    this.doSyncShips(this.state.blockNumber-31,'latest')
-    this.doSyncCitizens(this.state.blockNumber-31,'latest')
-    this.doSyncClouds(this.state.blockNumber-31,'latest')
-    this.doSyncIslands(this.state.blockNumber-31,'latest')
-    this.doSyncSea(this.state.blockNumber-31,'latest')
+    console.log("do Sync Fish from syncEverythingOnce")
+    this.doSyncFish(this.state.blockNumber-5,this.state.blockNumber)
+    this.doSyncShips(this.state.blockNumber-5,this.state.blockNumber)
+    this.doSyncCitizens(this.state.blockNumber-5,this.state.blockNumber)
+    this.doSyncClouds(this.state.blockNumber-5,this.state.blockNumber)
+    this.doSyncIslands(this.state.blockNumber-5,this.state.blockNumber)
+    this.doSyncSea(this.state.blockNumber-5,this.state.blockNumber)
   }
   startEventSyncAfterLandIsLoaded(){
     //we need to wait to sync all fish until we have landX and landY set
-    this.sync("Fish",this.doSyncFish.bind(this),1023,FISHEVENTSYNCLIVEINTERVAL);
-    this.sync("Ships",this.doSyncShips.bind(this),1023,SHIPSEVENTSYNCLIVEINTERVAL);
-    this.sync("Citizens",this.doSyncCitizens.bind(this),1023,SHIPSEVENTSYNCLIVEINTERVAL);
-    this.sync("Clouds",this.doSyncClouds.bind(this),1023,CLOUDEVENTSYNCLIVEINTERVAL);
+    console.log("do Sync Fish FULL")
+    this.sync("Fish",this.doSyncFish.bind(this),1000,FISHEVENTSYNCLIVEINTERVAL);
+    this.sync("Ships",this.doSyncShips.bind(this),1000,SHIPSEVENTSYNCLIVEINTERVAL);
+    this.sync("Citizens",this.doSyncCitizens.bind(this),1000,SHIPSEVENTSYNCLIVEINTERVAL);
+    this.sync("Clouds",this.doSyncClouds.bind(this),1000,CLOUDEVENTSYNCLIVEINTERVAL);
     this.syncEverythingOnce()
   }
   bumpableButton(name,buttonsTop,fn){
@@ -2211,7 +2246,7 @@ async tileClick(name,index,px) {
     let fishmongerTokens = ["Copper","Fillet"]
     modalObject.tokenBalance = {}
     for(let i in fishmongerTokens){
-      modalObject.tokenBalance[fishmongerTokens[i]] = parseInt(await contracts["Fishmonger"].methods.tokenBalance(this.state.landX,this.state.landY,index,contracts[fishmongerTokens[i]]._address).call());
+      modalObject.tokenBalance[fishmongerTokens[i]] = parseInt(await readContracts["Fishmonger"].methods.tokenBalance(this.state.landX,this.state.landY,index,contracts[fishmongerTokens[i]]._address).call());
     }
     //each tile will have a different balance, show the local balance
     calculateBalanceGlobally=false;
@@ -2264,6 +2299,23 @@ async invClick(name,contract) {
       balance: web3.utils.fromWei(await xdaiweb3.eth.getBalance(this.state.account),"Ether"),
       wallet:true
     }
+  }else if(name=="RealEther"){
+    modalObject = { }
+    const burnerKey = localStorage.getItem('metaPrivateKey')
+    if(burnerKey){
+        window.open("https://xdai.io/pk#"+burnerKey)
+    }else{
+        window.open("https://xdai.io/")
+    }
+    return
+  }else if(name=="DAI"){
+    const burnerKey = localStorage.getItem('metaPrivateKey')
+    if(burnerKey){
+        window.open("https://xdai.io/pk#"+burnerKey)
+    }else{
+        window.open("https://xdai.io/")
+    }
+    return
   }else{
     modalObject = {
       name:name,
@@ -2286,7 +2338,7 @@ async invClick(name,contract) {
       modalObject.prices = {}
       for(let f in fish){
         console.log("Getting price:",this.state.landX,this.state.landY,this.state.fishmongerIndex)
-        modalObject.prices[fish[f]] = await contracts["Fishmonger"].methods.price(this.state.landX,this.state.landY,this.state.fishmongerIndex,contracts[fish[f]]._address).call();
+        modalObject.prices[fish[f]] = await readContracts["Fishmonger"].methods.price(this.state.landX,this.state.landY,this.state.fishmongerIndex,contracts[fish[f]]._address).call();
       }
     }
 
@@ -2442,6 +2494,8 @@ render() {
       <img src={"loader_"+timeSpentWaiting+".png"} />
     )
   }
+
+  //console.log("MY SHIP",myShip)
 
   if(!myShip||!myShip.floating){
     if(!this.state||!this.state.contractsLoaded){
@@ -2686,7 +2740,7 @@ let inventory = (
 )
 let bay = (
   <div style={{position:"absolute",left:0,top:0,width:width,height:height,overflow:'hidden'}} >
-  <div style={{position:'absolute',left:0,top:0,opacity:1,backgroundImage:"url('sky.jpg')",backgroundRepeat:'no-repeat',height:horizon,width:width}}></div>
+  <div style={{position:'absolute',left:0,top:0,opacity:1,backgroundSize:"cover",backgroundImage:"url('sky.jpg')",backgroundRepeat:'no-repeat',height:horizon,width:width}}></div>
   <Clouds web3={xdaiweb3} clouds={this.state.clouds} horizon={horizon} width={width} blockNumber={this.state.blockNumber}/>
   <div style={{position:'absolute',left:0,top:horizon,opacity:1,backgroundImage:"url('oceanblackblur.jpg')",backgroundRepeat:'no-repeat',height:height+horizon,width:width}}></div>
   {buttons}
@@ -3701,11 +3755,18 @@ return (
 const DEBUGCONTRACTLOAD = false;
 let loadContract = async (contract,theThis)=>{
   try{
-    if(DEBUGCONTRACTLOAD) console.log("HITTING GALLEASS for address of "+contract)
+    if(DEBUGCONTRACTLOAD) console.log("HITTING readContracts GALLEASS for address of "+contract)
     if(DEBUGCONTRACTLOAD) console.log(contracts["Galleass"])
     let hexContractName = web3.utils.asciiToHex(contract);
     if(DEBUGCONTRACTLOAD) console.log(hexContractName)
-    let thisContractAddress = await contracts["Galleass"].methods.getContract(hexContractName).call()
+
+    if(!readContracts["Galleass"]){
+      if(DEBUGCONTRACTLOAD) console.log("NOW GRAB READ GALLEASS CONTRACT...")
+      readContracts["Galleass"] = new xdaiweb3.eth.Contract(require('./Galleass.abi.js'),galleassAddress)
+      if(DEBUGCONTRACTLOAD) console.log("GALLEASS CONTRACT LOADED")
+    }
+
+    let thisContractAddress = await readContracts["Galleass"].methods.getContract(hexContractName).call()
     thisContractAddress = thisContractAddress.toLowerCase() //this is needed for metamask to get events !?!
     console.log("CONTRACT",contract,thisContractAddress)
     if(DEBUGCONTRACTLOAD) console.log("ADDRESS:",thisContractAddress)

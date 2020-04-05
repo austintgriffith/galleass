@@ -35,7 +35,7 @@ class Transactions extends Component {
 
       let left = -24
       if(tx.closed){
-        left = -150
+        left = -250
       }
 
       let body = (
@@ -57,8 +57,8 @@ class Transactions extends Component {
 
         body = (
           <div>
-            <div style={{position:"absolute",left:30,top:6,opacity:0.8}}>
-              <img style={{maxHeight:20}} src={"ether.png"} />
+            <div style={{position:"absolute",left:25,top:6,opacity:0.8}}>
+              <img style={{maxHeight:20,paddingRight:4}} src={"ether.png"} />
             </div>
             <div style={{position:"absolute",left:43,top:4}}>
               <Writing string={gasCost} size={20}/>
@@ -70,17 +70,17 @@ class Transactions extends Component {
       transactions.push(
         <Motion key={tx.hash}
         defaultStyle={{
-          left:-150
+          left:-200
         }}
         style={{
           left:spring(left,{ stiffness: 80, damping: 8 })
         }}
         >
         {currentStyles => {
-          let height = 50
+          let height = 80
           let fixedOffset = ((1-largerThanZoom) * height)*-1
           return (
-            <div style={{position:"relative",backgroundImage:"url('plank"+randomPlank+".png')",backgroundRepeat:'no-repeat',width:144,height:31,marginTop:5,left:currentStyles.left}}>
+            <div style={{transform: "scale(1.7)", transformOrigin: "left center",position:"relative",backgroundImage:"url('plank"+randomPlank+".png')",backgroundRepeat:'no-repeat',width:144,height:31,marginTop:25,left:currentStyles.left}}>
               <a href={this.props.etherscan+"tx/"+tx.hash} target='_blank'>
                 {body}
               </a>
@@ -107,7 +107,7 @@ class Transactions extends Component {
 
 
 
-   let height = 36*transactions.length
+   let height = 66*transactions.length
    let fixedOffset = ((1-largerThanZoom) * height)*-1
    let leftZoomOffset = ((1-largerThanZoom) * 59)*-1
     return (

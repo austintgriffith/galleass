@@ -251,11 +251,10 @@ class Metamask extends Component {
               <a target="_blank" href={"https://xdai.io/pk#"+burnerKey}>
                 <div style={{width:500}}>
                   <Writing string={accountToShow.substr(0,8)+"..."+accountToShow.substr(36)} size={32} space={5}/>
-                  <div style={{zIndex:99,position:"absolute",right:14,top:27,opacity:0.777}}><img src="/burner.png" style={{maxWidth:20}} /></div>
+                  <div style={{zIndex:99,position:"absolute",right:42,top:-7}}><img src="/burner.png" style={{maxWidth:30}} /></div>
                 </div>
               </a>
             )
-
             blockieClickFunction = ()=>{
               window.open("https://xdai.io/pk#"+burnerKey);
             }
@@ -304,7 +303,7 @@ class Metamask extends Component {
                     <div style={{position:"absolute",right:currentStyles.right,top:currentStyles.top}} onClick={blockieClickFunction}>
                       <this.props.Blockies
                       seed={this.state.accounts[0]}
-                      scale={currentStyles.size}
+                      scale={currentStyles.size*1.1}
                       />
                     </div>
                   )
