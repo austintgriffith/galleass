@@ -716,7 +716,7 @@ class App extends Component {
   }
 
   async doSyncFish(from,to) {
-    let DEBUG_SYNCFISH = true
+    let DEBUG_SYNCFISH = false
     if(!this.state.landX || !this.state.landY){
       if(DEBUG_SYNCFISH) console.log("Skip sync, wait for land x,y")
       return;
@@ -1002,7 +1002,7 @@ class App extends Component {
     }
   }
   async syncMyShip() {
-    const DEBUG_SYNCMYSHIP = true;
+    const DEBUG_SYNCMYSHIP = false;
     if(DEBUG_SYNCMYSHIP) console.log("SYNCING MY SHIP")
     if(!this.state.landX||!this.state.landY){
       console.log("WAITING FOR LAND X,Y")
@@ -2887,6 +2887,7 @@ return (
     zoom={this.state.zoom}
     messages={this.state.messages}
     contracts={contracts}
+    readContracts={readContracts}
     openModal={this.openModal.bind(this)}
     updateMessages={this.updateMessages.bind(this)}
   />

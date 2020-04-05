@@ -6,11 +6,11 @@ import BuySellOwner from './BuySellOwner.js'
 
 class Fishmonger extends Component {
   async buyFillet(x,y,i){
-    let {web3,contracts,GWEI} = this.props
+    let {web3,readContracts,contracts,GWEI} = this.props
     console.log("BUY FILLET ",x,y,i)
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
     let buyAmount = 1
-    let filletPrice = await contracts["Fishmonger"].methods.filletPrice(x,y,i).call()
+    let filletPrice = await readContracts["Fishmonger"].methods.filletPrice(x,y,i).call()
     console.log("Fishmonger charges ",filletPrice," for fillets")
 
     let xHex = parseInt(x).toString(16)

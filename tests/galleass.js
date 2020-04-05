@@ -1284,14 +1284,14 @@ module.exports = {
         assert(result==0,"mintTimberBuildShips ERRORS")
       });
     });
-
+/*
     describe(bigHeader('BUY/SELL SHIPS'), function() {
       it('should buyAndSellShips', async function() {
         this.timeout(6000000)
         const result = await clevis("test","buyAndSellShips")
         assert(result==0,"buyAndSellShips ERRORS")
       });
-    });
+    });*/
     describe(bigHeader('EMBARK AND GO FISHING'), function() {
       it('should embarkAndGoFishing', async function() {
         this.timeout(6000000)
