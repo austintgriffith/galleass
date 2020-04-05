@@ -2,6 +2,7 @@ const galleass = require('./galleass.js')
 
 
 
+
 galleass.generateLand(0)
 
 
@@ -167,6 +168,9 @@ galleass.buildShip(0,"Dogger")
 
 
 
+
+
+galleass.setSellPriceAtMarket(0,"Timber",5)
 
 
 //and then node publish and npm run build and node deploy and node invalidate

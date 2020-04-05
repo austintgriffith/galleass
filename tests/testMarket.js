@@ -1,5 +1,7 @@
 const galleass = require("./galleass.js")
 
+
+/*
 //---------------- vvvvv ----------------- happens in deploy ------- //
 galleass.compile("Market")
 galleass.deploy("Market",0)
@@ -12,3 +14,4 @@ galleass.reload()
 //setContractOfTile:(accountindex,x,y,tileIndex,name)
 galleass.setContractOfTile(0,26535,24925,12,"Market")
 galleass.setPriceOfFirstTileOfType(0,102,9)
+*/

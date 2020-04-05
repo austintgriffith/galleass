@@ -3569,6 +3569,7 @@ if(this.state.modalObject.name == "Harbor"){
 if(this.state.modalObject.name == "Fishmonger"){
   content.push(
     <Fishmonger
+    readContracts={readContracts}
     {...this.state.modalObject}
     sellFish={this.sellFish.bind(this)}
     transferAndCall={this.transferAndCall.bind(this)}
@@ -3578,6 +3579,7 @@ if(this.state.modalObject.name == "Fishmonger"){
 if(this.state.modalObject.name == "Market"){
   content.push(
     <Market
+    readContracts={readContracts}
     {...this.state.modalObject}
     transferAndCall={this.transferAndCall.bind(this)}
     />

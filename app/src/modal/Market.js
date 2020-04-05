@@ -6,7 +6,7 @@ import BuySellOwner from './BuySellOwner.js'
 
 class Market extends Component {
   async setSellPrice(x,y,tile,tokenAddress,price){
-    let {web3,contracts,GWEI} = this.props
+    let {web3,readContracts,contracts,GWEI} = this.props
     console.log("setSellPrice",x,y,tile,tokenAddress,price)
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
     //setSellPrice(uint16 _x,uint16 _y,uint8 _tile,address _token,uint _price
