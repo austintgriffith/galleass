@@ -4,6 +4,12 @@ import {Motion, spring, presets} from 'react-motion';
 import BurnerProvider from 'burner-provider';
 var Web3 = require('web3');
 
+
+let RPCENDPOINT = 'https://dai.poa.network'
+if(window.location.href.indexOf("localhost")){
+  RPCENDPOINT = "http://localhost:8545"
+}
+
 class Metamask extends Component {
   constructor(props) {
     super(props);
@@ -24,7 +30,7 @@ class Metamask extends Component {
     console.log("CHECKMM",typeof window.web3)
     if (typeof window.web3 == 'undefined') {
 
-      var web3 = new Web3(new BurnerProvider('https://dai.poa.network'));
+      var web3 = new Web3(new BurnerProvider(RPCENDPOINT));
       window.web3 = web3
       console.log("BURNER IS READY",window.web3)
       window.web3.eth.getAccounts((err,_accounts)=>{

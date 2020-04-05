@@ -1,2 +1,2 @@
 #!/bin/bash
-watch -n 5 clevis sendTo 0.0001 0 0x2a906694d15df38f59e76ed3a5735f8aabcce9cb
+docker run -ti --rm --name clevis -p 3000:3000 -p 8545:8545 -v ${PWD}:/dapp austingriffith/clevis

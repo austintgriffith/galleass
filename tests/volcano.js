@@ -30,7 +30,7 @@ galleass.setShipCopperPrice(0,"Schooner","9")
 
 
 galleass.editMiddleTile(0,"Market",102)
-galleass.setPriceOfFirstTileOfType(0,102,99)
+galleass.setPriceOfFirstTileOfType(0,102,999)
 
 // no need for this now until you go 667// galleass.approveContract("Timber",0,"Land",6)
 //find a spot searching left to right for  (main hills or main grass =) and build a 2000 (village)
@@ -38,8 +38,7 @@ galleass.setPriceOfFirstTileOfType(0,102,99)
 // //put the village up for sale
 // galleass.setPriceOfFirstTileOfType(0,2000,6)
 
-//put all open land tiles up for sale
-//galleass.setPriceOfAllOpenLandTiles(0,9)
+
 
 //mint 6 timber to account 0
 galleass.testMint("Timber",0,0,6)
@@ -68,17 +67,10 @@ galleass.testMint("Timber",0,0,100)
 // galleass.attemptToBuildShip(1,"Dogger")
 
 //make sure you can build ships in the harbor with timber
-galleass.approveContract("Timber",0,"Harbor",2)
+galleass.approveContract("Timber",0,"Harbor",20)
 galleass.buildShip(0,"Dogger")
-
-galleass.approveContract("Timber",0,"Harbor",12)
-galleass.buildShip(0,"Schooner")
-galleass.buildShip(0,"Schooner")
-
-
-
-
-
+galleass.buildShip(0,"Dogger")
+galleass.buildShip(0,"Dogger")
 
 
 ////////// mint and approve fish and stock bay
@@ -119,6 +111,13 @@ galleass.stock("Snark",1,10)
 
 
 
+//buy ship and set sail to trigger ship actions and test fish stuff
+
+galleass.buyShip(0,"Dogger");
+galleass.approveFirst("Dogger",0,"Bay")
+galleass.embarkWithFirst(0,"Dogger")
+galleass.findFish(0)
+galleass.setSailTowardFish(0)
 
 
 
@@ -165,12 +164,27 @@ galleass.buildShip(0,"Dogger")
 
 
 
-
-
-
-
-
+galleass.setSellPriceAtMarket(0,"Fillet",3)
+galleass.setSellPriceAtMarket(0,"Greens",4)
 galleass.setSellPriceAtMarket(0,"Timber",5)
+galleass.setSellPriceAtMarket(0,"Stone",6)
+
+galleass.setBuyPriceAtMarket(0,"Fillet",2)
+galleass.setBuyPriceAtMarket(0,"Greens",3)
+galleass.setBuyPriceAtMarket(0,"Timber",4)
+galleass.setBuyPriceAtMarket(0,"Stone",5)
+
+galleass.testMint("Copper",0,0,1000) //mint copper to 0 account
+galleass.transferAndCall("Copper",0,"Market",1000,"0x00")//account 0 sends 100 copper to the fishmonger to (stock the contract action 0x00)
+
+galleass.testMint("Stone",0,0,100) //mint copper to 0 account
+galleass.transferAndCall("Stone",0,"Market",100,"0x00")//account 0 sends 100 copper to the fishmonger to (stock the contract action 0x00)
+
+galleass.testMint("Timber",0,0,150) //mint copper to 0 account
+galleass.transferAndCall("Timber",0,"Market",150,"0x00")//account 0 sends 100 copper to the fishmonger to (stock the contract action 0x00)
+
+galleass.testMint("Greens",0,0,50) //mint copper to 0 account
+galleass.transferAndCall("Greens",0,"Market",50,"0x00")//account 0 sends 100 copper to the fishmonger to (stock the contract action 0x00)
 
 
 //and then node publish and npm run build and node deploy and node invalidate

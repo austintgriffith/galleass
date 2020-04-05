@@ -918,6 +918,40 @@ module.exports = {
       });
     });
   },
+  setBuyPriceAtMarket:(accountindex,tokenName,price)=>{
+    describe('#setBuyPriceAtMarket()', function() {
+      it('should set setBuyPriceAtMarket', async function() {
+        /*  mapping (uint16 => mapping (uint16 => uint8[18])) public tileTypeAt;
+          mapping (uint16 => mapping (uint16 => address[18])) public contractAt;
+          mapping (uint16 => mapping (uint16 => address[18])) public ownerAt;
+          mapping (uint16 => mapping (uint16 => uint256[18])) public priceAt;*/
+        this.timeout(120000)
+        const accounts = await clevis("accounts")
+
+        let mainLand = await getMainLand();
+
+        let marketTile = await clevis("contract","tileTypes","LandLib",web3.utils.fromAscii("Market"))
+        let found = await searchLandFromCenterOut(mainLand,9,marketTile)
+        console.log(tab,"Found market tile at:",mainLand[0],mainLand[1],found)
+
+        let tokenAddress = localContractAddress(tokenName);
+
+        //const tileType = await clevis("contract","tileTypeAt","Land",x,y,tileIndex)
+        //console.log(tab,"Setting price of tile at index "+tileIndex+" at "+x+","+y+" (type "+tileType+") from account "+accountindex+"("+accounts[accountindex].blue+") to "+(""+price).cyan+"")
+
+        //const currentOwnerStart = await clevis("contract","ownerAt","Land",x,y,tileIndex)
+        //assert(currentOwnerStart==accounts[accountindex],"Account index "+accountindex+" doesn't own tile "+tileIndex+" at "+x+","+y)
+
+        //clevis contract setPrice Land 1 0 1
+        const result = await clevis("contract","setBuyPrice","Market",accountindex,mainLand[0],mainLand[1],found,tokenAddress,price)
+        printTxResult(result)
+
+        //const currentPrice = await clevis("contract","priceAt","Land",x,y,tileIndex)
+        //assert(currentPrice==price,"Failed to set price of tile "+tileIndex+" at "+x+","+y+" to "+price+" (current price is "+currentPrice+")")
+
+      });
+    });
+  },
   setPriceOfTile:(accountindex,x,y,tileIndex,price)=>{
     describe('#setPriceOfTile()', function() {
       it('should set the price of a tile', async function() {
