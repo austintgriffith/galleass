@@ -22,7 +22,10 @@ let contracts;
 let tokens = [];
 var Web3 = require('web3');
 var web3 = new Web3();
-web3.setProvider(new web3.providers.HttpProvider('http://localhost:48545'));
+
+const RPC = 'http://localhost:48545'
+
+web3.setProvider(new web3.providers.HttpProvider(RPC));
 
 
 const FAUCETACCOUNT = 2 //index in geth
@@ -50,11 +53,13 @@ app.get('/account/:account', async (req, res) => {
   console.log("balance",balance/10**18)
   if(balance==0){
     console.log("Giving some xdai...")
+    let newWeb3 = new Web3(new Web3.providers.HttpProvider(RPC));
     let tx = {
         from: web3.utils.toChecksumAddress(accounts[FAUCETACCOUNT]),
         to: web3.utils.toChecksumAddress(req.params.account),
         value: ''+(0.005*10**18),
-        data: '0x00'
+        gas: "30000",
+        gasPrice: ""+(1.0101*1000000000)
     }
     console.log(tx)
     /*web3.eth.sendTransaction(tx, function(error, hash){
@@ -62,7 +67,7 @@ app.get('/account/:account', async (req, res) => {
     });*/
 
     // using the event emitter
-    web3.eth.sendTransaction(tx)
+    newWeb3.eth.sendTransaction(tx)
     .on('transactionHash', function(hash){
         console.log("hash",hash)
     })
