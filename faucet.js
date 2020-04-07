@@ -9,6 +9,8 @@ const fs = require('fs');
 
 const ContractLoader = require('./modules/contractLoader.js');
 
+const https = require('https')
+
 
 var bodyParser = require('body-parser')
 app.use(bodyParser.json());
@@ -20,11 +22,14 @@ let contracts;
 let tokens = [];
 var Web3 = require('web3');
 var web3 = new Web3();
-web3.setProvider(new web3.providers.HttpProvider('http://0.0.0.0:8545'));
+
+const RPC = 'http://localhost:48545'
+
+web3.setProvider(new web3.providers.HttpProvider(RPC));
 
 
-const FAUCETACCOUNT = 0 //index in geth
-const APPPORT = 10003
+const FAUCETACCOUNT = 2 //index in geth
+//const APPPORT = 80
 
 let accounts
 web3.eth.getAccounts().then((_accounts)=>{
@@ -32,7 +37,6 @@ web3.eth.getAccounts().then((_accounts)=>{
   console.log("ACCOUNTS",accounts)
 })
 
-const GASBOOSTPRICE = 0.4
 
 app.get('/', (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -46,21 +50,43 @@ app.get('/account/:account', async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   console.log("/account",req.params.account)
   let balance = await web3.eth.getBalance(req.params.account)
-  console.log("balance",balance)
+  console.log("balance",balance/10**18)
   if(balance==0){
-    console.log("Giving some testnet eth...")
-    web3.eth.sendTransaction({
-        from: '0x4Dca2d4d123c6db667d81002602f9E9C7C976ede',
-        to: req.params.account,
-        value: '100000000000000000'
+    console.log("Giving some xdai...")
+    let newWeb3 = new Web3(new Web3.providers.HttpProvider(RPC));
+    let tx = {
+        from: web3.utils.toChecksumAddress(accounts[FAUCETACCOUNT]),
+        to: web3.utils.toChecksumAddress(req.params.account),
+        value: ''+(0.005*10**18),
+        gas: "30000",
+        gasPrice: ""+(1.0101*1000000000)
+    }
+    console.log(tx)
+    /*web3.eth.sendTransaction(tx, function(error, hash){
+      console.log(error, hash)
+    });*/
+
+    // using the event emitter
+    newWeb3.eth.sendTransaction(tx)
+    .on('transactionHash', function(hash){
+        console.log("hash",hash)
     })
-    .then(function(receipt){
-        console.log("RECEIPT",receipt)
-    });
+    .on('receipt', function(receipt){
+        console.log("receipt",receipt)
+    })
+    .on('error', console.error); // If a out of gas error, the second parameter is the receipt.
   }
   res.set('Content-Type', 'application/json');
   res.end(JSON.stringify({address:accounts[FAUCETACCOUNT]}));
 });
 
-app.listen(APPPORT);
-console.log(`http listening on `,APPPORT);
+//app.listen(APPPORT);
+//console.log(`http listening on `,APPPORT);
+
+https.createServer({
+  key: fs.readFileSync('privkey.pem'),
+  cert: fs.readFileSync('cert.pem'),
+  ca: fs.readFileSync('fullchain.pem')
+}, app).listen(443, () => {
+  console.log('Listening on 443...')
+})

@@ -156,7 +156,7 @@ console.log("APP")
 
 
 let RPCENDPOINT = 'https://dai.poa.network'
-if(window.location.href.indexOf("localhost")){
+if(window.location.href.indexOf("localhost")>=0){
   RPCENDPOINT = "http://localhost:8545"
 }
 
