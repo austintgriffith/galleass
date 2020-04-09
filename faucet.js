@@ -53,7 +53,7 @@ app.get('/account/:account', async (req, res) => {
   console.log("balance",balance/10**18)
   if(balance==0){
     console.log("Giving some xdai...")
-    let newWeb3 = new Web3(new Web3.providers.HttpProvider(RPC));
+    //let newWeb3 = new Web3(new Web3.providers.HttpProvider(RPC));
     let tx = {
         from: web3.utils.toChecksumAddress(accounts[FAUCETACCOUNT]),
         to: web3.utils.toChecksumAddress(req.params.account),
@@ -67,7 +67,7 @@ app.get('/account/:account', async (req, res) => {
     });*/
 
     // using the event emitter
-    newWeb3.eth.sendTransaction(tx)
+    web3.eth.sendTransaction(tx)
     .on('transactionHash', function(hash){
         console.log("hash",hash)
     })
