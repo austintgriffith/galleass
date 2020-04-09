@@ -404,7 +404,7 @@ class App extends Component {
 
       xdaiweb3 = new Web3(RPCENDPOINT)
       try{
-        mainnetweb3 = new Web3("https://mainnet.infura.io/v3/7c44d5e79492437fb709f60e196928b6")
+        mainnetweb3 = new Web3("https://mainnet.infura.io/v3/56755ea70ad042518280fb1bb9f5e548")
         ensContract = new mainnetweb3.eth.Contract(ensABI,"0x314159265dD8dbb310642f98f50C066173C1259b")
         daiContract = new mainnetweb3.eth.Contract(daiABI,"0x6B175474E89094C44Da98b954EedeAC495271d0F")
       }catch(e){
