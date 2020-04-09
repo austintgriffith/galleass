@@ -383,6 +383,23 @@ module.exports = {
       });
     });
   },
+  buildShipFast:(accountindex,model)=>{
+    describe('#buildShip()', function() {
+      it('should build Ships at the Harbor', async function() {
+        this.timeout(120000)
+        let mainLand = await getMainLand();
+        let harborTile = await clevis("contract","tileTypes","LandLib",web3.utils.fromAscii("Harbor"))
+        let found = await searchLandFromCenterOut(mainLand,9,harborTile)
+        console.log(tab,"Found harbor tile at:",mainLand[0],mainLand[1],found)
+        return clevis("contract","buildShip","Harbor",accountindex,mainLand[0],mainLand[1],found,web3.utils.fromAscii(model))
+        //printTxResult(result)
+        //countShips(uint16 _x,uint16 _y,uint8 _tile,bytes32 _model)
+        //const ships = await clevis("contract","countShips","Harbor",mainLand[0],mainLand[1],found,web3.utils.fromAscii(model))
+        //assert(ships>=1,"Dogger didn't build!?!")
+        //console.log(tab,"Harbor @ "+mainLand[0]+","+mainLand[1]+","+found+" has "+((ships+"").yellow+" "+model+"(s)"))
+      });
+    });
+  },
   attemptToBuildShip:(accountindex,model)=>{
     describe('#attemptToBuildShip()', function() {
       it('should fail to build Ships at the Harbor', async function() {

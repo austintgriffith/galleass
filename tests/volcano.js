@@ -13,9 +13,18 @@ galleass.buyFirstLandTile(0)
 
 //create buildings in the middle...
 galleass.editMiddleTile(0,"Harbor",100)
-galleass.setPriceOfFirstTileOfType(0,100,999)
+galleass.setPriceOfFirstTileOfType(0,100,40)
 galleass.editMiddleTile(0,"Fishmonger",101)
-galleass.setPriceOfFirstTileOfType(0,101,999)
+galleass.setPriceOfFirstTileOfType(0,101,90)
+
+galleass.testMint("Timber",0,0,26)
+galleass.approveContract("Timber",0,"Harbor",36)
+galleass.buildShipFast(0,"Dogger")
+galleass.buildShipFast(0,"Dogger")
+galleass.buildShipFast(0,"Dogger")
+
+galleass.setShipPrice(0,"Dogger","0.001")
+galleass.setShipCopperPrice(0,"Schooner","9")
 
 galleass.setFishPrice(0,"Pinner",2)
 galleass.setFishPrice(0,"Redbass",4)
@@ -25,29 +34,16 @@ galleass.setFishPrice(0,"Dangler",9)
 galleass.createCitizenAtTileType(0,"0x9129a6fbb3298ba8452a7c7948133c0138c0a6114af88226d6fd0ecdc7640d83","0x000f000f000f000f000f00000000000f00000000000000000000000000000000","Fishmonger")
 
 
-galleass.setShipPrice(0,"Dogger","0.001")
-galleass.setShipCopperPrice(0,"Schooner","9")
 
 
 galleass.editMiddleTile(0,"Market",102)
-galleass.setPriceOfFirstTileOfType(0,102,999)
+galleass.setPriceOfFirstTileOfType(0,102,25)
 
 // no need for this now until you go 667// galleass.approveContract("Timber",0,"Land",6)
 //find a spot searching left to right for  (main hills or main grass =) and build a 2000 (village)
 // galleass.buildTileOnFirstTileOfTypes(0,[1,2],2000)
 // //put the village up for sale
 // galleass.setPriceOfFirstTileOfType(0,2000,6)
-
-
-
-//mint 6 timber to account 0
-galleass.testMint("Timber",0,0,6)
-
-
-
-
-
-
 
 
 
@@ -69,7 +65,9 @@ galleass.testMint("Timber",0,0,100)
 //make sure you can build ships in the harbor with timber
 galleass.approveContract("Timber",0,"Harbor",20)
 galleass.buildShip(0,"Dogger")
-galleass.buildShip(0,"Dogger")
+galleass.buildShipFast(0,"Dogger")
+galleass.buildShipFast(0,"Dogger")
+galleass.buildShipFast(0,"Dogger")
 galleass.buildShip(0,"Dogger")
 
 
@@ -188,3 +186,23 @@ galleass.transferAndCall("Greens",0,"Market",50,"0x00")//account 0 sends 100 cop
 
 
 //and then node publish and npm run build and node deploy and node invalidate
+
+
+galleass.testMint("Timber",0,0,26)
+galleass.approveContract("Timber",0,"Harbor",36)
+galleass.buildShipFast(0,"Dogger")
+galleass.buildShipFast(0,"Dogger")
+galleass.buildShipFast(0,"Dogger")
+galleass.buildShipFast(0,"Dogger")
+galleass.buildShipFast(0,"Dogger")
+galleass.buildShipFast(0,"Dogger")
+galleass.buildShipFast(0,"Dogger")
+galleass.buildShipFast(0,"Dogger")
+galleass.buildShipFast(0,"Dogger")
+galleass.buildShipFast(0,"Dogger")
+galleass.buildShipFast(0,"Dogger")
+galleass.buildShipFast(0,"Dogger")
+galleass.buildShipFast(0,"Dogger")
+galleass.buildShipFast(0,"Dogger")
+galleass.buildShipFast(0,"Dogger")
+galleass.buildShip(0,"Dogger")
