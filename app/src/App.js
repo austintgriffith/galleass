@@ -147,6 +147,7 @@ const EVENTLOADCHUNK = 65534*2;//load a days worth of blocks of events at a time
 const FISHEVENTSYNCLIVEINTERVAL = 333
 const SHIPSEVENTSYNCLIVEINTERVAL = 444
 const CLOUDEVENTSYNCLIVEINTERVAL = 555
+const ISLANDEVENTINTERVAL = 666
 let eventLoadIndexes = {};
 let bottomBarTimeout;
 
@@ -404,6 +405,7 @@ class App extends Component {
 
       xdaiweb3 = new Web3(RPCENDPOINT)
       try{
+        console.log("Attemp")
         mainnetweb3 = new Web3("https://mainnet.infura.io/v3/56755ea70ad042518280fb1bb9f5e548")
         ensContract = new mainnetweb3.eth.Contract(ensABI,"0x314159265dD8dbb310642f98f50C066173C1259b")
         daiContract = new mainnetweb3.eth.Contract(daiABI,"0x6B175474E89094C44Da98b954EedeAC495271d0F")
@@ -692,7 +694,7 @@ class App extends Component {
   }
 
   async doSyncIslands(from,to) {
-    let DEBUG_SYNCISLANDS = false
+    let DEBUG_SYNCISLANDS = true
     let storedIslands = []
     if(from<1) from=1
     if(DEBUG_SYNCISLANDS) console.log("Sync ISLAND Chunk: "+from+" to "+to)
@@ -2105,6 +2107,7 @@ class App extends Component {
     this.sync("Ships",this.doSyncShips.bind(this),1000,SHIPSEVENTSYNCLIVEINTERVAL);
     this.sync("Citizens",this.doSyncCitizens.bind(this),1000,SHIPSEVENTSYNCLIVEINTERVAL);
     this.sync("Clouds",this.doSyncClouds.bind(this),1000,CLOUDEVENTSYNCLIVEINTERVAL);
+    this.sync("Islands",this.doSyncIslands.bind(this),1000,ISLANDEVENTINTERVAL);
     this.syncEverythingOnce()
   }
   bumpableButton(name,buttonsTop,fn){

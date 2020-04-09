@@ -16,7 +16,7 @@ import 'DataParser.sol';
 
 contract LandLib is Galleasset, DataParser {
 
-  uint public constant OPENLANDTILECOST = 5;
+  uint public constant OPENLANDTILECOST = 10;
 
   mapping (bytes32 => uint16) public tileTypes;
 
