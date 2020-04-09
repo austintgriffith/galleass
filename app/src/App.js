@@ -694,7 +694,7 @@ class App extends Component {
   }
 
   async doSyncIslands(from,to) {
-    let DEBUG_SYNCISLANDS = true
+    let DEBUG_SYNCISLANDS = false
     let storedIslands = []
     if(from<1) from=1
     if(DEBUG_SYNCISLANDS) console.log("Sync ISLAND Chunk: "+from+" to "+to)
